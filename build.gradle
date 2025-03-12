@@ -55,9 +55,9 @@ bootJar {
 
 sonar {
     properties {
-        property "sonar.projectKey", "TODO"
-        property "sonar.organization", "TODO"
-        property "sonar.host.url", "TODO"
+        property "sonar.projectKey", "Haizhouzhou_sopra-fs25-group-28-server"
+        property "sonar.organization", "haizhouzheng"
+        property "sonar.host.url", "https://sonarcloud.io"
     }
 }
 
