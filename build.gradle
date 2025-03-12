@@ -53,26 +53,41 @@ bootJar {
     archiveFileName = "${archiveBaseName.get()}.${archiveExtension.get()}"
 }
 
+// SonarCloud configuration
 sonar {
     properties {
-        property "sonar.projectKey", "Haizhouzhou_sopra-fs25-group-28-server"
-        property "sonar.organization", "haizhouzheng"
+        property "sonar.projectKey", "Haizhouzhou_sopra-fs25-group-28-server" // Replace with your actual project key
+        property "sonar.organization", "haizhouzheng"                           // Replace with your SonarCloud organization
         property "sonar.host.url", "https://sonarcloud.io"
+        // Uses the SONAR_TOKEN from environment variables (set it in GitHub Secrets or local.properties)
+        property "sonar.login", System.getenv("SONAR_TOKEN")
+        // Skip implicit compile to avoid deprecated behavior
+        property "sonar.gradle.skipCompile", "true"
+        // Define source and test directories
+        property "sonar.sources", "src/main/java"
+        property "sonar.tests", "src/test/java"
+        // Specify the path to the JaCoCo coverage report in XML format
+        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
     }
 }
 
+// JaCoCo configuration for test coverage reporting
 jacocoTestReport {
     reports {
         xml.enabled true
+        csv.enabled false
+        html.enabled true
     }
 }
 
+// Test configuration
 test {
     useJUnitPlatform()
     testLogging.showStandardStreams = true
     maxParallelForks = 1
 }
 
+// Optionally load local properties if available (e.g., for SONAR_TOKEN during local testing)
 File secretPropsFile = file('./local.properties')
 if (secretPropsFile.exists()) {
     Properties p = new Properties()
