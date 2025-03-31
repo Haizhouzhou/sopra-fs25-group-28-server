@@ -10,6 +10,8 @@ public class Player {
 
   private Session session;
   private String name;
+  // TODO: add correspondance to User
+  
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   public Player(Session session, String name){

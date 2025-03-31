@@ -22,6 +22,12 @@ public class GameRoomManager {
 
   public static GameRoomManager getInstance(){return instance;}
 
+  /**
+   * Create a new GameRoom and add it to tracked GameRoom list, 
+   * access to tracked GameRoom list through '.rooms'
+   * @param maxPlayers
+   * @return
+   */
   public GameRoom creatRoom(int maxPlayers){
     String roomId = generateRoomId();
     GameRoom room = new GameRoom(roomId, maxPlayers);
