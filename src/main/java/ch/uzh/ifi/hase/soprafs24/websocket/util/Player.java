@@ -8,24 +8,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Player {
 
+  private static final boolean PLAYER_NOT_READY = false;
+  private static final boolean PLAYER_READY = true;
+
   private Session session;
   private String name;
   // TODO: add correspondance to User
-  private String status;
+  private boolean status;
   
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   public Player(Session session, String name){
     this.session = session;
     this.name = name;
+    this.status = PLAYER_NOT_READY;
   }
 
   // define getter
   public Session getSession(){return session;}
   public String getName(){return name;}
 
-  public String getStatus(){return status;}
-  public void setStatus(String status){this.status = status;}
+  public boolean getStatus(){return status;}
+  public void setStatus(boolean status){this.status = status;}
 
   /**
    * send format message to player

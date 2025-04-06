@@ -22,6 +22,18 @@ public class GameRoomManager {
 
   public static GameRoomManager getInstance(){return instance;}
 
+  // TODO: change name into User entity to add correspondance
+  public Player registerPlayer(Session session, String name){
+    Player player = new Player(session, name);
+    sessionPlayers.put(session.getId(), player);
+    return player;
+  }
+
+  public void deregisterPlayer(Session session){
+    String sessionId = session.getId();
+    sessionPlayers.remove(sessionId);
+  }
+
   /**
    * Create a new GameRoom and add it to tracked GameRoom list, 
    * access to tracked GameRoom list through '.rooms'
@@ -35,20 +47,21 @@ public class GameRoomManager {
     return room;
   }
 
-  public boolean joinRoom(String roomId, Session session, String playerName){
+  public boolean joinRoom(String roomId, Session session){
     GameRoom room = rooms.get(roomId);
     if(room == null || room.isFull()){
       return false;
     }
 
-    Player player = new Player(session, playerName);
+    // Player player = new Player(session, playerName);
+    Player player = sessionPlayers.get(session.getId());
     room.addPlayer(player);
 
-    sessionPlayers.put(session.getId(), player);
+    // sessionPlayers.put(session.getId(), player);
     sessionRooms.put(session.getId(), roomId);
 
     // informe new player joining
-    room.broadcastePlayerJoin(playerName);
+    room.broadcastRoomStatus();
 
     return true;
   }
@@ -66,14 +79,19 @@ public class GameRoomManager {
         if(room.isEmpty()){
           rooms.remove(roomId);
         }else{
-          room.broadcastPlayerLeave(player.getName());
+          room.broadcastRoomStatus();
         }
       }
-
       // clear mapping
-      sessionPlayers.remove(sessionId);
+      // sessionPlayers.remove(sessionId);
       sessionRooms.remove(sessionId);
     }
+
+    MyWebSocketMessage message = new MyWebSocketMessage();
+    message.setType(MyWebSocketMessage.TYPE_SERVER_ROOM_LEFT);
+    message.setRoomId(roomId);
+    message.setSessionId(sessionId);
+    player.sendMessage(message);
   }
 
   private String generateRoomId(){

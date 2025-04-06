@@ -43,16 +43,16 @@ reason).
 
 ## Contributions Week 2 - [2025-04-01] to [2025-04-07]
 
-| **Student**                    | **Date** | **Link to Commit** | **Description**                                              | **Relevance**                                                |
-| ------------------------------ | -------- | ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| **Zizhou Luo (@Skiingseason)** | 2025.4.6 | [Link to Commit 1] | Create new branch `demo`, merge result of previous week. Fixed bug in `User` Test. Create `contribution.md` | Organize last week's work product, resolve small bugs and add to the record |
-|                                | [date]   | [Link to Commit 2] | [Brief description of the task]                              | [Why this contribution is relevant]                          |
-| **[@githubUser2]**             | [date]   | [Link to Commit 1] | [Brief description of the task]                              | [Why this contribution is relevant]                          |
-|                                | [date]   | [Link to Commit 2] | [Brief description of the task]                              | [Why this contribution is relevant]                          |
-| **[@githubUser3]**             | [date]   | [Link to Commit 1] | [Brief description of the task]                              | [Why this contribution is relevant]                          |
-|                                | [date]   | [Link to Commit 2] | [Brief description of the task]                              | [Why this contribution is relevant]                          |
-| **[@githubUser4]**             | [date]   | [Link to Commit 1] | [Brief description of the task]                              | [Why this contribution is relevant]                          |
-|                                | [date]   | [Link to Commit 2] | [Brief description of the task]                              | [Why this contribution is relevant]                          |
+| **Student**                    | **Date** | **Link to Commit**                                           | **Description**                                              | **Relevance**                                                |
+| ------------------------------ | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **Zizhou Luo (@Skiingseason)** | 2025.4.6 | [adec3f6](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/adec3f663ed311a68b72369b962fd5a382a4c8d3) | Create new branch `demo`, merge result of previous week. Fixed bug in `User` Test. Create `contribution.md` | Organize last week's work product, resolve small bugs and add to the record |
+|                                | 2025.4.6 | [Link to Commit 2]                                           | #14, #15 Players status in Gameroom(gready or not). Host player can start the game if it applay | Part of the game room logic. Only when all players are ready, the game can be started |
+| **[@githubUser2]**             | [date]   | [Link to Commit 1]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                          |
+|                                | [date]   | [Link to Commit 2]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                          |
+| **[@githubUser3]**             | [date]   | [Link to Commit 1]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                          |
+|                                | [date]   | [Link to Commit 2]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                          |
+| **[@githubUser4]**             | [date]   | [Link to Commit 1]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                          |
+|                                | [date]   | [Link to Commit 2]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                          |
 
 ---
 
