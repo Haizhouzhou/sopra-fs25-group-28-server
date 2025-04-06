@@ -11,6 +11,7 @@ public class Player {
   private Session session;
   private String name;
   // TODO: add correspondance to User
+  private String status;
   
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -22,6 +23,9 @@ public class Player {
   // define getter
   public Session getSession(){return session;}
   public String getName(){return name;}
+
+  public String getStatus(){return status;}
+  public void setStatus(String status){this.status = status;}
 
   /**
    * send format message to player

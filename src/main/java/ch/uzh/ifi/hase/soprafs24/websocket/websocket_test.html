@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket 测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #messageArea { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        button, input { margin: 5px; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h2>WebSocket 测试客户端</h2>
+    
+    <div>
+        <button id="connectButton">连接</button>
+        <button id="disconnectButton" disabled>断开</button>
+    </div>
+    
+    <div>
+        <input type="text" id="playerName" placeholder="玩家名称" value="测试玩家">
+    </div>
+    
+    <div>
+        <button id="createRoomButton" disabled>创建房间</button>
+        <input type="number" id="maxPlayers" placeholder="最大玩家数" value="4" min="2" max="10">
+    </div>
+    
+    <div>
+        <button id="joinRoomButton" disabled>加入房间</button>
+        <input type="text" id="roomId" placeholder="房间ID">
+    </div>
+    
+    <div>
+        <button id="sendMessageButton" disabled>发送消息</button>
+        <input type="text" id="message" placeholder="消息内容">
+    </div>
+    
+    <div>
+        <button id="leaveRoomButton" disabled>离开房间</button>
+    </div>
+    
+    <h3>消息记录</h3>
+    <div id="messageArea"></div>
+    
+    <script>
+        // 全局变量
+        let socket;
+        let connected = false;
+        let currentRoomId = '';
+        
+        // 获取DOM元素
+        const connectButton = document.getElementById('connectButton');
+        const disconnectButton = document.getElementById('disconnectButton');
+        const createRoomButton = document.getElementById('createRoomButton');
+        const joinRoomButton = document.getElementById('joinRoomButton');
+        const sendMessageButton = document.getElementById('sendMessageButton');
+        const leaveRoomButton = document.getElementById('leaveRoomButton');
+        const messageArea = document.getElementById('messageArea');
+        
+        // 添加消息到消息区域
+        function addMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            messageArea.appendChild(messageElement);
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+        
+        // 连接到WebSocket服务器
+        connectButton.addEventListener('click', function() {
+            // 修改这里的URL为你的WebSocket服务器地址
+            const serverUrl = "ws://localhost:8080/WebServer/";
+            
+            try {
+                socket = new WebSocket(serverUrl);
+                
+                socket.onopen = function(event) {
+                    connected = true;
+                    addMessage("已连接到服务器");
+                    
+                    // 更新按钮状态
+                    connectButton.disabled = true;
+                    disconnectButton.disabled = false;
+                    createRoomButton.disabled = false;
+                    joinRoomButton.disabled = false;
+                };
+                
+                socket.onmessage = function(event) {
+                    const data = event.data;
+                    addMessage(`收到消息: ${data}`);
+                    
+                    try {
+                        const message = JSON.parse(data);
+                        
+                        if (message.type === "ROOM_CREATED") {
+                            currentRoomId = message.roomId;
+                            document.getElementById("roomId").value = currentRoomId;
+                            sendMessageButton.disabled = false;
+                            leaveRoomButton.disabled = false;
+                            addMessage(`成功创建房间，ID: ${currentRoomId}`);
+                        } 
+                        else if (message.type === "ROOM_JOINED") {
+                            currentRoomId = message.roomId;
+                            sendMessageButton.disabled = false;
+                            leaveRoomButton.disabled = false;
+                            addMessage(`成功加入房间: ${currentRoomId}`);
+                        }
+                        else if (message.type === "ROOM_LEFT") {
+                            currentRoomId = '';
+                            sendMessageButton.disabled = true;
+                            leaveRoomButton.disabled = true;
+                            addMessage("已离开房间");
+                        }
+                        else if (message.type === "PLAYER_JOIN") {
+                            addMessage(`玩家 ${message.playerName} 加入了房间`);
+                        }
+                        else if (message.type === "PLAYER_LEAVE") {
+                            addMessage(`玩家 ${message.playerName} 离开了房间`);
+                        }
+                        else if (message.type === "GAME_MESSAGE") {
+                            addMessage(`${message.playerName}: ${message.content}`);
+                        }
+                        else if (message.type === "ERROR") {
+                            addMessage(`错误: ${message.content}`);
+                        }
+                    } catch (e) {
+                        // 如果不是JSON格式，直接显示原始消息
+                        console.error("解析消息失败", e);
+                    }
+                };
+                
+                socket.onclose = function(event) {
+                    connected = false;
+                    addMessage("连接已关闭");
+                    
+                    // 更新按钮状态
+                    connectButton.disabled = false;
+                    disconnectButton.disabled = true;
+                    createRoomButton.disabled = true;
+                    joinRoomButton.disabled = true;
+                    sendMessageButton.disabled = true;
+                    leaveRoomButton.disabled = true;
+                };
+                
+                socket.onerror = function(error) {
+                    addMessage(`连接错误: ${error}`);
+                    connected = false;
+                };
+            } catch (error) {
+                addMessage(`创建WebSocket连接失败: ${error.message}`);
+            }
+        });
+        
+        // 断开连接
+        disconnectButton.addEventListener('click', function() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.close();
+            }
+        });
+        
+        // 创建房间
+        createRoomButton.addEventListener('click', function() {
+            if (!connected) {
+                addMessage("请先连接到服务器");
+                return;
+            }
+            
+            const playerName = document.getElementById("playerName").value;
+            const maxPlayers = document.getElementById("maxPlayers").value;
+            
+            const message = {
+                type: "CREATE_ROOM",
+                playerName: playerName,
+                content: maxPlayers
+            };
+            
+            socket.send(JSON.stringify(message));
+            addMessage(`请求创建房间，最大玩家数: ${maxPlayers}`);
+        });
+        
+        // 加入房间
+        joinRoomButton.addEventListener('click', function() {
+            if (!connected) {
+                addMessage("请先连接到服务器");
+                return;
+            }
+            
+            const roomId = document.getElementById("roomId").value;
+            const playerName = document.getElementById("playerName").value;
+            
+            if (!roomId) {
+                addMessage("请输入房间ID");
+                return;
+            }
+            
+            const message = {
+                type: "JOIN_ROOM",
+                roomId: roomId,
+                playerName: playerName
+            };
+            
+            socket.send(JSON.stringify(message));
+            addMessage(`请求加入房间: ${roomId}`);
+        });
+        
+        // 发送消息
+        sendMessageButton.addEventListener('click', function() {
+            if (!connected) {
+                addMessage("请先连接到服务器");
+                return;
+            }
+            
+            if (!currentRoomId) {
+                addMessage("请先加入房间");
+                return;
+            }
+            
+            const messageContent = document.getElementById("message").value;
+            
+            if (!messageContent) {
+                addMessage("请输入消息内容");
+                return;
+            }
+            
+            const message = {
+                type: "GAME_MESSAGE",
+                content: messageContent
+            };
+            
+            socket.send(JSON.stringify(message));
+            document.getElementById("message").value = "";
+            addMessage(`发送消息: ${messageContent}`);
+        });
+        
+        // 离开房间
+        leaveRoomButton.addEventListener('click', function() {
+            if (!connected) {
+                addMessage("请先连接到服务器");
+                return;
+            }
+            
+            if (!currentRoomId) {
+                addMessage("你不在任何房间中");
+                return;
+            }
+            
+            const message = {
+                type: "LEAVE_ROOM"
+            };
+            
+            socket.send(JSON.stringify(message));
+            addMessage("请求离开房间");
+        });
+    </script>
+</body>
+</html>

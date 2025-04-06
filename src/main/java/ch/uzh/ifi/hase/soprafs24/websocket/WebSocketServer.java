@@ -54,7 +54,7 @@ public class WebSocketServer {
           handleCreateRoom(session, wsMessage);
           break;
         case WebSocketMessage.TYPE_JOIN_ROOM:
-
+          handleJoinRoom(session, wsMessage);
           break;
         default:
           log.warn("Unkown message type: {}", wsMessage.getType());
