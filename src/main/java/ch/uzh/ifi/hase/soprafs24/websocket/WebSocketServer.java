@@ -30,8 +30,9 @@ public class WebSocketServer {
   @OnOpen
   public void onOpen(Session session){
    log.info("WebSocket connection opened: {}", session.getId());
-   // TODO: change name to user
-   roomManager.registerPlayer(session, "TO_BE_determined_string");
+   // TODO: incorperate UserService, obtain userId
+   Long userId = new Long(1);
+   roomManager.registerPlayer(session, "TO_BE_determined_string", userId);
 
   }
 

@@ -23,8 +23,8 @@ public class GameRoomManager {
   public static GameRoomManager getInstance(){return instance;}
 
   // TODO: change name into User entity to add correspondance
-  public Player registerPlayer(Session session, String name){
-    Player player = new Player(session, name);
+  public Player registerPlayer(Session session, String name, Long userId){
+    Player player = new Player(session, name, userId);
     sessionPlayers.put(session.getId(), player);
     return player;
   }

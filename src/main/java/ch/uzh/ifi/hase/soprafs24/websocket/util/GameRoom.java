@@ -1,14 +1,13 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.ObjDoubleConsumer;
+
+import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
 public class GameRoom {
 
@@ -38,6 +37,22 @@ public class GameRoom {
   public boolean isFull(){return players.size() >= maxPlayer;}
 
   public boolean isEmpty(){return players.isEmpty();}
+
+  /**
+   * if all players are ready, host players can start the game
+   */
+  public void startGame(){
+    // something like game.initialize()
+    game = new Game(roomId, players);
+  }
+
+  /**
+   * if any players reach the goal, call this function and save game record
+   * TODO: to be implemente
+   */
+  public void EndGame(){
+
+  }
 
   private boolean getRoomStatus(){
     this.roomStatus = ROOM_READY;
