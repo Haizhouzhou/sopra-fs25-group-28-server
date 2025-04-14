@@ -2,14 +2,16 @@ package ch.uzh.ifi.hase.soprafs24.websocket.game;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Card;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Noble;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
@@ -22,10 +24,15 @@ public class Game {
     FINISHED        // 游戏已结束
   }
 
+  private final Long VICTORYPOINTS = 20L;
+
   // unique id for the game
   private final String gameId;
 
   private final List<Player> players;
+
+  // available gems on the board
+  private final Map<GemColor, Long> availableGems = new HashMap<>();
 
   // card deck of different levels of card
   private final Stack<Card> level1Deck = new Stack<>();
@@ -40,6 +47,7 @@ public class Game {
   // nobles on the board
   private final List<Noble> visibleNoble = new ArrayList<>(4);
 
+  private int currentPlayer = 0;
   private int currentRound = 0;
 
   // getters
@@ -60,6 +68,14 @@ public class Game {
     fillVisibleCards(level1Deck, visibleLevel1Cards);
     fillVisibleCards(level2Deck, visibleLevel2Cards);
     fillVisibleCards(level3Deck, visibleLevel3Cards);
+
+    // initialize available gems on board
+    availableGems.put(GemColor.BLACK, 7L);
+    availableGems.put(GemColor.RED, 7L);
+    availableGems.put(GemColor.BLUE, 7L);
+    availableGems.put(GemColor.GREEN, 7L);
+    availableGems.put(GemColor.WHITE, 7L);
+    availableGems.put(GemColor.GOLD, 5L);
 
     // TODO: initialize players' game status
     for(Player player : players){
@@ -143,7 +159,22 @@ public class Game {
     Collections.shuffle(this.players);
   }
 
+  // TODO: implement Get Game information
   public Object getGameInformation(){
     return new Object();
+  }
+
+  // TODO: make it public or private?
+  /**
+   * 
+   * @return true if there is player reach the condition of winning
+   */
+  public boolean checkVictoryCondition(){
+    for(Player player : players){
+      if(player.getVictoryPoints() >= VICTORYPOINTS){
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -67,6 +67,9 @@ public class Player {
     this.bonusGems.put(color, amount);
   }
 
+  public Long getVictoryPoints(){return victoryPoints;}
+  public void setVictoryPoints(Long victoryPoints){this.victoryPoints = victoryPoints;}
+
   // called when intialized a game
   public void initializeGameStatus(){
     

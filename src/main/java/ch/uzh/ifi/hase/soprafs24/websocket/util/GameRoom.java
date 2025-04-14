@@ -44,6 +44,7 @@ public class GameRoom {
   public void startGame(){
     // something like game.initialize()
     game = new Game(roomId, players);
+    game.initialize();
   }
 
   /**

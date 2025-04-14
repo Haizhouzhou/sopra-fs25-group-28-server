@@ -59,7 +59,17 @@ reason).
 
 ## Contributions Week 3 - [Begin Date] to [End Date]
 
-_Continue with the same table format as above._
+| **Student**                    | **Date**  | **Link to Commit**                                           | **Description**                                              | **Relevance**                                        |
+| ------------------------------ | --------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------------------------------- |
+| **Zizhou Luo (@Skiingseason)** | 2025.4.13 | [dda2493](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/dda2493d94ad83eafe96e5dcbc8c11676113eed1) | #16, #22, # 23 Merged Philips implementation of `items`(include `card` and `noble`) into demo branch. Wrote some test files | cards and nobles are important component of the game |
+|                                | 2025.4.14 |                                                              | #17, #26, #35 complete `Game`, implement method in `Game` to check victory condition. Add counter to decide players turn | part of game logic                                   |
+|                                | 2025.4.7  |                                                              |                                                              |                                                      |
+| **[@githubUser2]**             | [date]    | [Link to Commit 1]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                  |
+|                                | [date]    | [Link to Commit 2]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                  |
+| **[@githubUser3]**             | [date]    | [Link to Commit 1]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                  |
+|                                | [date]    | [Link to Commit 2]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                  |
+| **[@githubUser4]**             | [date]    | [Link to Commit 1]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                  |
+|                                | [date]    | [Link to Commit 2]                                           | [Brief description of the task]                              | [Why this contributio                                |
 
 ---
 
