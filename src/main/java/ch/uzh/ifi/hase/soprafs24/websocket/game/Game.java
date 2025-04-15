@@ -3,15 +3,16 @@ package ch.uzh.ifi.hase.soprafs24.websocket.game;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
+import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Card;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Noble;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
@@ -53,6 +54,13 @@ public class Game {
   // getters
   public String getGameId(){return this.gameId;}
   public List<Player> getPlayers(){return this.players;}
+  public int getCurrentPlayer(){return currentPlayer;}
+  public int getCurrentRound(){return currentRound;}
+  public Map<GemColor, Long> getAvailableGems(){return availableGems;}
+  public List<Card> getVisibleLevel1Cards(){return visibleLevel1Cards;}
+  public List<Card> getVisibleLevel2Cards(){return visibleLevel2Cards;}
+  public List<Card> getVisibleLevel3Cards(){return visibleLevel3Cards;}
+  public List<Noble> getVisibleNoble(){return visibleNoble;}
 
   public void initialize(){
     // fill the decks with predifined cards
@@ -159,9 +167,9 @@ public class Game {
     Collections.shuffle(this.players);
   }
 
-  // TODO: implement Get Game information
-  public Object getGameInformation(){
-    return new Object();
+  // TODO: may need some modification
+  public GameSnapshot getGameInformation(){
+    return GameSnapshot.createFromGame(this);
   }
 
   // TODO: make it public or private?

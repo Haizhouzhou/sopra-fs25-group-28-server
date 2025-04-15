@@ -32,12 +32,12 @@ reason).
 
 ## Contributions Week 1 - [2025-03-25] to [2025-04-01]
 
-| **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
-| ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
+| **Student**                    | **Date** | **Link to Commit**                                           | **Description**                                              | **Relevance**                                                |
+| ------------------------------ | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | **Zizhou Luo (@Skiingseason)** | 2025.4.1 | [f78ebce](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/f78ebce33f7c681be48fef67596dabf32a6fe19f) | implment Websocket framework, relative util class like WebSocketMessage, GameRoomManager (User Story issue#10, #11, #43) | Provides general framework for real-time game interaction to be held on |
-|    | 2025.4.1 | [5d73ad1](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/5d73ad1bf8056088f218c34383829a19bc681ee3) | implement create/join room methods, but needs to reorganize class structure. (#10, #12, #13) | Core UI components for multiplayer room joining & creation flow |
-| **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+|                                | 2025.4.1 | [5d73ad1](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/5d73ad1bf8056088f218c34383829a19bc681ee3) | implement create/join room methods, but needs to reorganize class structure. (#10, #12, #13) | Core UI components for multiplayer room joining & creation flow |
+| **[@githubUser2]**             | [date]   | [Link to Commit 1]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                          |
+|                                | [date]   | [Link to Commit 2]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                          |
 
 ---
 
@@ -62,8 +62,8 @@ reason).
 | **Student**                    | **Date**  | **Link to Commit**                                           | **Description**                                              | **Relevance**                                        |
 | ------------------------------ | --------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------------------------------- |
 | **Zizhou Luo (@Skiingseason)** | 2025.4.13 | [dda2493](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/dda2493d94ad83eafe96e5dcbc8c11676113eed1) | #16, #22, # 23 Merged Philips implementation of `items`(include `card` and `noble`) into demo branch. Wrote some test files | cards and nobles are important component of the game |
-|                                | 2025.4.14 |                                                              | #17, #26, #35 complete `Game`, implement method in `Game` to check victory condition. Add counter to decide players turn | part of game logic                                   |
-|                                | 2025.4.7  |                                                              |                                                              |                                                      |
+|                                | 2025.4.14 | [a3bca26](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/a3bca26b60a605ea0a00bc657d00e35a3c6bb4a0) | #17, #26, #35 complete `Game`, implement method in `Game` to check victory condition. Add counter to decide players turn | part of game logic                                   |
+|                                | 2025.4.15 |                                                              | Create DTO of Snapshot of GameStatus and PlayerStatus        | important for frontend and backend data transmission |
 | **[@githubUser2]**             | [date]    | [Link to Commit 1]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                  |
 |                                | [date]    | [Link to Commit 2]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                  |
 | **[@githubUser3]**             | [date]    | [Link to Commit 1]                                           | [Brief description of the task]                              | [Why this contribution is relevant]                  |

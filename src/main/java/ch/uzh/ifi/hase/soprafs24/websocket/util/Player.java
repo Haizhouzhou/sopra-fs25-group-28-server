@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.websocket.Session;
@@ -27,6 +28,7 @@ public class Player {
   private Map<GemColor, Long> gems;
   private Map<GemColor, Long> bonusGems; //gems collect from development card
   private Long victoryPoints;
+  public List<Card> reservedCards;
   
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -56,6 +58,7 @@ public class Player {
     }
     this.gems.put(color, amount);
   }
+  public Map<GemColor, Long> getAllGems(){return gems;}
 
   public Long getBonusGem(GemColor color){
     return this.bonusGems.get(color);
@@ -66,9 +69,12 @@ public class Player {
     }
     this.bonusGems.put(color, amount);
   }
+  public Map<GemColor, Long> getAllBonusGems(){return bonusGems;}
 
   public Long getVictoryPoints(){return victoryPoints;}
   public void setVictoryPoints(Long victoryPoints){this.victoryPoints = victoryPoints;}
+
+  public List<Card> getReservedCards(){return reservedCards;}
 
   // called when intialized a game
   public void initializeGameStatus(){

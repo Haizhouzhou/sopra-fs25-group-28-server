@@ -87,11 +87,11 @@ public class GameRoomManager {
       sessionRooms.remove(sessionId);
     }
 
-    MyWebSocketMessage message = new MyWebSocketMessage();
-    message.setType(MyWebSocketMessage.TYPE_SERVER_ROOM_LEFT);
-    message.setRoomId(roomId);
-    message.setSessionId(sessionId);
-    player.sendMessage(message);
+    // MyWebSocketMessage message = new MyWebSocketMessage();
+    // message.setType(MyWebSocketMessage.TYPE_SERVER_ROOM_LEFT);
+    // message.setRoomId(roomId);
+    // message.setSessionId(sessionId);
+    // player.sendMessage(message);
   }
 
   private String generateRoomId(){

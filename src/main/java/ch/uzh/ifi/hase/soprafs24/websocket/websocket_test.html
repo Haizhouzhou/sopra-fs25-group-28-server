@@ -170,7 +170,7 @@
             
             const message = {
                 type: "CREATE_ROOM",
-                playerName: playerName,
+                // playerName: playerName,
                 content: maxPlayers
             };
             
@@ -195,8 +195,8 @@
             
             const message = {
                 type: "JOIN_ROOM",
-                roomId: roomId,
-                playerName: playerName
+                roomId: roomId
+                //playerName: playerName
             };
             
             socket.send(JSON.stringify(message));

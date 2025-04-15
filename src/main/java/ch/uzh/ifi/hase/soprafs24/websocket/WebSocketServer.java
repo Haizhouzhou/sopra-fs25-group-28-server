@@ -31,9 +31,9 @@ public class WebSocketServer {
   public void onOpen(Session session){
    log.info("WebSocket connection opened: {}", session.getId());
    // TODO: incorperate UserService, obtain userId
-   Long userId = new Long(1);
+   Long userId = 1L;
    roomManager.registerPlayer(session, "TO_BE_determined_string", userId);
-
+    // log.info("player registered");
   }
 
   @OnClose
@@ -49,9 +49,10 @@ public class WebSocketServer {
    */
   @OnMessage
   public void onMessage(Session session, String message){
+    // log.info("receive message");
     try {      
       MyWebSocketMessage wsMessage = objectMapper.readValue(message, MyWebSocketMessage.class);
-
+      // log.info("message  type: {}",wsMessage.getType());
       switch(wsMessage.getType()){
         case MyWebSocketMessage.TYPE_CLIENT_CREATE_ROOM -> handleCreateRoom(session, wsMessage);
         case MyWebSocketMessage.TYPE_CLIENT_JOIN_ROOM -> handleJoinRoom(session, wsMessage);
@@ -61,6 +62,7 @@ public class WebSocketServer {
       }
       
     } catch (Exception e) {
+      log.info("error during message handling: {}", e);
     }
 
   }
