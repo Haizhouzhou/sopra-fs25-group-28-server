@@ -1,26 +1,26 @@
 package ch.uzh.ifi.hase.soprafs24.rest.dto;
 
-import java.util.Date;
-
 import ch.uzh.ifi.hase.soprafs24.constant.UserStatus;
 
-public class UserGetDTO {
+public class UserListGetDTO {
+  //pack information needed for users overwill page
+  private String name;
+
+  private String username;
+
+  private UserStatus status;
 
   private Long id;
-  private String name;
-  private String username;
-  private UserStatus status;
-  private Date creation_date;
-  private Date birthday;
 
-  public Long getId() {
+  public Long getId(){
     return id;
   }
 
-  public void setId(Long id) {
+  public void setId(Long id){
     this.id = id;
   }
 
+  
   public String getName() {
     return name;
   }
@@ -45,19 +45,5 @@ public class UserGetDTO {
     this.status = status;
   }
 
-  public Date getCreation_date(){
-    return creation_date;
-  }
   
-  public void setCreation_date(Date creation_date){
-    this.creation_date = creation_date;
-  }
-
-  public Date getBirthday(){
-    return birthday;
-  }
-
-  public void setBirthday(Date birthday){
-    this.birthday = birthday;
-  }
 }

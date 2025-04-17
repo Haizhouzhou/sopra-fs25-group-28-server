@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
@@ -45,20 +46,21 @@ public class UserServiceIntegrationTest {
     assertNull(userRepository.findByUsername("testUsername"));
 
     User testUser = new User();
-    testUser.setName("testName");
+    // testUser.setName("testName");
+    testUser.setPassword("testPassword");
     testUser.setUsername("testUsername");
-    testUser.setPassword("password");
 
     // when
     User createdUser = userService.createUser(testUser);
 
     // then
     assertEquals(testUser.getId(), createdUser.getId());
-    assertEquals(testUser.getName(), createdUser.getName());
+    // assertEquals(testUser.getName(), createdUser.getName()); name is randomly generated when creating new user
     assertEquals(testUser.getUsername(), createdUser.getUsername());
-    assertEquals(testUser.getPassword(), createdUser.getPassword());
     assertNotNull(createdUser.getToken());
-    assertEquals(UserStatus.OFFLINE, createdUser.getStatus());
+    assertNotNull(createdUser.getName());
+    assertNotNull(createdUser.getCreation_date());
+    assertEquals(UserStatus.ONLINE, createdUser.getStatus());
   }
 
   @Test
@@ -68,7 +70,7 @@ public class UserServiceIntegrationTest {
     User testUser = new User();
     testUser.setName("testName");
     testUser.setUsername("testUsername");
-    testUser.setPassword("password");
+    testUser.setPassword("testPassword");
     User createdUser = userService.createUser(testUser);
 
     // attempt to create second user with same username
@@ -77,9 +79,34 @@ public class UserServiceIntegrationTest {
     // change the name but forget about the username
     testUser2.setName("testName2");
     testUser2.setUsername("testUsername");
-    testUser2.setPassword("password");
+    testUser2.setPassword("testPassword");
 
     // check that an error is thrown
-    assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
+    assertEquals(HttpStatus.CONFLICT, exception.getStatus());
   }
+
+  @Test
+  public void userLogin_usernameNotFound_throwsException(){
+    User testLoginCredential = new User();
+    testLoginCredential.setUsername("testUsername");
+    testLoginCredential.setPassword("testPassword");
+
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> userService.userLogin(testLoginCredential));
+    assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+  }
+
+  @Test
+  public void userLogin_wrongPassword_throwsException(){
+    User testLoginCredential = new User();
+    testLoginCredential.setUsername("testUsername");
+    testLoginCredential.setPassword("testPassword");
+    userService.createUser(testLoginCredential);
+
+    testLoginCredential.setPassword("wrongPassword");
+
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> userService.userLogin(testLoginCredential));
+    assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatus());
+  }
+
 }

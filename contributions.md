@@ -75,7 +75,11 @@ reason).
 
 ## Contributions Week 4 - [Begin Date] to [End Date]
 
-_Continue with the same table format as above._
+| **Student**                    | **Date**  | **Link to Commit** | **Description**                                              | **Relevance**                                      |
+| ------------------------------ | --------- | ------------------ | ------------------------------------------------------------ | -------------------------------------------------- |
+| **Zizhou Luo (@Skiingseason)** | 2025.4.17 |                    | #2, #7, #9 complete user system: user can now edit their profile | user need an account to access to full application |
+|                                |           |                    |                                                              |                                                    |
+|                                |           |                    |                                                              |                                                    |
 
 ---
 

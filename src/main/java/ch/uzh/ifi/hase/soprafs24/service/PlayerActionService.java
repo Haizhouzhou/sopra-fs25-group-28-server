@@ -9,7 +9,7 @@
 
 // public class PlayerActionService {
 
-//     public void takeTwoSameGems(Game game, Player player, GemColor color) {                          //TODO: Implement player variables: blue, red, green, black, white, gold counters
+//     public void takeTwoSameGems(Game game, GemColor color) {                          //TODO: Implement player variables: blue, red, green, black, white, gold counters
 //         switch (color) {                                                                //TODO: Implement Gaem variables: blue, red, green, black, white, gold counters
 //             case BLUE:
 //                 if (blue < 2) {
@@ -133,8 +133,10 @@
 // }
 
 
-//     public void buyCard(User player, Card card) {                                                  //TODO: Implement player List: bought cards
+//     public void buyCard(Game game, Card card) {                                                  //TODO: Implement player List: bought cards
 //         // Implement logic to buy card
+
+      
 //     }
 
 //     public void reserveCard(Player player, Long cardId) {
