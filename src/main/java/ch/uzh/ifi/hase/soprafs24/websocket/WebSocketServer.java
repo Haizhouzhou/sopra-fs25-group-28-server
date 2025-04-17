@@ -5,6 +5,7 @@ import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
 import org.slf4j.Logger;
@@ -18,7 +19,7 @@ import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoomManager;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.MyWebSocketMessage;
 
 // TODO：modify endpoint
-@ServerEndpoint(value = "/WebServer/")
+@ServerEndpoint(value = "/WebServer/{tokenParam}")
 @Component
 public class WebSocketServer {
 
@@ -28,11 +29,12 @@ public class WebSocketServer {
   
 
   @OnOpen
-  public void onOpen(Session session){
+  public void onOpen(Session session, @PathParam("tokenParam") String token){
    log.info("WebSocket connection opened: {}", session.getId());
    // TODO: incorperate UserService, obtain userId
-   Long userId = 1L;
-   roomManager.registerPlayer(session, "TO_BE_determined_string", userId);
+  //  Long userId = 1L;
+  //  String token = "a dummy token";
+   roomManager.registerPlayer(session, token);
     // log.info("player registered");
   }
 
@@ -104,4 +106,8 @@ public class WebSocketServer {
   private void handleMessage(Session session, MyWebSocketMessage message){
     // TODO: implement this
   }
+
+    public GameRoomManager getRoomManager() {
+        return roomManager;
+    }
 }

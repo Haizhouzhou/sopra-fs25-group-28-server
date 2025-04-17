@@ -6,8 +6,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.Session;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import ch.uzh.ifi.hase.soprafs24.entity.User;
+import ch.uzh.ifi.hase.soprafs24.service.UserService;
+
 public class GameRoomManager {
   private static GameRoomManager instance = new GameRoomManager();
+
+  private static UserService userService;
+    
+  // 使用 @Autowired 注入到静态变量
+  @Autowired
+  public void setUserService(UserService userService) {
+      this.userService = userService;
+  }
 
   // Map roomId to GameRooms
   private Map<String, GameRoom> rooms = new ConcurrentHashMap<>();
@@ -23,8 +36,11 @@ public class GameRoomManager {
   public static GameRoomManager getInstance(){return instance;}
 
   // TODO: change name into User entity to add correspondance
-  public Player registerPlayer(Session session, String name, Long userId){
-    Player player = new Player(session, name, userId);
+  public Player registerPlayer(Session session, String token){
+
+    User correspondingUser = userService.getUserByToken(token);
+
+    Player player = new Player(session, correspondingUser.getName(), correspondingUser.getId());
     sessionPlayers.put(session.getId(), player);
     return player;
   }

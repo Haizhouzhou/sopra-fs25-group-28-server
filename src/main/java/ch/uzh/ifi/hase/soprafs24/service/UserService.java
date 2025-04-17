@@ -136,6 +136,10 @@ public class UserService {
     return userRepository.findById(userId).get();
   }
 
+  public User getUserByToken(String token){
+    return userRepository.findByToken(token);
+  }
+
   public User UserEdit(User inputUser,long id){
     User userByToken = userRepository.findByToken(inputUser.getToken());
     if(userByToken.getId() != id){
