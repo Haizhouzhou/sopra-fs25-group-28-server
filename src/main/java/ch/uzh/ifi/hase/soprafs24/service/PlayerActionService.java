@@ -1,181 +1,187 @@
-// package ch.uzh.ifi.hase.soprafs24.service;
+package ch.uzh.ifi.hase.soprafs24.service;
 
-// import ch.uzh.ifi.hase.soprafs24.entity.*;
-// import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
-// import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
-// import java.util.HashSet;
-// import java.util.List;
+import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
+import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.Card;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 
-// public class PlayerActionService {
+public class PlayerActionService {
 
-//     public void takeTwoSameGems(Game game, GemColor color) {                          //TODO: Implement player variables: blue, red, green, black, white, gold counters
-//         switch (color) {                                                                //TODO: Implement Gaem variables: blue, red, green, black, white, gold counters
-//             case BLUE:
-//                 if (blue < 2) {
-//                     throw new IllegalArgumentException("Not enough blue gems in supply.");
-//                 }
-//                 blue -= 2;
-//                 player.setBlue(player.getBlue() + 2); // assuming this method exists
-//                 break;
+    public void takeTwoSameGems(Player player, GemColor color, Map<GemColor, Long> boardGems) {
+        if (boardGems.getOrDefault(color, 0L) < 2) {
+            throw new IllegalArgumentException("Not enough gems of color: " + color);
+        }
+
+        boardGems.put(color, boardGems.get(color) - 2);
+        player.setGem(color, player.getGem(color) + 2);
+    }
+
+    public void takeThreeDifferentGems(Player player, List<GemColor> colors, Map<GemColor, Long> boardGems) {
+        if (colors == null || colors.size() != 3 || new HashSet<>(colors).size() != 3) {
+            throw new IllegalArgumentException("You must select exactly 3 different gem colors.");
+        }
+
+        for (GemColor color : colors) {
+            if (boardGems.getOrDefault(color, 0L) < 1) {
+                throw new IllegalArgumentException("Not enough gems of color: " + color);
+            }
+        }
+
+        for (GemColor color : colors) {
+            boardGems.put(color, boardGems.get(color) - 1);
+            player.setGem(color, player.getGem(color) + 1);
+        }
+    }
+
+    public Map<GemColor, Long> getPaymentForCard(Player player, Card card) {
+        Map<GemColor, Long> cost = card.getCost();
+        Map<GemColor, Long> payment = new HashMap<>();
+
+        long whiteCost = Math.max(0, cost.getOrDefault(GemColor.WHITE, 0L) - player.getBonusGem(GemColor.WHITE));
+        long blueCost = Math.max(0, cost.getOrDefault(GemColor.BLUE, 0L) - player.getBonusGem(GemColor.BLUE));
+        long greenCost = Math.max(0, cost.getOrDefault(GemColor.GREEN, 0L) - player.getBonusGem(GemColor.GREEN));
+        long redCost = Math.max(0, cost.getOrDefault(GemColor.RED, 0L) - player.getBonusGem(GemColor.RED));
+        long blackCost = Math.max(0, cost.getOrDefault(GemColor.BLACK, 0L) - player.getBonusGem(GemColor.BLACK));
+
+        long whiteGems = player.getGem(GemColor.WHITE);
+        long blueGems = player.getGem(GemColor.BLUE);
+        long greenGems = player.getGem(GemColor.GREEN);
+        long redGems = player.getGem(GemColor.RED);
+        long blackGems = player.getGem(GemColor.BLACK);
+        long goldGems = player.getGem(GemColor.GOLD);
+
+        long goldUsed = 0;
+
+        long whiteUsed = Math.min(whiteCost, whiteGems);
+        goldUsed += (whiteCost - whiteUsed);
+        payment.put(GemColor.WHITE, whiteUsed);
+
+        long blueUsed = Math.min(blueCost, blueGems);
+        goldUsed += (blueCost - blueUsed);
+        payment.put(GemColor.BLUE, blueUsed);
+
+        long greenUsed = Math.min(greenCost, greenGems);
+        goldUsed += (greenCost - greenUsed);
+        payment.put(GemColor.GREEN, greenUsed);
+
+        long redUsed = Math.min(redCost, redGems);
+        goldUsed += (redCost - redUsed);
+        payment.put(GemColor.RED, redUsed);
+
+        long blackUsed = Math.min(blackCost, blackGems);
+        goldUsed += (blackCost - blackUsed);
+        payment.put(GemColor.BLACK, blackUsed);
+
+        if (goldUsed > goldGems) {
+            return null; // Cannot afford
+        }
+
+        payment.put(GemColor.GOLD, goldUsed);
+        return payment;
+    }
+
+    public void buyCard(Game game, Player player, Long cardId) {
+        Card targetCard = null;
     
-//             case RED:
-//                 if (red < 2) {
-//                     throw new IllegalArgumentException("Not enough red gems in supply.");
-//                 }
-//                 red -= 2;
-//                 player.setRed(player.getRed() + 2);
-//                 break;
+        // Search in visible level 1 cards
+        for (Card card : game.getVisibleLevel1Cards()) {
+            if (card != null && card.getId().equals(cardId)) {
+                targetCard = card;
+                break;
+            }
+        }
     
-//             case GREEN:
-//                 if (green < 2) {
-//                     throw new IllegalArgumentException("Not enough green gems in supply.");
-//                 }
-//                 green -= 2;
-//                 player.setGreen(player.getGreen() + 2);
-//                 break;
+        // If not found, check level 2
+        if (targetCard == null) {
+            for (Card card : game.getVisibleLevel2Cards()) {
+                if (card != null && card.getId().equals(cardId)) {
+                    targetCard = card;
+                    break;
+                }
+            }
+        }
     
-//             case BLACK:
-//                 if (black < 2) {
-//                     throw new IllegalArgumentException("Not enough black gems in supply.");
-//                 }
-//                 black -= 2;
-//                 player.setBlack(player.getBlack() + 2);
-//                 break;
+        // If not found, check level 3
+        if (targetCard == null) {
+            for (Card card : game.getVisibleLevel3Cards()) {
+                if (card != null && card.getId().equals(cardId)) {
+                    targetCard = card;
+                    break;
+                }
+            }
+        }
     
-//             case WHITE:
-//                 if (white < 2) {
-//                     throw new IllegalArgumentException("Not enough white gems in supply.");
-//                 }
-//                 white -= 2;
-//                 player.setWhite(player.getWhite() + 2);
-//                 break;
+        // Still not found? Try reserved cards
+        if (targetCard == null) {
+            for (Card card : player.getReservedCards()) {
+                if (card.getId().equals(cardId)) {
+                    targetCard = card;
+                    break;
+                }
+            }
+        }
     
-//             default:
-//                 throw new IllegalArgumentException("Invalid gem color.");
-//         }
-//     }
-    
+        // If still null, it doesn't exist anywhere valid
+        if (targetCard == null) {
+            throw new IllegalArgumentException("Card with ID " + cardId + " not found in visible or reserved cards.");
+        }
+        Map<GemColor, Long> payment = getPaymentForCard(player, targetCard);
+        if (payment == null) {
+            throw new IllegalStateException("Player cannot afford the card.");
+        }
+            // Step 3: Deduct the gems from the player
+    for (Map.Entry<GemColor, Long> entry : payment.entrySet()) {
+        GemColor color = entry.getKey();
+        long amountToDeduct = entry.getValue();
+        long currentAmount = player.getGem(color);
+        player.setGem(color, currentAmount - amountToDeduct);
+    }
 
-//     // Take up to 3 different gems
-// public void takeThreeDifferentGems(User player, List<GemColor> colors) {
-//     // Check that the list contains exactly 3 different colors
-//     if (colors == null || colors.size() != 3 || new HashSet<>(colors).size() != 3) {
-//         throw new IllegalArgumentException("You must select exactly 3 different gem colors.");
-//     }
+    // Add the card to player's purchased cards
+    // player.getPurchasedCards().add(targetCard);
 
-//     for (GemColor color : colors) {
-//         switch (color) {
-//             case BLUE:
-//                 if (blue < 1) {
-//                     throw new IllegalArgumentException("Not enough blue gems in supply.");
-//                 }
-//                 break;
+    // Add the points of the card to the player's victory points
+    long currentPoints = player.getVictoryPoints();
+    player.setVictoryPoints(currentPoints + targetCard.getPoints());
 
-//             case RED:
-//                 if (red < 1) {
-//                     throw new IllegalArgumentException("Not enough red gems in supply.");
-//                 }
-//                 break;
-
-//             case GREEN:
-//                 if (green < 1) {
-//                     throw new IllegalArgumentException("Not enough green gems in supply.");
-//                 }
-//                 break;
-
-//             case BLACK:
-//                 if (black < 1) {
-//                     throw new IllegalArgumentException("Not enough black gems in supply.");
-//                 }
-//                 break;
-
-//             case WHITE:
-//                 if (white < 1) {
-//                     throw new IllegalArgumentException("Not enough white gems in supply.");
-//                 }
-//                 break;
-
-//             default:
-//                 throw new IllegalArgumentException("Invalid gem color selected.");
-//         }
-//     }
-
-//     // If all colors are available, apply the changes
-//     for (GemColor color : colors) {
-//         switch (color) {
-//             case BLUE:
-//                 blue -= 1;
-//                 player.setBlue(player.getBlue() + 1);
-//                 break;
-
-//             case RED:
-//                 red -= 1;
-//                 player.setRed(player.getRed() + 1);
-//                 break;
-
-//             case GREEN:
-//                 green -= 1;
-//                 player.setGreen(player.getGreen() + 1);
-//                 break;
-
-//             case BLACK:
-//                 black -= 1;
-//                 player.setBlack(player.getBlack() + 1);
-//                 break;
-
-//             case WHITE:
-//                 white -= 1;
-//                 player.setWhite(player.getWhite() + 1);
-//                 break;
-//         }
-//     }
-// }
-
-
-//     public void buyCard(Game game, Card card) {                                                  //TODO: Implement player List: bought cards
-//         // Implement logic to buy card
-
-      
-//     }
-
-//     public void reserveCard(Player player, Long cardId) {
-//         // Validate player's reserved cards
-//         List<Long> reservedCards = player.getReservedCards();                                    //TODO: Implement player List: reservedCards                
-//         if (reservedCards.size() >= 3) {
-//             throw new IllegalStateException("Cannot reserve more than 3 cards.");
-//         }
-    
-//         // Find and remove the card from the board
-//         boolean cardFound = false;
-    
-//         if (visibleLevel1Cards.contains(cardId)) {
-//             visibleLevel1Cards.remove(cardId);
-//             cardFound = true;
-//         } else if (visibleLevel2Cards.contains(cardId)) {
-//             visibleLevel2Cards.remove(cardId);
-//             cardFound = true;
-//         } else if (visibleLevel3Cards.contains(cardId)) {
-//             visibleLevel3Cards.remove(cardId);
-//             cardFound = true;
-//         }
-    
-//         if (!cardFound) {
-//             throw new IllegalArgumentException("Card ID not found on the board.");
-//         }
-    
-//         // Add the card to the player's reserved hand
-//         reservedCards.add(cardId);
-    
-//         // Give the player a gold gem
-//         player.setGold(player.getGold() + 1);
-//     }
-//     public boolean canAffordCard(Player player, Card card) {                                     //TODO: Implement Method to check if cost can be covered
-
-//         return true;
-//     }
+    // Increase the bonus gem (discount) for the color of this card
+    GemColor bonusColor = targetCard.getColor();
+    long currentBonus = player.getBonusGem(bonusColor);
+    player.setBonusGem(bonusColor, currentBonus + 1);
 
     
+        
+    }                                                                               //TODO: implement: reserved cards, purchased cards, remove card from board or hand
+    
 
-//     // Add other actions here
-// }
+    public void reserveCard(Player player, Long cardId, List<Card> visibleCards, Map<GemColor, Long> boardGems) {
+        if (player.getReservedCards().size() >= 3) {
+            throw new IllegalStateException("Cannot reserve more than 3 cards.");
+        }
+
+        Card cardToReserve = null;
+        for (Card card : visibleCards) {
+            if (card.getId().equals(cardId)) {
+                cardToReserve = card;
+                break;
+            }
+        }
+
+        if (cardToReserve == null) {
+            throw new IllegalArgumentException("Card ID not found on the board.");
+        }
+
+        visibleCards.remove(cardToReserve);
+        player.getReservedCards().add(cardToReserve);
+
+        if (boardGems.get(GemColor.GOLD) > 0) {
+            boardGems.put(GemColor.GOLD, boardGems.get(GemColor.GOLD) - 1);
+            player.setGem(GemColor.GOLD, player.getGem(GemColor.GOLD) + 1);
+        }
+    }
+}
