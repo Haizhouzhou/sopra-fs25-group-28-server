@@ -185,4 +185,55 @@ public class Game {
     }
     return false;
   }
+  public void endTurn() {
+    // 1. Refill empty visible card slots
+    fillVisibleCards(level1Deck, visibleLevel1Cards);
+    fillVisibleCards(level2Deck, visibleLevel2Cards);
+    fillVisibleCards(level3Deck, visibleLevel3Cards);
+
+    // 2. Check if the current player qualifies for a noble
+    noblePurchase(this);
+
+    // 3. Check for victory condition
+    checkVictoryCondition();
+
+    // 4. Increment round
+    currentRound++;
+
+    // 5. Advance to next player
+    currentPlayer = (currentPlayer + 1) % players.size();
+}
+
+public void noblePurchase(Game game) {
+  Player player = game.getPlayers().get(game.getCurrentPlayer());
+
+  for (Noble noble : new ArrayList<>(game.getVisibleNoble())) { // avoid concurrent modification
+      boolean qualifies = true;
+
+      for (Map.Entry<GemColor, Integer> entry : noble.getRequirements().entrySet()) {
+          GemColor color = entry.getKey();
+          int required = entry.getValue();
+
+          if (player.getBonusGem(color) < required) {
+              qualifies = false;
+              break;
+          }
+      }
+
+      if (qualifies) {
+          // Award the noble
+          player.setVictoryPoints(player.getVictoryPoints() + noble.getPoints());
+
+          // Remove from board
+          game.getVisibleNoble().remove(noble);
+
+          // Optionally add to player's noble collection if needed in future
+          // player.getCollectedNobles().add(noble);
+
+          break; // Only one noble per turn
+      }
+  }
+}
+
+
 }
