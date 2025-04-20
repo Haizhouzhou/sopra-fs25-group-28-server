@@ -210,9 +210,9 @@ public void noblePurchase(Game game) {
   for (Noble noble : new ArrayList<>(game.getVisibleNoble())) { // avoid concurrent modification
       boolean qualifies = true;
 
-      for (Map.Entry<GemColor, Integer> entry : noble.getRequirements().entrySet()) {
+      for (Map.Entry<GemColor, Long> entry : noble.getCost().entrySet()) {
           GemColor color = entry.getKey();
-          int required = entry.getValue();
+          long required = entry.getValue();
 
           if (player.getBonusGem(color) < required) {
               qualifies = false;
