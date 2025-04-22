@@ -12,6 +12,7 @@ public class UserGetDTO {
   private UserStatus status;
   private Date creation_date;
   private Date birthday;
+  private String avatar;
 
   public Long getId() {
     return id;
@@ -60,4 +61,9 @@ public class UserGetDTO {
   public void setBirthday(Date birthday){
     this.birthday = birthday;
   }
+
+
+  public String getAvatar() {return avatar;}
+
+  public void setAvatar(String avatar) {this.avatar = avatar;}
 }

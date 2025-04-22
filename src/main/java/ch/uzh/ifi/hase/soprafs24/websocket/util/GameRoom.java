@@ -20,6 +20,12 @@ public class GameRoom {
   private boolean roomStatus;
   private Game game;
 
+
+  private String roomName = "";
+  private Long ownerId;
+  private String ownerName;
+
+
   public GameRoom(String roomId, int maxPlayer){
     this.roomId = roomId;
     this.maxPlayer = maxPlayer;
@@ -38,7 +44,20 @@ public class GameRoom {
 
   public boolean isEmpty(){return players.isEmpty();}
 
-  /**
+  public String getOwnerName() {
+        return ownerName;
+    }
+
+  public void setRoomName(String roomName) {this.roomName = roomName;}
+
+  public String getRoomName() {return roomName;}
+
+  public void setOwnerId(Long ownerId) {this.ownerId = ownerId;}
+
+  public Long getOwnerId() {return this.ownerId;}
+
+
+    /**
    * if all players are ready, host players can start the game
    */
   public void startGame(){
@@ -70,18 +89,24 @@ public class GameRoom {
     roomInfo.put("currentPlayers", getCurrentPlayerCount());
     roomInfo.put("isReady", getRoomStatus());
 
+
     List<Map<String,Object>> playersInfo = new ArrayList<>();
     for(Player player : players){
       Map<String,Object> playerInfo = new HashMap<>();
       // TODO: add user id here, something like
       // playerInfo.put("playerId",player.getUser().getname);
-      playerInfo.put("name",player.getName());
+      playerInfo.put("userId", player.getUserId()); // 添加
       playerInfo.put("room_status", player.getStatus());
-      playersInfo.add(playerInfo);
+      playerInfo.put("name",player.getName());
+      playerInfo.put("avatar", player.getAvatar()); // 添加
+
+        playersInfo.add(playerInfo);
     }
 
     roomInfo.put("players",playersInfo);
-    return roomInfo;
+    roomInfo.put("roomName", roomName);
+
+      return roomInfo;
   }
 
   public void addPlayer(Player player){
@@ -112,17 +137,42 @@ public class GameRoom {
     }
   }
 
-  public void broadcastRoomStatus(){
-    Map<String, Object> roomInfo = getRoomInformation();
+    public void broadcastRoomStatus() {
+        Map<String, Object> msg = new HashMap<>();
+        msg.put("type", "ROOM_STATE");
 
-    MyWebSocketMessage message = new MyWebSocketMessage();
-    message.setType(MyWebSocketMessage.TYPE_SERVER_ROOM_STATE);
-    message.setRoomId(roomId);
-    message.setContent(roomInfo);
+        List<Map<String, Object>> playerStates = new ArrayList<>();
+        for (Player p : players) {
+            Map<String, Object> pInfo = new HashMap<>();
+            pInfo.put("userId", p.getUserId());
+            pInfo.put("name", p.getName());
+            // 确保这里使用正确的方法获取状态
+            pInfo.put("room_status", p.getStatus()); // 而不是某个过时的值
+            pInfo.put("avatar", p.getAvatar());
+            pInfo.put("isOwner", p.getUserId().equals(this.ownerId));
+            playerStates.add(pInfo);
+        }
 
-    broadcastMessage(message);
+        // 打印每个玩家的状态，用于调试
+        for (Player p : players) {
+            System.out.println("Player: " + p.getName() + ", Status: " + p.getStatus());
+        }
 
+        msg.put("players", playerStates);
+        msg.put("ownerId", this.ownerId);
+        msg.put("ownerName", this.ownerName);
+        broadcast(JsonUtils.toJson(msg));
+        System.out.println("Broadcasting room state: " + JsonUtils.toJson(msg));
+    }
+
+
+
+
+
+  public void setOwnerName(String ownerName) {
+      this.ownerName = ownerName;
   }
+
 
   private Player findPlayerInRoom(Player targetPlayer){
     for(Player player : players){
@@ -132,5 +182,11 @@ public class GameRoom {
     }
     return null;
   }
-  
+
+
+  public void broadcast(String message) {
+      for (Player player : players) {
+          player.sendMessage(message);
+      }
+  }
 }

@@ -44,7 +44,6 @@ public class UserService {
 
   public User createUser(User newUser) {
     checkLoginCredential(newUser);
-    newUser.setName(generateUniqueRandomUsername());
     newUser.setToken(UUID.randomUUID().toString());
     newUser.setCreation_date(new Date());
     newUser.setStatus(UserStatus.ONLINE);
@@ -68,7 +67,6 @@ public class UserService {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "wrong password");
     }
 
-    userByUsername.setToken(UUID.randomUUID().toString());
     userByUsername.setStatus(UserStatus.ONLINE);
 
     userRepository.saveAndFlush(userByUsername);
@@ -137,7 +135,16 @@ public class UserService {
   }
 
   public User getUserByToken(String token){
-    return userRepository.findByToken(token);
+      System.out.println("Looking for token: " + token);
+      System.out.println("Looking for token: " + token);
+      User user = userRepository.findByToken(token);
+      if (user == null) {
+          System.out.println("Token NOT FOUND!");
+      } else {
+          System.out.println("User found: " + user.getUsername());
+      }
+      return user;
+//      return userRepository.findByToken(token);
   }
 
   public User UserEdit(User inputUser,long id){

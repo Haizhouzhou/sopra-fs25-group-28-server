@@ -52,6 +52,9 @@ public class User implements Serializable {
   @Column(nullable = true)
   private Date birthday;
 
+  @Column
+  private String avatar;
+
   public Long getId() {
     return id;
   }
@@ -115,4 +118,8 @@ public class User implements Serializable {
   public void setBirthday(Date birthday){
     this.birthday = birthday;
   }
+
+  public String getAvatar() {return avatar;}
+
+  public void setAvatar(String avatar) {this.avatar = avatar;}
 }

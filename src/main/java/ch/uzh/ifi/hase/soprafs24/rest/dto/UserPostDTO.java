@@ -13,8 +13,10 @@ public class UserPostDTO {
   private String password;
 
   private String token;
-  
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+
+  private String avatar;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private Date birthday;
 
   public String getName() {
@@ -57,5 +59,9 @@ public class UserPostDTO {
   public void setBirthday(Date birthday){
     this.birthday = birthday;
   }
+
+  public String getAvatar() {return avatar;}
+
+  public void setAvatar(String avatar) {this.avatar = avatar;}
   
 }
