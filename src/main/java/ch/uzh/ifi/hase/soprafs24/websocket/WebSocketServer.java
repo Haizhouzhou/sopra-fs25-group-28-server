@@ -83,6 +83,7 @@ public class WebSocketServer {
                 case MyWebSocketMessage.TYPE_CLIENT_PLAYER_MESSAGE -> handleMessage(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_GET_ROOMS -> handleGetRooms(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_PLAYER_STATUS -> handlePlayerStatus(session, wsMessage);
+                case MyWebSocketMessage.TYPE_CLIENT_START_GAME -> handleStartGame(session, wsMessage);
                 default -> log.warn("Unknown message type: {}", messageType);
             }
         }
@@ -139,7 +140,32 @@ public class WebSocketServer {
     }
 
     private void handleMessage(Session session, MyWebSocketMessage message) {
-        // TODO: implement this
+        try {
+            // 获取消息内容
+            String roomId = message.getRoomId();
+            Object content = message.getContent();
+
+            // 获取发送消息的玩家
+            Player player = roomManager.getPlayerBySession(session);
+            if (player == null) return;
+
+            // 获取房间
+            GameRoom room = roomManager.getRoom(roomId);
+            if (room == null) return;
+
+            // 构造聊天消息
+            MyWebSocketMessage chatMessage = new MyWebSocketMessage();
+            chatMessage.setType(MyWebSocketMessage.TYPE_SERVER_CHAT_MESSAGE);
+            chatMessage.setRoomId(roomId);
+            chatMessage.setContent(content); // 或处理成期望的格式
+
+            // 广播给房间中的所有玩家
+            room.broadcastMessage(chatMessage);
+
+            System.out.println("Broadcasting chat message to room " + roomId + ": " + content);
+        } catch (Exception e) {
+            log.error("Error handling player message", e);
+        }
     }
 
     public GameRoomManager getRoomManager() {
@@ -235,6 +261,62 @@ public class WebSocketServer {
             }
         } catch (Exception e) {
             log.error("Error handling PLAYER_STATUS message: {}", e.getMessage(), e);
+        }
+    }
+
+    private void handleStartGame(Session session, MyWebSocketMessage message) {
+        try {
+            String roomId = message.getRoomId();
+            log.info("Request to start game in room: {}", roomId);
+
+            GameRoom room = roomManager.getRoom(roomId);
+            if (room == null) {
+                log.warn("Cannot start game: Room {} not found", roomId);
+                return;
+            }
+
+            Player player = roomManager.getPlayerBySession(session);
+            if (player == null) {
+                log.warn("Cannot start game: Player not found for session");
+                return;
+            }
+
+            // 检查是否是房主
+            if (!player.getUserId().equals(room.getOwnerId())) {
+                log.warn("Cannot start game: Player {} is not the room owner", player.getName());
+                return;
+            }
+
+            // 检查所有非房主玩家是否都已准备
+            boolean allReady = true;
+            for (Player p : room.getPlayers()) {
+                if (!p.getUserId().equals(room.getOwnerId()) && !p.getStatus()) {
+                    allReady = false;
+                    break;
+                }
+            }
+
+            if (!allReady) {
+                log.warn("Cannot start game: Not all players are ready");
+                return;
+            }
+
+            // 开始游戏
+            log.info("Starting game for room: {}", roomId);
+            room.startGame();
+
+            // 广播游戏状态给所有玩家
+            MyWebSocketMessage gameStateMsg = new MyWebSocketMessage();
+            gameStateMsg.setType(MyWebSocketMessage.TYPE_SERVER_GAME_STATE);
+            gameStateMsg.setRoomId(roomId);
+
+
+            gameStateMsg.setContent(room.getGame().getGameInformation());
+
+            log.info("Broadcasting GAME_STATE message to all players in room {}", roomId);
+            room.broadcastMessage(gameStateMsg);
+        } catch (Exception e) {
+            log.error("Error starting game", e);
         }
     }
 
