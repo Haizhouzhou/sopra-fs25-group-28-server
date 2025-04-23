@@ -69,7 +69,10 @@ public class GameRoomManager {
 
         Player player = sessionPlayers.get(session.getId());
         room.addPlayer(player);
+
+        // 确保这行代码执行，将会话ID与房间ID关联起来
         sessionRooms.put(session.getId(), roomId);
+
         room.broadcastRoomStatus();
 
         try {
@@ -116,22 +119,37 @@ public class GameRoomManager {
         String sessionId = session.getId();
         Player sessionPlayer = sessionPlayers.get(sessionId);
 
+        System.out.println("getPlayerBySession - sessionId: " + sessionId +
+                ", sessionPlayer: " + (sessionPlayer != null ?
+                sessionPlayer.getName() + ", id:" + sessionPlayer.getUserId() : "null"));
+
         if (sessionPlayer == null) return null;
 
         // 获取玩家所在的房间
         String roomId = sessionRooms.get(sessionId);
+        System.out.println("getPlayerBySession - roomId: " + roomId);
+
         if (roomId != null) {
             GameRoom room = rooms.get(roomId);
             if (room != null) {
+                System.out.println("Room player count: " + room.getPlayers().size());
                 // 从房间中查找真正的Player实例
                 for (Player roomPlayer : room.getPlayers()) {
+                    System.out.println("Room player: " + roomPlayer.getName() +
+                            ", id:" + roomPlayer.getUserId() +
+                            ", instance:" + System.identityHashCode(roomPlayer));
+
                     if (roomPlayer.getUserId().equals(sessionPlayer.getUserId())) {
+                        System.out.println("Returning ROOM player instance: " +
+                                System.identityHashCode(roomPlayer));
                         return roomPlayer; // 返回房间中的Player实例
                     }
                 }
             }
         }
 
+        System.out.println("Returning SESSION player instance: " +
+                System.identityHashCode(sessionPlayer));
         return sessionPlayer; // 如果找不到，返回原始实例
     }
 

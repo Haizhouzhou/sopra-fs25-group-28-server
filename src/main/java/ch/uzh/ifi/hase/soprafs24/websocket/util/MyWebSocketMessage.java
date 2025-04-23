@@ -41,8 +41,11 @@ public class MyWebSocketMessage {
   public static final String TYPE_SERVER_ROOM_STATE = "ROOM_STATE";
   public static final String TYPE_SERVER_GAME_STATE = "GAME_STATE";
 
+  public static final String TYPE_CLIENT_START_GAME = "START_GAME";
+
+
   private static final Set<String> VALID_CLIENT_TYPES = Set.of(
-    TYPE_CLIENT_CREATE_ROOM, TYPE_CLIENT_JOIN_ROOM, TYPE_CLIENT_LEAVE_ROOM, TYPE_CLIENT_PLAYER_MESSAGE, TYPE_CLIENT_GET_ROOMS, TYPE_SYSTEM, TYPE_CLIENT_PLAYER_STATUS
+    TYPE_CLIENT_CREATE_ROOM, TYPE_CLIENT_JOIN_ROOM, TYPE_CLIENT_LEAVE_ROOM, TYPE_CLIENT_PLAYER_MESSAGE, TYPE_CLIENT_GET_ROOMS, TYPE_SYSTEM, TYPE_CLIENT_PLAYER_STATUS,TYPE_CLIENT_START_GAME
   );
 
   private static final Set<String> VALID_SERVER_TYPES = Set.of(
@@ -50,6 +53,7 @@ public class MyWebSocketMessage {
   );
 
   private static final Set<String> ALL_VALID_TYPES = UnionSet(VALID_CLIENT_TYPES, VALID_SERVER_TYPES);
+
 
   public String getType(){return type;}
   public boolean  setType(String type){

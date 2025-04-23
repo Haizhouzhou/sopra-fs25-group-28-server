@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,9 +31,11 @@ public class Player {
   private Map<GemColor, Long> gems;
   private Map<GemColor, Long> bonusGems; //gems collect from development card
   private Long victoryPoints;
-  public List<Card> reservedCards;
-  
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  public List<Card> reservedCards = new ArrayList<>();
+
+
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
   public Player(Session session, String name, Long userId){
     this.session = session;
@@ -46,7 +49,13 @@ public class Player {
   public String getName(){return name;}
 
   public boolean getStatus(){return status;}
-  public void setStatus(boolean status){this.status = status;}
+    public void setStatus(boolean status) {
+        System.out.println("Player " + this.name + " (id:" + this.userId +
+                ") status changing from " + this.status +
+                " to " + status + " [instance: " +
+                System.identityHashCode(this) + "]");
+        this.status = status;
+    }
 
   public Long getUserId(){return userId;}
   public void setUserId(Long userId){this.userId = userId;}

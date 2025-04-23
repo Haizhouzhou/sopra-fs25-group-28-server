@@ -64,6 +64,7 @@ public class GameRoom {
     // something like game.initialize()
     game = new Game(roomId, players);
     game.initialize();
+    System.out.println("Game started in room: " + roomId);
   }
 
   /**
@@ -138,8 +139,18 @@ public class GameRoom {
   }
 
     public void broadcastRoomStatus() {
+        System.out.println("broadcastRoomStatus - Room: " + roomId +
+                ", max players: " + maxPlayer);
+        for (Player p : players) {
+            System.out.println("Player in broadcastRoomStatus: " + p.getName() +
+                    ", id:" + p.getUserId() +
+                    ", status:" + p.getStatus() +
+                    ", instance:" + System.identityHashCode(p));
+        }
         Map<String, Object> msg = new HashMap<>();
         msg.put("type", "ROOM_STATE");
+        msg.put("roomName", this.roomName);
+
 
         List<Map<String, Object>> playerStates = new ArrayList<>();
         for (Player p : players) {
@@ -188,5 +199,9 @@ public class GameRoom {
       for (Player player : players) {
           player.sendMessage(message);
       }
+  }
+
+  public Game getGame() {
+      return this.game;
   }
 }
