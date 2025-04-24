@@ -450,38 +450,6 @@ public class GameRoom {
         player.sendMessage(message);
     }
 
-    /**
-     * 发送信息消息给指定玩家
-     * @param player 玩家
-     * @param infoMessage 信息消息
-     */
-    public void sendInfoToPlayer(Player player, String infoMessage) {
-        MyWebSocketMessage message = new MyWebSocketMessage();
-        message.setType(MyWebSocketMessage.TYPE_SERVER_INFO);
-        message.setRoomId(roomId);
-
-        Map<String, String> content = new HashMap<>();
-        content.put("message", infoMessage);
-        message.setContent(content);
-
-        player.sendMessage(message);
-    }
-
-    /**
-     * 发送信息消息给所有玩家
-     * @param infoMessage 信息消息
-     */
-    public void sendInfoToAll(String infoMessage) {
-        MyWebSocketMessage message = new MyWebSocketMessage();
-        message.setType(MyWebSocketMessage.TYPE_SERVER_INFO);
-        message.setRoomId(roomId);
-
-        Map<String, String> content = new HashMap<>();
-        content.put("message", infoMessage);
-        message.setContent(content);
-
-        broadcastMessage(message);
-    }
 
     // 拿三个不同颜色
     public boolean handleTakeThreeGems(Player player, List<String> colors) {

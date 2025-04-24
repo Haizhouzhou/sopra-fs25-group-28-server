@@ -8,12 +8,10 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
-import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
