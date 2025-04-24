@@ -58,6 +58,10 @@ public class GameRoom {
 
   public Long getOwnerId() {return this.ownerId;}
 
+  // used for testing
+  public Game getGameInstance(){return game;}
+  public void setGameInstance(Game game){this.game = game;}
+
 
     /**
    * if all players are ready, host players can start the game

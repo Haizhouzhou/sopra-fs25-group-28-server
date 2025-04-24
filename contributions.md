@@ -75,17 +75,23 @@ reason).
 
 ## Contributions Week 4 - [Begin Date] to [End Date]
 
+| **Student**                    | **Date**  | **Link to Commit**                                           | **Description**                                | **Relevance**                      |
+| ------------------------------ | --------- | ------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------- |
+| **Zizhou Luo (@Skiingseason)** | 2025.4.23 | [0dd7272](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/0dd72727f6c0c184d04209b980df4f1649bba86d) | fix sonarQube code coverage not visiable issue | important metrics for code quality |
+|                                |           |                                                              |                                                |                                    |
+|                                |           |                                                              |                                                |                                    |
+
+---
+
+## Contributions Week 5 - [Begin Date] to [End Date]
+
 | **Student**                    | **Date**  | **Link to Commit**                                           | **Description**                                              | **Relevance**                                      |
 | ------------------------------ | --------- | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------------------------------- |
 | **Zizhou Luo (@Skiingseason)** | 2025.4.17 | [5016498](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/5016498587de07ccf8788c0e125c1b1c9f46535a) | #2, #7, #9 complete user system: user can now edit their profile | user need an account to access to full application |
 |                                |           |                                                              |                                                              |                                                    |
 |                                |           |                                                              |                                                              |                                                    |
 
----
 
-## Contributions Week 5 - [Begin Date] to [End Date]
-
-_Continue with the same table format as above._
 
 ---
 
