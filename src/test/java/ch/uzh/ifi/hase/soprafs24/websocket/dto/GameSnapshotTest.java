@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 
 public class GameSnapshotTest {
@@ -58,6 +59,9 @@ public class GameSnapshotTest {
     Player player = mock(Player.class); // mock player
     List<Player> players = List.of(player);
 
+    GameRoom gameRoom = mock(GameRoom.class);
+    when(gameRoom.getRoomName()).thenReturn("test-gameRoom");
+
     Game game = mock(Game.class);
     when(game.getGameId()).thenReturn("test-game");
     when(game.getPlayers()).thenReturn(players);
@@ -68,6 +72,8 @@ public class GameSnapshotTest {
     when(game.getVisibleLevel2Cards()).thenReturn(new ArrayList<>());
     when(game.getVisibleLevel3Cards()).thenReturn(new ArrayList<>());
     when(game.getVisibleNoble()).thenReturn(new ArrayList<>());
+    when(game.getGameRoom()).thenReturn(gameRoom);
+
   
     try (MockedStatic<PlayerSnapshot> mockedStatic = mockStatic(PlayerSnapshot.class)) {
       mockedStatic.when(() -> PlayerSnapshot.createFromPlayer(player)).thenReturn(p1);
