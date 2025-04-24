@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,18 +20,22 @@ public class Player {
 
   private Session session;
   private String name;
-  // TODO: add correspondance to User
+  private String avatar;
+
+    // TODO: add correspondance to User
   private Long userId;
-  private boolean status;
+  private boolean status = false;
   private boolean isInitialized = false;
 
   // Game status relate
   private Map<GemColor, Long> gems;
   private Map<GemColor, Long> bonusGems; //gems collect from development card
   private Long victoryPoints;
-  public List<Card> reservedCards;
-  
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  public List<Card> reservedCards = new ArrayList<>();
+
+
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
   public Player(Session session, String name, Long userId){
     this.session = session;
@@ -44,7 +49,13 @@ public class Player {
   public String getName(){return name;}
 
   public boolean getStatus(){return status;}
-  public void setStatus(boolean status){this.status = status;}
+    public void setStatus(boolean status) {
+        System.out.println("Player " + this.name + " (id:" + this.userId +
+                ") status changing from " + this.status +
+                " to " + status + " [instance: " +
+                System.identityHashCode(this) + "]");
+        this.status = status;
+    }
 
   public Long getUserId(){return userId;}
   public void setUserId(Long userId){this.userId = userId;}
@@ -76,6 +87,17 @@ public class Player {
 
   public List<Card> getReservedCards(){return reservedCards;}
 
+
+public String getAvatar() {
+    return avatar;
+}
+
+public void setAvatar(String avatar) {
+    this.avatar = avatar;
+}
+
+
+
   // called when intialized a game
   public void initializeGameStatus(){
     
@@ -104,19 +126,36 @@ public class Player {
    * send format message to player
    * @param message either a String or a WebSocketMessage Object
    */
-  public void sendMessage(Object message){
-    try {
-      String messageStr;
-      if (message instanceof String){
-        messageStr = (String) message;
-      }else{
-        messageStr = objectMapper.writeValueAsString(message); // forming information according to @JasonProperty and getter function
-      }
+  public void sendMessage(Object message) {
+      try {
+          String messageStr;
+          if (message instanceof String) {
+              messageStr = (String) message;
+          }
+          else {
+              messageStr = objectMapper.writeValueAsString(message); // forming information according to @JasonProperty and getter function
+          }
 
-      session.getBasicRemote().sendText(messageStr);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+          session.getBasicRemote().sendText(messageStr);
+      }
+      catch (IOException e) {
+          e.printStackTrace();
+      }
   }
-  
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Player player = (Player) o;
+
+        return userId != null && userId.equals(player.userId);
+    }
+
+    @Override
+    public int hashCode() {
+        return userId != null ? userId.hashCode() : 0;
+    }
+
 }

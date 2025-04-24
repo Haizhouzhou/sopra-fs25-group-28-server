@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,111 +9,161 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.websocket.Session;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import ch.uzh.ifi.hase.soprafs24.entity.User;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
 
+
+@Component
 public class GameRoomManager {
-  private static GameRoomManager instance = new GameRoomManager();
 
-  private static UserService userService;
-    
-  // 使用 @Autowired 注入到静态变量
-  @Autowired
-  public void setUserService(UserService userService) {
-      this.userService = userService;
-  }
+    private final UserService userService;
 
-  // Map roomId to GameRooms
-  private Map<String, GameRoom> rooms = new ConcurrentHashMap<>();
+    private final Map<String, GameRoom> rooms = new ConcurrentHashMap<>();
+    private final Map<String, Player> sessionPlayers = new ConcurrentHashMap<>();
+    private final Map<String, String> sessionRooms = new ConcurrentHashMap<>();
 
-  // Map websocket connections(sessions) to players
-  private Map<String, Player> sessionPlayers = new ConcurrentHashMap<>();
+    private final Map<Long, String> userIdToUsername = new ConcurrentHashMap<>();
 
-  // Map websocket connections(sessions) to Rooms
-  private Map<String, String> sessionRooms = new ConcurrentHashMap<>();
 
-  private GameRoomManager(){}
-
-  public static GameRoomManager getInstance(){return instance;}
-
-  // TODO: change name into User entity to add correspondance
-  public Player registerPlayer(Session session, String token){
-
-    User correspondingUser = userService.getUserByToken(token);
-
-    Player player = new Player(session, correspondingUser.getName(), correspondingUser.getId());
-    sessionPlayers.put(session.getId(), player);
-    return player;
-  }
-
-  public void deregisterPlayer(Session session){
-    String sessionId = session.getId();
-    sessionPlayers.remove(sessionId);
-  }
-
-  /**
-   * Create a new GameRoom and add it to tracked GameRoom list, 
-   * access to tracked GameRoom list through '.rooms'
-   * @param maxPlayers
-   * @return
-   */
-  public GameRoom creatRoom(int maxPlayers){
-    String roomId = generateRoomId();
-    GameRoom room = new GameRoom(roomId, maxPlayers);
-    rooms.put(roomId, room);
-    return room;
-  }
-
-  public boolean joinRoom(String roomId, Session session){
-    GameRoom room = rooms.get(roomId);
-    if(room == null || room.isFull()){
-      return false;
+    @Autowired
+    public GameRoomManager(UserService userService) {
+        this.userService = userService;
     }
 
-    // Player player = new Player(session, playerName);
-    Player player = sessionPlayers.get(session.getId());
-    room.addPlayer(player);
+    public Player registerPlayer(Session session, String token) {
+        User correspondingUser = userService.getUserByToken(token);
+        Player player = new Player(session, correspondingUser.getName(), correspondingUser.getId());
+        sessionPlayers.put(session.getId(), player);
+        player.setAvatar(correspondingUser.getAvatar());
 
-    // sessionPlayers.put(session.getId(), player);
-    sessionRooms.put(session.getId(), roomId);
+        System.out.println("[registerPlayer] avatar = " + correspondingUser.getAvatar());
 
-    // informe new player joining
-    room.broadcastRoomStatus();
+        return player;
+    }
 
-    return true;
-  }
+    public void deregisterPlayer(Session session) {
+        String sessionId = session.getId();
+        sessionPlayers.remove(sessionId);
+    }
 
-  public void leaveRoom(Session session){
-    String sessionId = session.getId();
-    Player player = sessionPlayers.get(sessionId);
-    String roomId = sessionRooms.get(sessionId);
+    public GameRoom creatRoom(int maxPlayers, Player player, String roomName) {
+        String roomId = generateRoomId();
+        GameRoom room = new GameRoom(roomId, maxPlayers);
+        room.setOwnerName(player.getName());
+        room.setOwnerId(player.getUserId());
+        room.setRoomName(roomName); // 保存房间名
+        rooms.put(roomId, room);
+        room.addPlayer(player);
+        sessionRooms.put(player.getSession().getId(), roomId);
+        room.broadcastRoomStatus();
+        return room;
+    }
 
-    if(player != null && roomId != null){
-      GameRoom room = rooms.get(roomId);
-      if(room != null){
-        room.removePlayer(player);
-
-        if(room.isEmpty()){
-          rooms.remove(roomId);
-        }else{
-          room.broadcastRoomStatus();
+    public boolean joinRoom(String roomId, Session session) {
+        GameRoom room = rooms.get(roomId);
+        if (room == null || room.isFull()) {
+            return false;
         }
-      }
-      // clear mapping
-      // sessionPlayers.remove(sessionId);
-      sessionRooms.remove(sessionId);
+
+        Player player = sessionPlayers.get(session.getId());
+        room.addPlayer(player);
+
+        // 确保这行代码执行，将会话ID与房间ID关联起来
+        sessionRooms.put(session.getId(), roomId);
+
+        room.broadcastRoomStatus();
+
+        try {
+            Map<String, Object> joinedMessage = new ConcurrentHashMap<>();
+            joinedMessage.put("type", "ROOM_JOINED");
+            joinedMessage.put("roomId", roomId);
+            session.getBasicRemote().sendText(JsonUtils.toJson(joinedMessage));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
     }
 
-    // MyWebSocketMessage message = new MyWebSocketMessage();
-    // message.setType(MyWebSocketMessage.TYPE_SERVER_ROOM_LEFT);
-    // message.setRoomId(roomId);
-    // message.setSessionId(sessionId);
-    // player.sendMessage(message);
-  }
+    public void leaveRoom(Session session) {
+        String sessionId = session.getId();
+        Player player = sessionPlayers.get(sessionId);
+        String roomId = sessionRooms.get(sessionId);
 
-  private String generateRoomId(){
-    return UUID.randomUUID().toString().substring(0,8);
-  }
+        if (player != null && roomId != null) {
+            GameRoom room = rooms.get(roomId);
+            if (room != null) {
+                room.removePlayer(player);
+                if (room.isEmpty()) {
+                    rooms.remove(roomId);
+                } else {
+                    room.broadcastRoomStatus();
+                }
+            }
+            sessionRooms.remove(sessionId);
+        }
+    }
+
+
+    private String generateRoomId() {
+        return UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    public List<GameRoom> getAllRooms() {
+        return new ArrayList<>(rooms.values());
+    }
+
+    public Player getPlayerBySession(Session session) {
+        String sessionId = session.getId();
+        Player sessionPlayer = sessionPlayers.get(sessionId);
+
+        System.out.println("getPlayerBySession - sessionId: " + sessionId +
+                ", sessionPlayer: " + (sessionPlayer != null ?
+                sessionPlayer.getName() + ", id:" + sessionPlayer.getUserId() : "null"));
+
+        if (sessionPlayer == null) return null;
+
+        // 获取玩家所在的房间
+        String roomId = sessionRooms.get(sessionId);
+        System.out.println("getPlayerBySession - roomId: " + roomId);
+
+        if (roomId != null) {
+            GameRoom room = rooms.get(roomId);
+            if (room != null) {
+                System.out.println("Room player count: " + room.getPlayers().size());
+                // 从房间中查找真正的Player实例
+                for (Player roomPlayer : room.getPlayers()) {
+                    System.out.println("Room player: " + roomPlayer.getName() +
+                            ", id:" + roomPlayer.getUserId() +
+                            ", instance:" + System.identityHashCode(roomPlayer));
+
+                    if (roomPlayer.getUserId().equals(sessionPlayer.getUserId())) {
+                        System.out.println("Returning ROOM player instance: " +
+                                System.identityHashCode(roomPlayer));
+                        return roomPlayer; // 返回房间中的Player实例
+                    }
+                }
+            }
+        }
+
+        System.out.println("Returning SESSION player instance: " +
+                System.identityHashCode(sessionPlayer));
+        return sessionPlayer; // 如果找不到，返回原始实例
+    }
+
+
+    public void registerUsername(Long userId, String username) {
+        userIdToUsername.put(userId, username);
+    }
+
+    public String getUsername(Long userId) {
+        return userIdToUsername.getOrDefault(userId, "Unknown");
+    }
+
+    public GameRoom getRoom(String roomId) {
+        return rooms.get(roomId);
+    }
 
 }

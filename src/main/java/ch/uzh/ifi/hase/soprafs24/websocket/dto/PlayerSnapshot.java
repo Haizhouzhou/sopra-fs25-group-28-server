@@ -31,9 +31,12 @@ public class PlayerSnapshot {
   public void setBonusGems(Map<GemColor, Long> bonusGems){this.bonusGems = bonusGems;}
 
   public List<Long> getReservedCardIds(){return reservedCardIds;}
-  public void setReservedCardIds(List<Card> reservedCards){
-    for(Card reservedCard : reservedCards){
-      this.reservedCardIds.add(reservedCard.getId());
+
+  public void setReservedCardIds(List<Card> reservedCards) {
+    if (reservedCards != null) {
+        for (Card reservedCard : reservedCards) {
+            this.reservedCardIds.add(reservedCard.getId());
+        }
     }
   }
 

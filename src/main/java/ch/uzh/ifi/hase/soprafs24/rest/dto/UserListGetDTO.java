@@ -12,6 +12,8 @@ public class UserListGetDTO {
 
   private Long id;
 
+  private String avatar;
+
   public Long getId(){
     return id;
   }
@@ -44,6 +46,10 @@ public class UserListGetDTO {
   public void setStatus(UserStatus status) {
     this.status = status;
   }
+
+  public String getAvatar() {return avatar;}
+
+  public void setAvatar(String avatar) {this.avatar = avatar;}
 
   
 }
