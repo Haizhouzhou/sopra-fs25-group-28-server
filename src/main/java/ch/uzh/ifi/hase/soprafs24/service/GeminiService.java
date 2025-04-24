@@ -78,41 +78,41 @@ public class GeminiService {
     HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
     // 5. Send POST Request, expecting a String response
-        try {
-            // *** Changed expected response type to String.class ***
-            ResponseEntity<String> responseEntity = restTemplate.exchange(
-                    urlWithKey,
-                    HttpMethod.POST,
-                    entity,
-                    String.class // Expect the raw JSON response as a String
-            );
+    try {
+      // *** Changed expected response type to String.class ***
+      ResponseEntity<String> responseEntity = restTemplate.exchange(
+              urlWithKey,
+              HttpMethod.POST,
+              entity,
+              String.class // Expect the raw JSON response as a String
+      );
 
-            // 6. Handle Response
-            if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                String rawJsonResponse = responseEntity.getBody();
-                log.debug("Received raw JSON response from Gemini ({}): {}", responseEntity.getStatusCode(), rawJsonResponse);
-                // Return the raw JSON string directly
-                return rawJsonResponse;
-            } else {
-                // Handle non-2xx responses that still might have a body
-                String errorBody = responseEntity.getBody() != null ? responseEntity.getBody() : "(No response body)";
-                log.error("Gemini API request failed with status code: {}. Response body: {}", responseEntity.getStatusCode(), errorBody);
-                // Return a descriptive error message, not the raw error JSON unless you specifically want to
-                return "Error: Gemini API returned status " + responseEntity.getStatusCodeValue();
-            }
-        } catch (HttpClientErrorException e) {
-            // Handle 4xx/5xx errors where getResponseBodyAsString() is useful
-            log.error("Client/Server error calling Gemini API: {} - Response: {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
-            // Return a descriptive error message including the status code
-            return "Error: Failed to call Gemini API (" + e.getStatusCode().value() + "). Check logs for details.";
-        } catch (RestClientException e) {
-            // Handle connectivity or other lower-level errors
-            log.error("Error connecting or executing request to Gemini API: {}", e.getMessage(), e);
-            return "Error: Could not connect to Gemini API. " + e.getMessage();
-        } catch (Exception e) {
-            // Catch any other unexpected errors
-            log.error("Unexpected error during Gemini API call: {}", e.getMessage(), e);
-            return "Error: An unexpected error occurred. Check logs.";
+      // 6. Handle Response
+      if (responseEntity.getStatusCode().is2xxSuccessful()) {
+        String rawJsonResponse = responseEntity.getBody();
+        log.debug("Received raw JSON response from Gemini ({}): {}", responseEntity.getStatusCode(), rawJsonResponse);
+        // Return the raw JSON string directly
+        return rawJsonResponse;
+      } else {
+        // Handle non-2xx responses that still might have a body
+        String errorBody = responseEntity.getBody() != null ? responseEntity.getBody() : "(No response body)";
+        log.error("Gemini API request failed with status code: {}. Response body: {}", responseEntity.getStatusCode(), errorBody);
+        // Return a descriptive error message, not the raw error JSON unless you specifically want to
+        return "Error: Gemini API returned status " + responseEntity.getStatusCodeValue();
+      }
+    } catch (HttpClientErrorException e) {
+      // Handle 4xx/5xx errors where getResponseBodyAsString() is useful
+      log.error("Client/Server error calling Gemini API: {} - Response: {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
+      // Return a descriptive error message including the status code
+      return "Error: Failed to call Gemini API (" + e.getStatusCode().value() + "). Check logs for details.";
+    } catch (RestClientException e) {
+      // Handle connectivity or other lower-level errors
+      log.error("Error connecting or executing request to Gemini API: {}", e.getMessage(), e);
+      return "Error: Could not connect to Gemini API. " + e.getMessage();
+    } catch (Exception e) {
+      // Catch any other unexpected errors
+      log.error("Unexpected error during Gemini API call: {}", e.getMessage(), e);
+      return "Error: An unexpected error occurred. Check logs.";
 
     }
   }

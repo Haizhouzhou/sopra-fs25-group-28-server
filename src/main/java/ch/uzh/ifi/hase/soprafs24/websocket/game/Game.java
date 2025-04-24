@@ -27,7 +27,7 @@ public class Game {
     FINISHED        // 游戏已结束
   }
 
-  private final Long VICTORYPOINTS = 20L;
+  private final Long VICTORYPOINTS = 5L;
 
   // unique id for the game
   private final String gameId;
@@ -83,6 +83,21 @@ public class Game {
   public GameRoom getGameRoom() {
         return this.gameRoom;
   }
+
+  public Long getWinnerId() {
+    Player winner = null;
+    Long maxPoints = -1L;
+
+    for (Player player : players) {
+        if (player.getVictoryPoints() > maxPoints) {
+            maxPoints = player.getVictoryPoints();
+            winner = player;
+        }
+    }
+
+     return winner != null ? winner.getUserId() : null;
+    }
+
 
   public void initialize(){
     // fill the decks with predifined cards
