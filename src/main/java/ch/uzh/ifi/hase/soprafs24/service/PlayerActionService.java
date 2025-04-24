@@ -156,9 +156,9 @@ public class PlayerActionService {
 
     
         
-    }                                                                               //TODO: implement: reserved cards, purchased cards, remove card from board or hand
+    }                                                                               
     
-
+    //TODO: implement: reserved cards, purchased cards, remove card from board or hand
     public void reserveCard(Player player, Long cardId, List<Card> visibleCards, Map<GemColor, Long> boardGems) {
         if (player.getReservedCards().size() >= 3) {
             throw new IllegalStateException("Cannot reserve more than 3 cards.");
