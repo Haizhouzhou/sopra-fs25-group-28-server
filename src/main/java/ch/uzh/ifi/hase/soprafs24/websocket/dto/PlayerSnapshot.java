@@ -10,7 +10,7 @@ import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 
 public class PlayerSnapshot {
   private Long userId;
-  
+  private String name;
   // player status in game
   private Map<GemColor, Long> gems;
   private Map<GemColor, Long> bonusGems; //gems collect from development card
@@ -40,6 +40,10 @@ public class PlayerSnapshot {
     }
   }
 
+  public String getName() {return name;}
+
+  public void setName(String name) {this.name = name;}
+
   public static PlayerSnapshot createFromPlayer(Player player){
     PlayerSnapshot snapshot = new PlayerSnapshot();
     
@@ -48,6 +52,7 @@ public class PlayerSnapshot {
     snapshot.setGems(player.getAllGems());
     snapshot.setBonusGems(player.getAllBonusGems());
     snapshot.setReservedCardIds(player.getReservedCards());
+    snapshot.name = player.getName();
 
     return snapshot;
   }
