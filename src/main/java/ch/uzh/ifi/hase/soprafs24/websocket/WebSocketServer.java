@@ -8,6 +8,7 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
+import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,6 +85,17 @@ public class WebSocketServer {
                 case MyWebSocketMessage.TYPE_CLIENT_GET_ROOMS -> handleGetRooms(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_PLAYER_STATUS -> handlePlayerStatus(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_START_GAME -> handleStartGame(session, wsMessage);
+
+                //action in game, added
+                case MyWebSocketMessage.TYPE_CLIENT_TAKE_GEM -> handleTakeGem(session, wsMessage);
+                case MyWebSocketMessage.TYPE_CLIENT_BUY_CARD -> handleBuyCard(session, wsMessage);
+                case MyWebSocketMessage.TYPE_CLIENT_RESERVE_CARD -> handleReserveCard(session, wsMessage);
+                case MyWebSocketMessage.TYPE_CLIENT_END_TURN -> handleEndTurn(session, wsMessage);
+                case MyWebSocketMessage.TYPE_CLIENT_NOBLE_VISIT -> handleNobleVisit(session, wsMessage);
+                case MyWebSocketMessage.TYPE_CLIENT_AI_HINT -> handleAiHint(session, wsMessage);
+
+
+
                 default -> log.warn("Unknown message type: {}", messageType);
             }
         }
@@ -319,6 +331,277 @@ public class WebSocketServer {
             log.error("Error starting game", e);
         }
     }
+
+    /**
+     * 处理玩家获取宝石的请求
+     */
+    private void handleTakeGem(Session session, MyWebSocketMessage message) {
+        try {
+            // 获取房间ID和玩家
+            String roomId = message.getRoomId();
+            Player player = roomManager.getPlayerBySession(session);
+
+            if (player == null) {
+                log.warn("Player not found for session");
+                return;
+            }
+
+            // 获取房间
+            GameRoom room = roomManager.getRoom(roomId);
+            if (room == null) {
+                log.warn("Room not found: {}", roomId);
+                return;
+            }
+
+            // 获取宝石颜色
+            Map<String, Object> content = (Map<String, Object>) message.getContent();
+            String target = (String) content.get("target");
+
+            if (target == null) {
+                log.warn("No target gem specified");
+                return;
+            }
+
+            // 执行获取宝石操作
+            boolean success = room.handleTakeGem(player, target);
+
+            if (!success) {
+                // 发送错误消息给玩家
+                room.sendErrorToPlayer(player, "无法获取宝石，请检查是否是您的回合或宝石是否已用完。");
+            }
+        } catch (Exception e) {
+            log.error("Error handling TAKE_GEM message: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 处理玩家购买卡牌的请求
+     */
+    private void handleBuyCard(Session session, MyWebSocketMessage message) {
+        try {
+            // 获取房间ID和玩家
+            String roomId = message.getRoomId();
+            Player player = roomManager.getPlayerBySession(session);
+
+            if (player == null) {
+                log.warn("Player not found for session");
+                return;
+            }
+
+            // 获取房间
+            GameRoom room = roomManager.getRoom(roomId);
+            if (room == null) {
+                log.warn("Room not found: {}", roomId);
+                return;
+            }
+
+            // 获取卡牌ID
+            Map<String, Object> content = (Map<String, Object>) message.getContent();
+            String target = (String) content.get("target");
+
+            if (target == null) {
+                log.warn("No target card specified");
+                return;
+            }
+
+            // 执行购买卡牌操作
+            boolean success = room.handleBuyCard(player, target);
+
+            if (!success) {
+                // 发送错误消息给玩家
+                room.sendErrorToPlayer(player, "无法购买卡牌，请检查是否是您的回合或资源是否足够。");
+            }
+        } catch (Exception e) {
+            log.error("Error handling BUY_CARD message: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 处理玩家预留卡牌的请求
+     */
+    private void handleReserveCard(Session session, MyWebSocketMessage message) {
+        try {
+            // 获取房间ID和玩家
+            String roomId = message.getRoomId();
+            Player player = roomManager.getPlayerBySession(session);
+
+            if (player == null) {
+                log.warn("Player not found for session");
+                return;
+            }
+
+            // 获取房间
+            GameRoom room = roomManager.getRoom(roomId);
+            if (room == null) {
+                log.warn("Room not found: {}", roomId);
+                return;
+            }
+
+            // 获取卡牌ID
+            Map<String, Object> content = (Map<String, Object>) message.getContent();
+            String target = (String) content.get("target");
+
+            if (target == null) {
+                log.warn("No target card specified");
+                return;
+            }
+
+            // 执行预留卡牌操作
+            boolean success = room.handleReserveCard(player, target);
+
+            if (!success) {
+                // 发送错误消息给玩家
+                room.sendErrorToPlayer(player, "无法预留卡牌，请检查是否是您的回合或是否已达到预留上限。");
+            }
+        } catch (Exception e) {
+            log.error("Error handling RESERVE_CARD message: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 处理玩家结束回合的请求
+     */
+    private void handleEndTurn(Session session, MyWebSocketMessage message) {
+        try {
+            log.info("Handling END_TURN message");
+
+            // 获取房间ID和玩家
+            String roomId = message.getRoomId();
+            Player player = roomManager.getPlayerBySession(session);
+
+            if (player == null) {
+                log.warn("Player not found for session");
+                return;
+            }
+
+            // 获取房间
+            GameRoom room = roomManager.getRoom(roomId);
+            if (room == null) {
+                log.warn("Room not found: {}", roomId);
+                return;
+            }
+
+            // 获取当前玩家索引
+            Game game = room.getGame();
+            int currentPlayerBefore = game.getCurrentPlayer();
+            log.info("Current player before end turn: {}", currentPlayerBefore);
+
+            // 执行结束回合操作
+            boolean success = room.handleEndTurn(player);
+
+            // 记录结束回合操作的结果
+            log.info("End turn operation success: {}", success);
+
+            // 记录操作后的当前玩家索引
+            int currentPlayerAfter = game.getCurrentPlayer();
+            log.info("Current player after end turn: {}", currentPlayerAfter);
+
+            if (!success) {
+                // 发送错误消息给玩家
+                room.sendErrorToPlayer(player, "无法结束回合，请检查是否是您的回合。");
+            }
+
+            Map<String, Object> content = (Map<String, Object>) message.getContent();
+            log.info("END_TURN message content: {}", content);
+
+        } catch (Exception e) {
+            log.error("Error handling END_TURN message: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 处理玩家访问贵族的请求
+     */
+    private void handleNobleVisit(Session session, MyWebSocketMessage message) {
+        try {
+            // 获取房间ID和玩家
+            String roomId = message.getRoomId();
+            Player player = roomManager.getPlayerBySession(session);
+
+            if (player == null) {
+                log.warn("Player not found for session");
+                return;
+            }
+
+            // 获取房间
+            GameRoom room = roomManager.getRoom(roomId);
+            if (room == null) {
+                log.warn("Room not found: {}", roomId);
+                return;
+            }
+
+            // 获取贵族ID
+            Map<String, Object> content = (Map<String, Object>) message.getContent();
+            String target = (String) content.get("target");
+
+            if (target == null) {
+                log.warn("No target noble specified");
+                return;
+            }
+
+            // 执行访问贵族操作
+            boolean success = room.handleNobleVisit(player, target);
+
+            if (!success) {
+                // 发送错误消息给玩家
+                room.sendErrorToPlayer(player, "无法访问贵族，请检查是否是您的回合或是否满足贵族要求。");
+            }
+        } catch (Exception e) {
+            log.error("Error handling NOBLE_VISIT message: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 处理玩家请求AI提示的请求
+     */
+    private void handleAiHint(Session session, MyWebSocketMessage message) {
+        try {
+            // 获取房间ID和玩家
+            String roomId = message.getRoomId();
+            Player player = roomManager.getPlayerBySession(session);
+
+            if (player == null) {
+                log.warn("Player not found for session");
+                return;
+            }
+
+            // 获取房间
+            GameRoom room = roomManager.getRoom(roomId);
+            if (room == null) {
+                log.warn("Room not found: {}", roomId);
+                return;
+            }
+
+            // 获取房间的游戏实例
+            Game game = room.getGame();
+            if (game == null) {
+                log.warn("Game not found in room: {}", roomId);
+                return;
+            }
+
+            // 检查是否是玩家的回合
+            if (!game.isPlayerTurn(player)) {
+                room.sendErrorToPlayer(player, "只能在您的回合请求提示。");
+                return;
+            }
+
+            // 发送提示消息
+            MyWebSocketMessage hintMessage = new MyWebSocketMessage();
+            hintMessage.setType(MyWebSocketMessage.TYPE_SERVER_AI_HINT_RESULT);
+            hintMessage.setRoomId(roomId);
+
+            Map<String, String> content = new HashMap<>();
+            content.put("message", "此功能尚未实现，敬请期待！");
+            hintMessage.setContent(content);
+
+            player.sendMessage(hintMessage);
+        } catch (Exception e) {
+            log.error("Error handling AI_HINT message: {}", e.getMessage(), e);
+        }
+    }
+
+
+
 
 
 

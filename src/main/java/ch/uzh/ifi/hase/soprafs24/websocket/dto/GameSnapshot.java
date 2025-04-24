@@ -26,6 +26,8 @@ public class GameSnapshot {
 
   private List<PlayerSnapshot> playerSnapshots;
 
+  private String roomName;
+
   // getter and setter
   public String getGameId(){return gameId;}
   public void setGameId(String gameId){this.gameId = gameId;}
@@ -76,7 +78,12 @@ public class GameSnapshot {
 
   public List<PlayerSnapshot> getPlayerSnapshots(){return playerSnapshots;}
   public void setPlayerSnapshots(List<PlayerSnapshot> playerSnapshots){this.playerSnapshots = playerSnapshots;}
-  
+
+  public String getRoomName() {return roomName;}
+
+  public void setRoomName(String roomName) {this.roomName = roomName;}
+
+
   public static GameSnapshot createFromGame(Game game){
     GameSnapshot snapshot = new GameSnapshot();
 
@@ -89,6 +96,8 @@ public class GameSnapshot {
     snapshot.setVisibleLevel2cardIds(game.getVisibleLevel2Cards());
     snapshot.setVisibleLevel3cardIds(game.getVisibleLevel3Cards());
     snapshot.setVisibleNobleIds(game.getVisibleNoble());
+
+    snapshot.setRoomName(game.getGameRoom().getRoomName());
 
     List<PlayerSnapshot> playerSnapshots = new ArrayList<>();
     for(Player player : game.getPlayers()){
