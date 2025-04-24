@@ -46,7 +46,7 @@ public class UserServiceIntegrationTest {
     assertNull(userRepository.findByUsername("testUsername"));
 
     User testUser = new User();
-    // testUser.setName("testName");
+    testUser.setName("testName");
     testUser.setPassword("testPassword");
     testUser.setUsername("testUsername");
 
@@ -55,7 +55,7 @@ public class UserServiceIntegrationTest {
 
     // then
     assertEquals(testUser.getId(), createdUser.getId());
-    // assertEquals(testUser.getName(), createdUser.getName()); name is randomly generated when creating new user
+    assertEquals(testUser.getName(), createdUser.getName()); // name is randomly generated when creating new user
     assertEquals(testUser.getUsername(), createdUser.getUsername());
     assertNotNull(createdUser.getToken());
     assertNotNull(createdUser.getName());
@@ -98,10 +98,16 @@ public class UserServiceIntegrationTest {
 
   @Test
   public void userLogin_wrongPassword_throwsException(){
+
+    User testUser = new User();
+    testUser.setName("testName");
+    testUser.setUsername("testUsername");
+    testUser.setPassword("testPassword");
+    userService.createUser(testUser);
+
     User testLoginCredential = new User();
     testLoginCredential.setUsername("testUsername");
     testLoginCredential.setPassword("testPassword");
-    userService.createUser(testLoginCredential);
 
     testLoginCredential.setPassword("wrongPassword");
 

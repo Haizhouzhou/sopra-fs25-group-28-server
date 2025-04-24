@@ -1,10 +1,5 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.dto;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.when;
-import org.mockito.MockedStatic;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +7,12 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.MockedStatic;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
@@ -76,9 +76,14 @@ public class GameSnapshotTest {
       GameSnapshot snapshot = GameSnapshot.createFromGame(game);
 
       // Assert
+  
       assert snapshot.getGameId().equals("test-game");
       assert snapshot.getPlayerSnapshots().size() == 1;
       assert snapshot.getPlayerSnapshots().get(0).getUserId() == 1L;
+
+      ObjectMapper mapper = new ObjectMapper();
+      String json = mapper.writeValueAsString(snapshot);
+      System.out.println("Serialized GameSnapshot: " + json);
     }
   }
   
