@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs24.entity;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -36,6 +37,9 @@ public class User implements Serializable {
   @Column(nullable = false, unique = true)
   private String username;
 
+  @Column(nullable = false)
+  private String password;
+
   @Column(nullable = false, unique = true)
   private String token;
 
@@ -43,7 +47,13 @@ public class User implements Serializable {
   private UserStatus status;
 
   @Column(nullable = false)
-  private String password;
+  private Date creation_date;
+
+  @Column(nullable = true)
+  private Date birthday;
+
+  @Column
+  private String avatar;
 
   public Long getId() {
     return id;
@@ -69,6 +79,14 @@ public class User implements Serializable {
     this.username = username;
   }
 
+  public String getPassword(){
+    return password;
+  }
+
+  public void setPassword(String password){
+    this.password = password;
+  }
+
   public String getToken() {
     return token;
   }
@@ -85,11 +103,23 @@ public class User implements Serializable {
     this.status = status;
   }
 
-  public String getPassword() {
-    return password;
+  public Date getCreation_date(){
+    return creation_date;
   }
 
-  public void setPassword(String password) {
-    this.password = password;
+  public void setCreation_date(Date creation_date){
+    this.creation_date = creation_date;
   }
+
+  public Date getBirthday(){
+    return birthday;
+  }
+
+  public void setBirthday(Date birthday){
+    this.birthday = birthday;
+  }
+
+  public String getAvatar() {return avatar;}
+
+  public void setAvatar(String avatar) {this.avatar = avatar;}
 }
