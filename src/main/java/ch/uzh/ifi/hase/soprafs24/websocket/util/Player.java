@@ -128,18 +128,18 @@ public void setAvatar(String avatar) {
    */
   public void sendMessage(Object message) {
       try {
-          String messageStr;
-          if (message instanceof String) {
-              messageStr = (String) message;
-          }
-          else {
-              messageStr = objectMapper.writeValueAsString(message); // forming information according to @JasonProperty and getter function
-          }
+        String messageStr;
+        if (message instanceof String) {
+          messageStr = (String) message;
+        }
+        else {
+          messageStr = objectMapper.writeValueAsString(message); // forming information according to @JasonProperty and getter function
+        }
 
-          session.getBasicRemote().sendText(messageStr);
+        session.getBasicRemote().sendText(messageStr);
       }
       catch (IOException e) {
-          e.printStackTrace();
+        e.printStackTrace();
       }
   }
 

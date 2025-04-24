@@ -1,90 +1,30 @@
-package ch.uzh.ifi.hase.soprafs24.service;
+package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.web.WebAppConfiguration;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.rest.dto.GeminiAPIResponse;
+import ch.uzh.ifi.hase.soprafs24.service.GeminiService;
+import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
+import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
-@WebAppConfiguration
-@SpringBootTest
-@ActiveProfiles("test")
-public class GeminiIntegrationTest {
+public class GeminiHint {
 
-  private static final Logger log = LoggerFactory.getLogger(GeminiIntegrationTest.class);
+  private final Logger log = LoggerFactory.getLogger(GeminiHint.class);
 
   @Autowired
   private GeminiService geminiService;
-  
-  @Test
-  @DisplayName("calling Gemini API should give back JSON response")
-  void testGeminiAPISuccess_returnValidJsonString(){
-    // Arrange
-    String userPrompt = "Explain AI with one sentence.";
-    String systemInstruction = null;
-    
-    log.info("测试实际调用gemini api");
-    log.info("used prompt: {}", userPrompt);
 
-    // Act
-    String rawJsonResponse = null;
-    try {
-        rawJsonResponse = geminiService.getGeminiHint(userPrompt, systemInstruction);
-    } catch (Exception e) {
+  private static ObjectMapper objectMapper = new ObjectMapper();
 
-    }
-
-    // Assert
-    log.info("rawResponse: {}", rawJsonResponse);
-
-  }
-
-  @Test
-  @DisplayName("calling Gemini API should give back JSON response")
-  void testGeminiAPISuccess_GetHintForSplendor(){
-    // Arrange
-
-    //  以下的gameState只用于测试，与实际的gamestate不一定一样
-    String mockCurrentGameState = """ 
-      {
-        "players": [
-          {
-            "name": "Player1",
-            "tokens": {"red": 2, "blue": 2, "green": 0, "black": 1, "white": 0, "gold": 1},
-            "bonuses": {"red": 1, "blue": 0, "green": 0, "black": 1, "white": 0},
-            "reservedCards": [],
-            "prestigePoints": 12
-          },
-          {
-            "name": "Player2",
-            "tokens": {"red": 5, "blue": 3, "green": 3, "black": 2, "white": 2, "gold": 0},
-            "bonuses": {"red": 0, "blue": 0, "green": 0, "black": 0, "white": 1},
-            "reservedCards": [{"cost": {"red": 3, "blue": 2}, "points": 2}],
-            "prestigePoints": 12
-          }
-        ],
-        "table": {
-          "availableTokens": {"red": 0, "blue": 2, "green": 4, "black": 4, "white": 5, "gold": 4},
-          "cards": [
-            {"id": 2,"tier": 1, "cost": {"red": 2, "blue": 1}, "bonuse":"black", "points": 0},
-            {"id": 8,"tier": 2, "cost": {"red": 5, "blue": 3}, "bonuse":"red", "points": 3},
-          ],
-          "nobles": [{"id":3, "requirements": {"red": 4, "blue": 4}, "points": 3}]
-        },
-        "activePlayer": "Player1"
-      }
-      """;
-    String userPrompt = "Game State:\n" + mockCurrentGameState;
-
-
-    String systemInstruction = """
+  private String systemInstruction = """
         You are an AI assistant helping a player in the game of Splendor by providing strategic hints. 
         Your task is to analyze the current game state and give the player a single-sentence suggestion 
         for their next move.
@@ -118,41 +58,54 @@ public class GeminiIntegrationTest {
 
         Based on the provided game state, generate a single-sentence hint for the active player. Exam carefully if the action is available. Don't provide invalid aciton.
         The hint should suggest the optimal action they should take (e.g., "Reserve a card of id: 8," "Buy card of id: 2," 
-        or "Take specific gem tokens"). And give one sentense of explanation.
+        or "Take specific gem tokens"). Do not include explanations or reasons.
         """;
       //Do not include explanations or reasons.
+      //And give one sentense of explanation.
+  
+  public String generateSplendorHint(Game game){
 
-    log.info("测试实际调用gemini api");
-    // log.info("used prompt: {}", userPrompt);
-    // log.info("used system instruction: {}", systemInstruction);
+    GameSnapshot snapshot = game.getGameInformation();
+    Map<String, Object> extendedSnapshot = objectMapper.convertValue(snapshot, new TypeReference<Map<String, Object>>() {});
+    extendedSnapshot.put("visibleLevel1cards", game.getVisibleLevel1Cards());
+    extendedSnapshot.put("visibleLevel2cards", game.getVisibleLevel2Cards());
+    extendedSnapshot.put("visibleLevel3cards", game.getVisibleLevel3Cards());
+    extendedSnapshot.put("visibleNobles", game.getVisibleNoble());
 
-    // Act
+    String currentGameState = null;
+    try {
+      currentGameState = objectMapper.writeValueAsString(extendedSnapshot);
+    } catch (Exception e) {
+      log.error("error when serializing gameSnapshot : {}", e);
+    }
+    
+    String userPrompt = "Game State:\n" + currentGameState;
+    log.info("used prompt(include game state): {}", userPrompt);
+
     String rawJsonResponse = null;
     try {
       rawJsonResponse = geminiService.getGeminiHint(userPrompt, systemInstruction);
     } catch (Exception e) {
       log.error("调用 Gemini API 时发生异常: ", e);
     }
-
-    // Assert
-    log.info("rawResponse: {}", rawJsonResponse);
-    
-    // 尝试解析
-    ObjectMapper objectMapper = new ObjectMapper();
     if(rawJsonResponse == null || rawJsonResponse.isEmpty() || rawJsonResponse.startsWith("Error:")){
       log.warn("无效或错误的 JSON 响应字符串: {}", rawJsonResponse);
     }
+
     try {
       GeminiAPIResponse response = objectMapper.readValue(rawJsonResponse, GeminiAPIResponse.class);
       String extractedText = response.getFirstCandidateText();
       if (extractedText != null) {
         log.info("成功解析并提取文本: {}", extractedText);
+        return extractedText;
       } else {
         log.warn("无法从解析后的响应中提取文本 (可能 finishReason 不是 STOP 或结构不匹配)。");
+        return "无法从解析后的响应中提取文本 (可能 finishReason 不是 STOP 或结构不匹配)。";
       }
     } catch (Exception e) {
       log.error("处理 Gemini 响应时发生意外错误: {}", e.getMessage(), e);
+      return "处理 Gemini 响应时发生意外错误";
     }
-
   }
+
 }
