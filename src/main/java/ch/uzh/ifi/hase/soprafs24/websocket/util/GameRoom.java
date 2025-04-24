@@ -1,10 +1,6 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
@@ -77,11 +73,43 @@ public class GameRoom {
    * if any players reach the goal, call this function and save game record
    * TODO: to be implemente
    */
-  public void EndGame(){
+  public void EndGame() {
+      if (game == null) {
+          System.out.println("尝试结束游戏，但 game 为 null");
+          return;
+      }
 
+      System.out.println("游戏结束，开始广播最终结果");
+
+      // 构造游戏结束消息
+      MyWebSocketMessage message = new MyWebSocketMessage();
+      message.setType("GAME_OVER");
+      message.setRoomId(roomId);
+
+      // 获取玩家信息
+      List<Map<String, Object>> playerResults = new ArrayList<>();
+      for (Player p : players) {
+          Map<String, Object> pInfo = new HashMap<>();
+          pInfo.put("userId", p.getUserId());
+          pInfo.put("name", p.getName());
+          pInfo.put("avatar", p.getAvatar());
+          pInfo.put("victoryPoints", p.getVictoryPoints());
+          playerResults.add(pInfo);
+      }
+
+      // 包装成 content 发送
+      Map<String, Object> content = new HashMap<>();
+      content.put("players", playerResults);
+      content.put("winnerId", game.getWinnerId());
+
+      message.setContent(content);
+
+      broadcastMessage(message);
   }
 
-  private boolean getRoomStatus(){
+
+
+    private boolean getRoomStatus(){
     this.roomStatus = ROOM_READY;
     for(Player player : players){
       roomStatus = roomStatus && player.getStatus();
@@ -426,37 +454,45 @@ public class GameRoom {
         player.sendMessage(message);
     }
 
-    /**
-     * 发送信息消息给指定玩家
-     * @param player 玩家
-     * @param infoMessage 信息消息
-     */
-    public void sendInfoToPlayer(Player player, String infoMessage) {
-        MyWebSocketMessage message = new MyWebSocketMessage();
-        message.setType(MyWebSocketMessage.TYPE_SERVER_INFO);
-        message.setRoomId(roomId);
 
-        Map<String, String> content = new HashMap<>();
-        content.put("message", infoMessage);
-        message.setContent(content);
+    // 拿三个不同颜色
+    public boolean handleTakeThreeGems(Player player, List<String> colors) {
+        if (game == null || colors == null || colors.size() != 3) return false;
 
-        player.sendMessage(message);
+        Set<String> uniqueColors = new HashSet<>(colors);
+        if (uniqueColors.size() != 3) return false;
+
+        for (String colorStr : colors) {
+            GemColor color = GemColor.valueOf(colorStr.toUpperCase());
+            if (game.getAvailableGems().get(color) <= 0) return false;
+        }
+
+        for (String colorStr : colors) {
+            GemColor color = GemColor.valueOf(colorStr.toUpperCase());
+            player.setGem(color, player.getGem(color) + 1);
+            game.getAvailableGems().put(color, game.getAvailableGems().get(color) - 1);
+        }
+
+        broadcastGameState();
+        return true;
     }
 
-    /**
-     * 发送信息消息给所有玩家
-     * @param infoMessage 信息消息
-     */
-    public void sendInfoToAll(String infoMessage) {
-        MyWebSocketMessage message = new MyWebSocketMessage();
-        message.setType(MyWebSocketMessage.TYPE_SERVER_INFO);
-        message.setRoomId(roomId);
 
-        Map<String, String> content = new HashMap<>();
-        content.put("message", infoMessage);
-        message.setContent(content);
+    // 拿两个相同颜色
+    public boolean handleTakeDoubleGem(Player player, String colorStr) {
+        if (game == null) return false;
 
-        broadcastMessage(message);
+        GemColor color = GemColor.valueOf(colorStr.toUpperCase());
+        if (game.getAvailableGems().get(color) < 4) return false;
+
+        player.setGem(color, player.getGem(color) + 2);
+        game.getAvailableGems().put(color, game.getAvailableGems().get(color) - 2);
+
+        broadcastGameState();
+        return true;
     }
+
+
+
 
 }

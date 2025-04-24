@@ -1,9 +1,6 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.Session;
@@ -25,6 +22,8 @@ public class GameRoomManager {
     private Map<String, String> sessionRooms = new ConcurrentHashMap<>();
 
     private Map<Long, String> userIdToUsername = new ConcurrentHashMap<>();
+
+    private final Map<String, Player> clientSessionIdToPlayerMap = new HashMap<>();
 
 
     @Autowired
@@ -176,5 +175,15 @@ public class GameRoomManager {
     public GameRoom getRoom(String roomId) {
         return rooms.get(roomId);
     }
+
+
+    public void registerClientSessionId(String clientSessionId, Player player) {
+        clientSessionIdToPlayerMap.put(clientSessionId, player);
+    }
+
+    public Player getPlayerByClientSessionId(String clientSessionId) {
+        return clientSessionIdToPlayerMap.get(clientSessionId);
+    }
+
 
 }

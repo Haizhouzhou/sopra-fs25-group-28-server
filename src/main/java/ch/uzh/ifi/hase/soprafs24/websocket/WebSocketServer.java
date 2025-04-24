@@ -12,7 +12,6 @@ import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -93,6 +92,8 @@ public class WebSocketServer {
                 case MyWebSocketMessage.TYPE_CLIENT_END_TURN -> handleEndTurn(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_NOBLE_VISIT -> handleNobleVisit(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_AI_HINT -> handleAiHint(session, wsMessage);
+                case MyWebSocketMessage.TYPE_CLIENT_TAKE_THREE_GEMS -> handleTakeThreeGems(session, wsMessage);
+                case MyWebSocketMessage.TYPE_CLIENT_TAKE_DOUBLE_GEM -> handleTakeDoubleGem(session, wsMessage);
 
 
 
@@ -123,7 +124,7 @@ public class WebSocketServer {
                 }
             }
 
-            Player player = roomManager.getPlayerBySession(session);
+            Player player = getPlayerFromMessage(session, message);
             GameRoom room = roomManager.creatRoom(maxPlayers, player, roomName);
             boolean joined = roomManager.joinRoom(room.getRoomId(), session);
 
@@ -134,13 +135,20 @@ public class WebSocketServer {
                 session.getBasicRemote().sendText(objectMapper.writeValueAsString(joinedMsg));
             }
         } catch (Exception e) {
-            log.error("Failed to create room", e);
+            log.error("Failed to create room {}", e);
         }
     }
 
 
     private void handleJoinRoom(Session session, MyWebSocketMessage message) {
         boolean joined = roomManager.joinRoom(message.getRoomId(), session);
+
+        String clientSessionId = message.getSessionId();
+        Player player = getPlayerFromMessage(session, message);
+        if (clientSessionId != null && player != null) {
+            roomManager.registerClientSessionId(clientSessionId, player);
+            log.info("✅ Registered clientSessionId {} → userId {}", clientSessionId, player.getUserId());
+        }
 
         // if(joined){
         //   sendRoomJoinedMessage(session, message.getRoomId());
@@ -158,7 +166,7 @@ public class WebSocketServer {
             Object content = message.getContent();
 
             // 获取发送消息的玩家
-            Player player = roomManager.getPlayerBySession(session);
+            Player player = getPlayerFromMessage(session, message);
             if (player == null) return;
 
             // 获取房间
@@ -257,7 +265,7 @@ public class WebSocketServer {
 
             GameRoom room = roomManager.getRoom(roomId);
             if (room != null) {
-                Player player = roomManager.getPlayerBySession(session);
+                Player player = getPlayerFromMessage(session, message);
                 log.info("Found player: {}, userId: {}", player != null ? player.getName() : "null", player != null ? player.getUserId() : "null");
 
                 if (player != null && player.getUserId().equals(userId)) {
@@ -287,7 +295,7 @@ public class WebSocketServer {
                 return;
             }
 
-            Player player = roomManager.getPlayerBySession(session);
+            Player player = getPlayerFromMessage(session, message);
             if (player == null) {
                 log.warn("Cannot start game: Player not found for session");
                 return;
@@ -339,7 +347,7 @@ public class WebSocketServer {
         try {
             // 获取房间ID和玩家
             String roomId = message.getRoomId();
-            Player player = roomManager.getPlayerBySession(session);
+            Player player = getPlayerFromMessage(session, message);
 
             if (player == null) {
                 log.warn("Player not found for session");
@@ -381,7 +389,7 @@ public class WebSocketServer {
         try {
             // 获取房间ID和玩家
             String roomId = message.getRoomId();
-            Player player = roomManager.getPlayerBySession(session);
+            Player player = getPlayerFromMessage(session, message);
 
             if (player == null) {
                 log.warn("Player not found for session");
@@ -423,7 +431,7 @@ public class WebSocketServer {
         try {
             // 获取房间ID和玩家
             String roomId = message.getRoomId();
-            Player player = roomManager.getPlayerBySession(session);
+            Player player = getPlayerFromMessage(session, message);
 
             if (player == null) {
                 log.warn("Player not found for session");
@@ -467,7 +475,7 @@ public class WebSocketServer {
 
             // 获取房间ID和玩家
             String roomId = message.getRoomId();
-            Player player = roomManager.getPlayerBySession(session);
+            Player player = getPlayerFromMessage(session, message);
 
             if (player == null) {
                 log.warn("Player not found for session");
@@ -516,7 +524,7 @@ public class WebSocketServer {
         try {
             // 获取房间ID和玩家
             String roomId = message.getRoomId();
-            Player player = roomManager.getPlayerBySession(session);
+            Player player = getPlayerFromMessage(session, message);
 
             if (player == null) {
                 log.warn("Player not found for session");
@@ -558,7 +566,7 @@ public class WebSocketServer {
         try {
             // 获取房间ID和玩家
             String roomId = message.getRoomId();
-            Player player = roomManager.getPlayerBySession(session);
+            Player player = getPlayerFromMessage(session, message);
 
             if (player == null) {
                 log.warn("Player not found for session");
@@ -601,6 +609,65 @@ public class WebSocketServer {
     }
 
 
+    private Player getPlayerFromMessage(Session session, MyWebSocketMessage message) {
+        String clientSessionId = message.getSessionId();
+        Player player = null;
+
+        if (clientSessionId != null) {
+            player = roomManager.getPlayerByClientSessionId(clientSessionId);
+            log.info("getPlayerByClientSessionId: {}, resolved to: {}", clientSessionId, player != null ? player.getUserId() : "null");
+        }
+
+        if (player == null) {
+            player = roomManager.getPlayerBySession(session);
+            log.info("fallback to getPlayerBySession: {}", player != null ? player.getUserId() : "null");
+        }
+
+        return player;
+    }
+
+    private void handleTakeThreeGems(Session session, MyWebSocketMessage message) {
+        try {
+            String roomId = message.getRoomId();
+            Player player = getPlayerFromMessage(session, message);
+            if (player == null) return;
+
+            GameRoom room = roomManager.getRoom(roomId);
+            if (room == null) return;
+
+            Map<String, Object> content = (Map<String, Object>) message.getContent();
+            List<String> colors = (List<String>) content.get("colors");
+
+            boolean success = room.handleTakeThreeGems(player, colors);
+            if (!success) {
+                room.sendErrorToPlayer(player, "CAN NOT TAKE THREE GEMS");
+            }
+        } catch (Exception e) {
+            log.error("handleTakeThreeGems error: ", e);
+        }
+    }
+
+
+    private void handleTakeDoubleGem(Session session, MyWebSocketMessage message) {
+        try {
+            String roomId = message.getRoomId();
+            Player player = getPlayerFromMessage(session, message);
+            if (player == null) return;
+
+            GameRoom room = roomManager.getRoom(roomId);
+            if (room == null) return;
+
+            Map<String, Object> content = (Map<String, Object>) message.getContent();
+            String color = (String) content.get("color");
+
+            boolean success = room.handleTakeDoubleGem(player, color);
+            if (!success) {
+                room.sendErrorToPlayer(player, "CAN NOT TAKE DOUBLE GEM");
+            }
+        } catch (Exception e) {
+            log.error("handleTakeDoubleGem error: ", e);
+        }
+    }
 
 
 

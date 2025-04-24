@@ -127,21 +127,28 @@ public void setAvatar(String avatar) {
    * @param message either a String or a WebSocketMessage Object
    */
   public void sendMessage(Object message) {
-      try {
-        String messageStr;
-        if (message instanceof String) {
-          messageStr = (String) message;
-        }
-        else {
-          messageStr = objectMapper.writeValueAsString(message); // forming information according to @JasonProperty and getter function
-        }
-
-        session.getBasicRemote().sendText(messageStr);
+      if (session == null || !session.isOpen()) {
+          System.err.println("WebSocket session is closed. Cannot send message.");
+          return;
       }
-      catch (IOException e) {
-        e.printStackTrace();
+
+      try {
+          String messageStr;
+          if (message instanceof String) {
+              messageStr = (String) message;
+          } else {
+              messageStr = objectMapper.writeValueAsString(message); // 根据注解格式化 JSON
+          }
+
+          session.getBasicRemote().sendText(messageStr);
+          System.out.println("Message sent to user: " + messageStr);
+
+      } catch (IOException e) {
+          System.err.println("Failed to send message to user:");
+          e.printStackTrace();
       }
   }
+
 
     @Override
     public boolean equals(Object o) {
