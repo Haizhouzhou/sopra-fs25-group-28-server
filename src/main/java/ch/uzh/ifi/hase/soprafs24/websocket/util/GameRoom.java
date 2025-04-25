@@ -327,26 +327,26 @@ public class GameRoom {
      * @param nobleIdStr 贵族ID字符串
      * @return 操作是否成功
      */
-    public boolean handleNobleVisit(Player player, String nobleIdStr) {
-        if (game == null) {
-            return false;
-        }
+    // public boolean handleNobleVisit(Player player, String nobleIdStr) {
+    //     if (game == null) {
+    //         return false;
+    //     }
 
-        try {
-            Long nobleId = Long.parseLong(nobleIdStr);
-            boolean success = game.visitNoble(player, nobleId);
+    //     try {
+    //         Long nobleId = Long.parseLong(nobleIdStr);
+    //         boolean success = game.visitNoble(player, nobleId);
 
-            if (success) {
-                // 发送游戏状态更新到所有玩家
-                broadcastGameState();
-            }
+    //         if (success) {
+    //             // 发送游戏状态更新到所有玩家
+    //             broadcastGameState();
+    //         }
 
-            return success;
-        } catch (NumberFormatException e) {
-            // 贵族ID格式无效
-            return false;
-        }
-    }
+    //         return success;
+    //     } catch (NumberFormatException e) {
+    //         // 贵族ID格式无效
+    //         return false;
+    //     }
+    // }
 
     /**
      * 处理玩家结束回合的操作

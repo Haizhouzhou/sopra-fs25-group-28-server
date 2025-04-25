@@ -35,20 +35,20 @@ public class Game {
   private final List<Player> players;
 
   // available gems on the board
-  private final Map<GemColor, Long> availableGems = new HashMap<>();
+  private Map<GemColor, Long> availableGems = new HashMap<>();
 
   // card deck of different levels of card
-  private final Stack<Card> level1Deck = new Stack<>();
-  private final Stack<Card> level2Deck = new Stack<>();
-  private final Stack<Card> level3Deck = new Stack<>();
+  private Stack<Card> level1Deck = new Stack<>();
+  private Stack<Card> level2Deck = new Stack<>();
+  private Stack<Card> level3Deck = new Stack<>();
 
   // visible card on the board
-  private final List<Card> visibleLevel1Cards = new ArrayList<>(4);
-  private final List<Card> visibleLevel2Cards = new ArrayList<>(4);
-  private final List<Card> visibleLevel3Cards = new ArrayList<>(4);
+  private List<Card> visibleLevel1Cards = new ArrayList<>(4);
+  private List<Card> visibleLevel2Cards = new ArrayList<>(4);
+  private List<Card> visibleLevel3Cards = new ArrayList<>(4);
 
   // nobles on the board
-  private final List<Noble> visibleNoble = new ArrayList<>(4);
+  private List<Noble> visibleNoble = new ArrayList<>(4);
 
   private int currentPlayer = 0;
   private int currentRound = 0;
@@ -200,11 +200,11 @@ public class Game {
    * @param players List of players participate in the game
    *
    */
-  public Game(String gameRoomId, Set<Player> players){
-    this.gameId = gameRoomId;
-    this.players = new ArrayList<>(players);
-    Collections.shuffle(this.players);
-  }
+//   public Game(String gameRoomId, Set<Player> players){
+//     this.gameId = gameRoomId;
+//     this.players = new ArrayList<>(players);
+//     Collections.shuffle(this.players);
+//   }
 
   // TODO: may need some modification
   public GameSnapshot getGameInformation(){
@@ -226,61 +226,61 @@ public class Game {
     return false;
   }
     // Game.java
-public void endTurn() {
-    // 1. Refill empty visible card slots
-    fillVisibleCards(level1Deck, visibleLevel1Cards);
-    fillVisibleCards(level2Deck, visibleLevel2Cards);
-    fillVisibleCards(level3Deck, visibleLevel3Cards);
+    public void endTurn() {
+        // 1. Refill empty visible card slots
+        fillVisibleCards(level1Deck, visibleLevel1Cards);
+        fillVisibleCards(level2Deck, visibleLevel2Cards);
+        fillVisibleCards(level3Deck, visibleLevel3Cards);
 
-    // 2. Check if the current player qualifies for a noble
-    noblePurchase(this);
+        // 2. Check if the current player qualifies for a noble
+        noblePurchase(this);
 
-    // 3. Check for victory condition
-    checkVictoryCondition();
+        // 3. Check for victory condition
+        checkVictoryCondition();
 
-    // 4. Increment round
-    currentRound++;
+        // 4. Increment round
+        currentRound++;
 
-    // 5. Advance to next player
-    Player currentTurnPlayer = players.get(currentPlayer);
-    System.out.println("回合结束，当前玩家: " + currentTurnPlayer.getUserId());
+        // 5. Advance to next player
+        Player currentTurnPlayer = players.get(currentPlayer);
+        System.out.println("回合结束，当前玩家: " + currentTurnPlayer.getUserId());
 
-    currentPlayer = (currentPlayer + 1) % players.size();
+        currentPlayer = (currentPlayer + 1) % players.size();
 
-    Player nextTurnPlayer = players.get(currentPlayer);
-    System.out.println("下一回合玩家: " + nextTurnPlayer.getUserId());
-}
+        Player nextTurnPlayer = players.get(currentPlayer);
+        System.out.println("下一回合玩家: " + nextTurnPlayer.getUserId());
+    }
 
-public void noblePurchase(Game game) {
-  Player player = game.getPlayers().get(game.getCurrentPlayer());
+    public void noblePurchase(Game game) {
+        Player player = game.getPlayers().get(game.getCurrentPlayer());
 
-  for (Noble noble : new ArrayList<>(game.getVisibleNoble())) { // avoid concurrent modification
-      boolean qualifies = true;
+        for (Noble noble : new ArrayList<>(game.getVisibleNoble())) { // avoid concurrent modification
+            boolean qualifies = true;
 
-      for (Map.Entry<GemColor, Long> entry : noble.getCost().entrySet()) {
-          GemColor color = entry.getKey();
-          long required = entry.getValue();
+            for (Map.Entry<GemColor, Long> entry : noble.getCost().entrySet()) {
+                GemColor color = entry.getKey();
+                long required = entry.getValue();
 
-          if (player.getBonusGem(color) < required) {
-              qualifies = false;
-              break;
-          }
-      }
+                if (player.getBonusGem(color) < required) {
+                    qualifies = false;
+                    break;
+                }
+            }
 
-      if (qualifies) {
-          // Award the noble
-          player.setVictoryPoints(player.getVictoryPoints() + noble.getPoints());
+            if (qualifies) {
+                // Award the noble
+                player.setVictoryPoints(player.getVictoryPoints() + noble.getPoints());
 
-          // Remove from board
-          game.getVisibleNoble().remove(noble);
+                // Remove from board
+                game.getVisibleNoble().remove(noble);
 
-          // Optionally add to player's noble collection if needed in future
-          // player.getCollectedNobles().add(noble);
+                // Optionally add to player's noble collection if needed in future
+                // player.getCollectedNobles().add(noble);
 
-          break; // Only one noble per turn
-      }
-  }
-}
+                break; // Only one noble per turn
+            }
+        }
+    }
 
     /**
      * 获取玩家
@@ -386,41 +386,27 @@ public void noblePurchase(Game game) {
 
         // 检查卡牌所需资源
         Map<GemColor, Long> cost = card.getCost();
-        Map<GemColor, Long> playerGems = new HashMap<>();
-        for (GemColor color : GemColor.values()) {
-            playerGems.put(color, player.getGem(color));
+        Map<GemColor, Long> playerGems = new HashMap<>(player.getAllGems());
+        Map<GemColor, Long> playerBonus = new HashMap<>(player.getAllBonusGems());
+
+        Long goldPossess = player.getGem(GemColor.GOLD);
+
+        for(GemColor color : GemColor.values()){
+            if(color == GemColor.GOLD){continue;}
+            Long colorCost = cost.getOrDefault(color, 0L);
+            Long colorPossess = playerGems.getOrDefault(color, 0L);
+            Long colorDiscount = playerBonus.getOrDefault(color, 0L);
+
+            // min(0, colorCost - colorDiscount)计算实际需要多少gem token
+            // max(colorPossess - 实际需要token) 计算需要多少金币来补足缺口
+            Long actualCost = Math.max(0L, colorCost - colorDiscount); //减去折扣后，对应的cost最小为0
+            Long goldDeficit = Math.min(0, colorPossess - actualCost); //拥有的gem token减去实际cost后
+            // System.out.println("GemColor" + color + ", 此时goldPossess: " + goldPossess + ", 实际cost: " + actualCost + ", 玩家拥有对应gem: " + colorPossess + ", Gold缺口: " + goldDeficit);
+            goldPossess += goldDeficit;
+            
+            if(goldPossess < 0){return false;}
         }
-
-        Long goldNeeded = 0L;
-
-        // 计算每种颜色需要多少宝石
-        for (Map.Entry<GemColor, Long> entry : cost.entrySet()) {
-            GemColor color = entry.getKey();
-            Long requiredAmount = entry.getValue();
-
-            // 减去玩家拥有的对应颜色卡牌折扣
-            requiredAmount -= player.getBonusGem(color);
-
-            if (requiredAmount <= 0) {
-                continue; // 不需要支付这种颜色的宝石
-            }
-
-            // 玩家拥有的这种颜色的宝石
-            Long playerAmount = playerGems.get(color);
-
-            if (playerAmount >= requiredAmount) {
-                // 玩家有足够的这种颜色的宝石
-                playerGems.put(color, playerAmount - requiredAmount);
-            } else {
-                // 需要用黄金宝石补充
-                Long deficit = requiredAmount - playerAmount;
-                playerGems.put(color, 0L); // 这种颜色的宝石用完了
-                goldNeeded += deficit;
-            }
-        }
-
-        // 检查是否有足够的黄金宝石
-        return playerGems.get(GemColor.GOLD) >= goldNeeded;
+        return true;
     }
 
     /**
@@ -594,54 +580,54 @@ public void noblePurchase(Game game) {
      * @param nobleId 贵族ID
      * @return 操作是否成功
      */
-    public boolean visitNoble(Player player, Long nobleId) {
-        // 检查是否是该玩家的回合
-        if (!isPlayerTurn(player)) {
-            return false;
-        }
+    // public boolean visitNoble(Player player, Long nobleId) {
+    //     // 检查是否是该玩家的回合
+    //     if (!isPlayerTurn(player)) {
+    //         return false;
+    //     }
 
-        // 检查游戏是否正在进行
-        if (gameState != GameState.RUNNING) {
-            return false;
-        }
+    //     // 检查游戏是否正在进行
+    //     if (gameState != GameState.RUNNING) {
+    //         return false;
+    //     }
 
-        // 查找贵族
-        Noble targetNoble = null;
-        for (Noble noble : visibleNoble) {
-            if (noble.getId().equals(nobleId)) {
-                targetNoble = noble;
-                break;
-            }
-        }
+    //     // 查找贵族
+    //     Noble targetNoble = null;
+    //     for (Noble noble : visibleNoble) {
+    //         if (noble.getId().equals(nobleId)) {
+    //             targetNoble = noble;
+    //             break;
+    //         }
+    //     }
 
-        if (targetNoble == null) {
-            return false;
-        }
+    //     if (targetNoble == null) {
+    //         return false;
+    //     }
 
-        // 检查玩家是否满足贵族的要求
-        boolean qualifies = true;
-        for (Map.Entry<GemColor, Long> entry : targetNoble.getCost().entrySet()) {
-            GemColor color = entry.getKey();
-            Long required = entry.getValue();
+    //     // 检查玩家是否满足贵族的要求
+    //     boolean qualifies = true;
+    //     for (Map.Entry<GemColor, Long> entry : targetNoble.getCost().entrySet()) {
+    //         GemColor color = entry.getKey();
+    //         Long required = entry.getValue();
 
-            if (player.getBonusGem(color) < required) {
-                qualifies = false;
-                break;
-            }
-        }
+    //         if (player.getBonusGem(color) < required) {
+    //             qualifies = false;
+    //             break;
+    //         }
+    //     }
 
-        if (!qualifies) {
-            return false;
-        }
+    //     if (!qualifies) {
+    //         return false;
+    //     }
 
-        // 玩家获得贵族的点数
-        player.setVictoryPoints(player.getVictoryPoints() + targetNoble.getPoints());
+    //     // 玩家获得贵族的点数
+    //     player.setVictoryPoints(player.getVictoryPoints() + targetNoble.getPoints());
 
-        // 从游戏板上移除贵族
-        visibleNoble.remove(targetNoble);
+    //     // 从游戏板上移除贵族
+    //     visibleNoble.remove(targetNoble);
 
-        return true;
-        }
+    //     return true;
+    //     }
 
 
 }
