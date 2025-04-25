@@ -14,7 +14,9 @@ import ch.uzh.ifi.hase.soprafs24.rest.dto.GeminiAPIResponse;
 import ch.uzh.ifi.hase.soprafs24.service.GeminiService;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
+import org.springframework.stereotype.Component;
 
+@Component
 public class GeminiHint {
 
   private final Logger log = LoggerFactory.getLogger(GeminiHint.class);
@@ -62,8 +64,8 @@ public class GeminiHint {
         """;
       //Do not include explanations or reasons.
       //And give one sentense of explanation.
-  
-  public String generateSplendorHint(Game game){
+
+      public String generateSplendorHint(Game game){
 
     GameSnapshot snapshot = game.getGameInformation();
     Map<String, Object> extendedSnapshot = objectMapper.convertValue(snapshot, new TypeReference<Map<String, Object>>() {});
