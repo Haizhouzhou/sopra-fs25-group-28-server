@@ -344,36 +344,6 @@ public class Game {
     }
 
     /**
-     * 玩家获取宝石
-     * @param player 获取宝石的玩家
-     * @param color 宝石颜色
-     * @return 操作是否成功
-     */
-    public boolean takeGem(Player player, GemColor color) {
-        // 检查是否是该玩家的回合
-        if (!isPlayerTurn(player)) {
-            return false;
-        }
-
-        // 检查游戏是否正在进行
-        if (gameState != GameState.RUNNING) {
-            return false;
-        }
-
-        // 检查宝石是否还有剩余
-        Long availableAmount = availableGems.get(color);
-        if (availableAmount == null || availableAmount <= 0) {
-            return false;
-        }
-
-        // 玩家获取宝石
-        player.setGem(color, player.getGem(color) + 1);
-        availableGems.put(color, availableAmount - 1);
-
-        return true;
-    }
-
-    /**
      * 检查玩家是否能购买卡牌
      * @param player 玩家
      * @param card 卡牌
@@ -573,61 +543,5 @@ public class Game {
 
         return true;
     }
-
-    /**
-     * 玩家访问贵族
-     * @param player 玩家
-     * @param nobleId 贵族ID
-     * @return 操作是否成功
-     */
-    // public boolean visitNoble(Player player, Long nobleId) {
-    //     // 检查是否是该玩家的回合
-    //     if (!isPlayerTurn(player)) {
-    //         return false;
-    //     }
-
-    //     // 检查游戏是否正在进行
-    //     if (gameState != GameState.RUNNING) {
-    //         return false;
-    //     }
-
-    //     // 查找贵族
-    //     Noble targetNoble = null;
-    //     for (Noble noble : visibleNoble) {
-    //         if (noble.getId().equals(nobleId)) {
-    //             targetNoble = noble;
-    //             break;
-    //         }
-    //     }
-
-    //     if (targetNoble == null) {
-    //         return false;
-    //     }
-
-    //     // 检查玩家是否满足贵族的要求
-    //     boolean qualifies = true;
-    //     for (Map.Entry<GemColor, Long> entry : targetNoble.getCost().entrySet()) {
-    //         GemColor color = entry.getKey();
-    //         Long required = entry.getValue();
-
-    //         if (player.getBonusGem(color) < required) {
-    //             qualifies = false;
-    //             break;
-    //         }
-    //     }
-
-    //     if (!qualifies) {
-    //         return false;
-    //     }
-
-    //     // 玩家获得贵族的点数
-    //     player.setVictoryPoints(player.getVictoryPoints() + targetNoble.getPoints());
-
-    //     // 从游戏板上移除贵族
-    //     visibleNoble.remove(targetNoble);
-
-    //     return true;
-    //     }
-
 
 }

@@ -239,7 +239,7 @@ public class GameBuyCardTest {
 
     // Verify player bonus increase
     ArgumentCaptor<Long> bonusCaptor = ArgumentCaptor.forClass(Long.class);
-    verify(mockPlayer).setBonusGem(eq(cardColor), bonusCaptor.capture()); // Card color is BLUE
+    verify(mockPlayer).setBonusGem(eq(cardColor), bonusCaptor.capture());
     assertEquals(expectedPlayerBlueBonus, bonusCaptor.getValue(), "Incorrect player bonus gems");
 
     // Verify player points increase
@@ -258,7 +258,7 @@ public class GameBuyCardTest {
   public void buyCard_Success_fromReservedCard(){
     // arrange
     Long cardIdToBuy = affordableReservedCardId;
-    GemColor cardColor = cardAbleToBuyReserved.getColor(); // WHITE
+    GemColor cardColor = cardAbleToBuyReserved.getColor(); 
 
     Long expectedPlayerBlackGems = 0L;
     Long expectedPlayerRedGems = 0L;

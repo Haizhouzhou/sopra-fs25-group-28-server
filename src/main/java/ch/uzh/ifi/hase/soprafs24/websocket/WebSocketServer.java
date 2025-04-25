@@ -16,6 +16,7 @@ import javax.websocket.server.ServerEndpoint;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,8 +37,16 @@ public class WebSocketServer {
 
     private static Logger log = LoggerFactory.getLogger(WebSocketServer.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final GameRoomManager roomManager = SpringContext.getBean(GameRoomManager.class);
-    private final GeminiHint geminiHint = SpringContext.getBean(GeminiHint.class);
+    private final GameRoomManager roomManager;
+    // private final GameRoomManager roomManager = SpringContext.getBean(GameRoomManager.class);
+    private final GeminiHint geminiHint;
+    // private final GeminiHint geminiHint = SpringContext.getBean(GeminiHint.class);
+
+    @Autowired
+    public WebSocketServer(GameRoomManager roomManager, GeminiHint geminiHint) {
+        this.roomManager = roomManager;
+        this.geminiHint = geminiHint;
+    }
 
 
 //  private GameRoomManager roomManager;
@@ -87,11 +96,9 @@ public class WebSocketServer {
                 case MyWebSocketMessage.TYPE_CLIENT_START_GAME -> handleStartGame(session, wsMessage);
 
                 //action in game, added
-                case MyWebSocketMessage.TYPE_CLIENT_TAKE_GEM -> handleTakeGem(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_BUY_CARD -> handleBuyCard(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_RESERVE_CARD -> handleReserveCard(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_END_TURN -> handleEndTurn(session, wsMessage);
-                // case MyWebSocketMessage.TYPE_CLIENT_NOBLE_VISIT -> handleNobleVisit(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_AI_HINT -> handleAiHint(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_TAKE_THREE_GEMS -> handleTakeThreeGems(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_TAKE_DOUBLE_GEM -> handleTakeDoubleGem(session, wsMessage);
@@ -359,48 +366,6 @@ public class WebSocketServer {
     }
 
     /**
-     * 处理玩家获取宝石的请求
-     */
-    private void handleTakeGem(Session session, MyWebSocketMessage message) {
-        try {
-            // 获取房间ID和玩家
-            String roomId = message.getRoomId();
-            Player player = getPlayerFromMessage(session, message);
-
-            if (player == null) {
-                log.warn("Player not found for session");
-                return;
-            }
-
-            // 获取房间
-            GameRoom room = roomManager.getRoom(roomId);
-            if (room == null) {
-                log.warn("Room not found: {}", roomId);
-                return;
-            }
-
-            // 获取宝石颜色
-            Map<String, Object> content = (Map<String, Object>) message.getContent();
-            String target = (String) content.get("target");
-
-            if (target == null) {
-                log.warn("No target gem specified");
-                return;
-            }
-
-            // 执行获取宝石操作
-            boolean success = room.handleTakeGem(player, target);
-
-            if (!success) {
-                // 发送错误消息给玩家
-                room.sendErrorToPlayer(player, "无法获取宝石，请检查是否是您的回合或宝石是否已用完。");
-            }
-        } catch (Exception e) {
-            log.error("Error handling TAKE_GEM message: {}", e.getMessage(), e);
-        }
-    }
-
-    /**
      * 游戏内，处理玩家购买卡牌的请求
      */
     private void handleBuyCard(Session session, MyWebSocketMessage message) {
@@ -536,48 +501,6 @@ public class WebSocketServer {
     }
 
     /**
-     * 处理玩家访问贵族的请求
-     */
-    // private void handleNobleVisit(Session session, MyWebSocketMessage message) {
-    //     try {
-    //         // 获取房间ID和玩家
-    //         String roomId = message.getRoomId();
-    //         Player player = getPlayerFromMessage(session, message);
-
-    //         if (player == null) {
-    //             log.warn("Player not found for session");
-    //             return;
-    //         }
-
-    //         // 获取房间
-    //         GameRoom room = roomManager.getRoom(roomId);
-    //         if (room == null) {
-    //             log.warn("Room not found: {}", roomId);
-    //             return;
-    //         }
-
-    //         // 获取贵族ID
-    //         Map<String, Object> content = (Map<String, Object>) message.getContent();
-    //         String target = (String) content.get("target");
-
-    //         if (target == null) {
-    //             log.warn("No target noble specified");
-    //             return;
-    //         }
-
-    //         // 执行访问贵族操作
-    //         boolean success = room.handleNobleVisit(player, target);
-
-    //         if (!success) {
-    //             // 发送错误消息给玩家
-    //             room.sendErrorToPlayer(player, "无法访问贵族，请检查是否是您的回合或是否满足贵族要求。");
-    //         }
-    //     } catch (Exception e) {
-    //         log.error("Error handling NOBLE_VISIT message: {}", e.getMessage(), e);
-    //     }
-    // }
-
-    /**
      * 游戏内，处理玩家请求AI提示的请求
      */
     private void handleAiHint(Session session, MyWebSocketMessage message) {
@@ -611,8 +534,6 @@ public class WebSocketServer {
             log.error("Error handling AI_HINT message: {}", e.getMessage(), e);
         }
     }
-
-
 
     private Player getPlayerFromMessage(Session session, MyWebSocketMessage message) {
         String clientSessionId = message.getSessionId();
@@ -687,11 +608,4 @@ public class WebSocketServer {
         }
     }
 
-
-
-
-
 }
-
-
-

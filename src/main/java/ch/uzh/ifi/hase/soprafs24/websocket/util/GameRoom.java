@@ -240,34 +240,6 @@ public class GameRoom {
   }
 
     /**
-     * 处理玩家获取宝石的操作
-     * @param player 玩家
-     * @param colorStr 宝石颜色字符串
-     * @return 操作是否成功
-     */
-    public boolean handleTakeGem(Player player, String colorStr) {
-        if (game == null) {
-            return false;
-        }
-
-        try {
-            // 将字符串转换为GemColor枚举
-            GemColor color = GemColor.valueOf(colorStr.toUpperCase());
-            boolean success = game.takeGem(player, color);
-
-            if (success) {
-                // 发送游戏状态更新到所有玩家
-                broadcastGameState();
-            }
-
-            return success;
-        } catch (IllegalArgumentException e) {
-            // 颜色无效
-            return false;
-        }
-    }
-
-    /**
      * 处理玩家购买卡牌的操作
      * @param player 玩家
      * @param cardIdStr 卡牌ID字符串
@@ -320,33 +292,6 @@ public class GameRoom {
             return false;
         }
     }
-
-    /**
-     * 处理玩家访问贵族的操作
-     * @param player 玩家
-     * @param nobleIdStr 贵族ID字符串
-     * @return 操作是否成功
-     */
-    // public boolean handleNobleVisit(Player player, String nobleIdStr) {
-    //     if (game == null) {
-    //         return false;
-    //     }
-
-    //     try {
-    //         Long nobleId = Long.parseLong(nobleIdStr);
-    //         boolean success = game.visitNoble(player, nobleId);
-
-    //         if (success) {
-    //             // 发送游戏状态更新到所有玩家
-    //             broadcastGameState();
-    //         }
-
-    //         return success;
-    //     } catch (NumberFormatException e) {
-    //         // 贵族ID格式无效
-    //         return false;
-    //     }
-    // }
 
     /**
      * 处理玩家结束回合的操作
