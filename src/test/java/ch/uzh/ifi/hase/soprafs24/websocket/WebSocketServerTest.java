@@ -16,10 +16,7 @@ import org.mockito.MockitoAnnotations;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -105,53 +102,54 @@ public class WebSocketServerTest {
   // test for onMessage
   @Test
   void onMessage_withNullType_shouldLogWarningAndReturn() {
-    // arrange
-    String jsonMessage = "{\"roomId\":\"" + testRoomId + "\"}"; // Message without type
+      // arrange
+      String jsonMessage = "{\"roomId\":\"" + testRoomId + "\"}"; // Message without type
 
-    // act
-    webSocketServer.onMessage(mockSession, jsonMessage);
+      // act
+      webSocketServer.onMessage(mockSession, jsonMessage);
 
-    // assert
-    verify(roomManager, never()).creatRoom(anyInt(), any(Player.class), anyString());
-    verify(roomManager, never()).joinRoom(anyString(), any(Session.class));
+      // assert
+      verify(roomManager, never()).createRoom(anyInt(), any(Session.class), anyString());
+      verify(roomManager, never()).joinRoom(anyString(), any(Session.class));
   }
 
-  @Test
-  void onMessage_withUnknownType_shouldLogWarningAndReturn() throws JsonProcessingException {
-    // arrange
-    Map<String, Object> messageMap = new HashMap<>();
-    messageMap.put("type", "UNKNOWN_TYPE");
-    messageMap.put("roomId", testRoomId);
-    String jsonMessage = objectMapper.writeValueAsString(messageMap);
 
-    // act
-    webSocketServer.onMessage(mockSession, jsonMessage);
+    @Test
+    void onMessage_withUnknownType_shouldLogWarningAndReturn() throws JsonProcessingException {
+        // arrange
+        Map<String, Object> messageMap = new HashMap<>();
+        messageMap.put("type", "UNKNOWN_TYPE");
+        messageMap.put("roomId", testRoomId);
+        String jsonMessage = objectMapper.writeValueAsString(messageMap);
 
-    // assert
-    verify(roomManager, never()).creatRoom(anyInt(), any(Player.class), anyString());
-  }
+        // act
+        webSocketServer.onMessage(mockSession, jsonMessage);
 
-  @Test
-  void handleCreateRoom_shouldCallRoomManagerAndSendResponse() throws IOException {
-    // arrange
-    MyWebSocketMessage wsMessage = new MyWebSocketMessage();
-    wsMessage.setType(MyWebSocketMessage.TYPE_CLIENT_CREATE_ROOM);
-    wsMessage.setSessionId(testSessionId); // Include if getPlayerFromMessage uses it
-    wsMessage.setContent(Map.of("maxPlayers", 4, "roomName", "Test Room"));
-    String jsonMessage = objectMapper.writeValueAsString(wsMessage);
+        // assert
+        verify(roomManager, never()).createRoom(anyInt(), any(Session.class), anyString());
+    }
 
-    given(roomManager.creatRoom(anyInt(), eq(mockPlayer), anyString())).willReturn(mockRoom);
-    given(roomManager.joinRoom(testRoomId, mockSession)).willReturn(true); // mock successful join
-    given(mockRoom.getRoomId()).willReturn(testRoomId); 
 
-    // act
-    webSocketServer.onMessage(mockSession, jsonMessage);
+    @Test
+    void handleCreateRoom_shouldCallRoomManagerAndSendResponse() throws IOException {
+        // arrange
+        MyWebSocketMessage wsMessage = new MyWebSocketMessage();
+        wsMessage.setType(MyWebSocketMessage.TYPE_CLIENT_CREATE_ROOM);
+        wsMessage.setSessionId(testSessionId);
+        wsMessage.setContent(Map.of("maxPlayers", 4, "roomName", "Test Room"));
+        String jsonMessage = objectMapper.writeValueAsString(wsMessage);
 
-    // assert
-    verify(roomManager).creatRoom(eq(4), eq(mockPlayer), eq("Test Room"));
-    verify(roomManager).joinRoom(testRoomId, mockSession);
-    verify(mockRemoteEndpoint).sendText(stringCaptor.capture());
-  }
+        given(roomManager.createRoom(anyInt(), eq(mockSession), anyString())).willReturn(mockRoom);
+        given(mockRoom.getRoomId()).willReturn(testRoomId);
+
+        // act
+        webSocketServer.onMessage(mockSession, jsonMessage);
+
+        // assert
+        verify(roomManager).createRoom(eq(4), eq(mockSession), eq("Test Room"));
+        verify(mockRemoteEndpoint).sendText(stringCaptor.capture());
+    }
+
 
   @Test
   void handleJoinRoom_shouldCallRoomManagerAndBroadcast() throws IOException {
@@ -232,24 +230,33 @@ public class WebSocketServerTest {
     verify(mockRemoteEndpoint).sendText(stringCaptor.capture());
   }
 
-  @Test
-  void handlePlayerStatus_shouldSetStatusAndBroadcast() throws IOException {
-    // arrange
-    boolean targetStatus = true;
-    MyWebSocketMessage wsMessage = new MyWebSocketMessage();
-    wsMessage.setType(MyWebSocketMessage.TYPE_CLIENT_PLAYER_STATUS);
-    wsMessage.setRoomId(testRoomId);
-    wsMessage.setSessionId(testSessionId);
-    wsMessage.setContent(Map.of("userId", testUserId, "status", targetStatus));
-    String jsonMessage = objectMapper.writeValueAsString(wsMessage);
+    @Test
+    void handlePlayerStatus_shouldSetStatusAndBroadcast() throws IOException {
+        // arrange
+        boolean targetStatus = true;
+        MyWebSocketMessage wsMessage = new MyWebSocketMessage();
+        wsMessage.setType(MyWebSocketMessage.TYPE_CLIENT_PLAYER_STATUS);
+        wsMessage.setRoomId(testRoomId);
+        wsMessage.setSessionId(testSessionId);
+        wsMessage.setContent(Map.of("userId", testUserId, "status", targetStatus));
+        String jsonMessage = objectMapper.writeValueAsString(wsMessage);
 
-    // act
-    webSocketServer.onMessage(mockSession, jsonMessage);
+        // mock player behavior
+        given(mockPlayer.getUserId()).willReturn(testUserId);
+        Set<Player> playersInRoom = Set.of(mockPlayer);
+        given(mockRoom.getPlayers()).willReturn(playersInRoom);
+        given(roomManager.getRoom(testRoomId)).willReturn(mockRoom);
+        given(roomManager.getPlayerBySession(mockSession)).willReturn(mockPlayer);
 
-    // assert
-    verify(mockPlayer).setStatus(targetStatus);
-    verify(mockRoom).broadcastRoomStatus();
-  }
+        // act
+        webSocketServer.onMessage(mockSession, jsonMessage);
+
+        // assert
+        verify(mockPlayer).setStatus(targetStatus);
+        verify(mockRoom).broadcastRoomStatus();
+    }
+
+
 
   @Test
   void handleStartGame_shouldCallRoomStartGameAndBroadcastState() throws IOException {

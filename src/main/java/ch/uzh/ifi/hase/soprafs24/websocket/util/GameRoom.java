@@ -7,6 +7,10 @@ import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
+import javax.websocket.Session;
+import java.io.IOException;
+
+
 public class GameRoom {
 
   private static final boolean ROOM_READY = true;
@@ -166,6 +170,7 @@ public class GameRoom {
    * broadcast Message to all players in the room
    * @param message either a String or a WebSocketMessage Object
    */
+
   public void broadcastMessage(Object message){
     for(Player player : players){
       player.sendMessage(message);
@@ -181,24 +186,22 @@ public class GameRoom {
                     ", status:" + p.getStatus() +
                     ", instance:" + System.identityHashCode(p));
         }
+
         Map<String, Object> msg = new HashMap<>();
         msg.put("type", "ROOM_STATE");
         msg.put("roomName", this.roomName);
-
 
         List<Map<String, Object>> playerStates = new ArrayList<>();
         for (Player p : players) {
             Map<String, Object> pInfo = new HashMap<>();
             pInfo.put("userId", p.getUserId());
             pInfo.put("name", p.getName());
-            // 确保这里使用正确的方法获取状态
-            pInfo.put("room_status", p.getStatus()); // 而不是某个过时的值
+            pInfo.put("room_status", p.getStatus());
             pInfo.put("avatar", p.getAvatar());
             pInfo.put("isOwner", p.getUserId().equals(this.ownerId));
             playerStates.add(pInfo);
         }
 
-        // 打印每个玩家的状态，用于调试
         for (Player p : players) {
             System.out.println("Player: " + p.getName() + ", Status: " + p.getStatus());
         }
@@ -206,9 +209,25 @@ public class GameRoom {
         msg.put("players", playerStates);
         msg.put("ownerId", this.ownerId);
         msg.put("ownerName", this.ownerName);
-        broadcast(JsonUtils.toJson(msg));
-        System.out.println("Broadcasting room state: " + JsonUtils.toJson(msg));
+
+        String jsonMessage = JsonUtils.toJson(msg);
+
+        for (Player player : players) {
+            Session session = player.getSession();
+            if (session != null && session.isOpen()) {
+                try {
+                    session.getBasicRemote().sendText(jsonMessage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("Skipping closed session for player: " + player.getName());
+            }
+        }
+
+        System.out.println("Broadcasting room state: " + jsonMessage);
     }
+
 
 
 
@@ -371,9 +390,15 @@ public class GameRoom {
 
             // 广播给每个玩家
             for (Player player : players) {
-                System.out.println("正在向玩家 " + player.getUserId() + " 发送游戏状态");
-                player.sendMessage(message);
+                Session session = player.getSession();
+                if (session != null && session.isOpen()) {
+                    System.out.println("正在向玩家 " + player.getUserId() + " 发送游戏状态");
+                    player.sendMessage(message);
+                } else {
+                    System.out.println("跳过玩家 " + player.getUserId() + "：连接已关闭");
+                }
             }
+
 
             System.out.println("游戏状态广播完成");
         } catch (Exception e) {

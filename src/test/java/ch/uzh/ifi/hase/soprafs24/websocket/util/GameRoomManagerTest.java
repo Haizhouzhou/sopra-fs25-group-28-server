@@ -31,8 +31,8 @@ import ch.uzh.ifi.hase.soprafs24.entity.User;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
 
 public class GameRoomManagerTest {
-  
-  @Mock 
+
+  @Mock
   private UserService mockUserService;
 
   @Mock
@@ -46,7 +46,7 @@ public class GameRoomManagerTest {
 
   @Mock
   private RemoteEndpoint.Basic mockBasicRemote;
-  
+
   @InjectMocks
   private GameRoomManager gameRoomManager;
 
@@ -63,7 +63,7 @@ public class GameRoomManagerTest {
   private String testRoomId = "testRoomId";
 
   @BeforeEach
-  private void setUp(){
+  public void setUp(){
     MockitoAnnotations.openMocks(this);
 
     mockSessionPlayersMap = new HashMap<>();
@@ -150,32 +150,42 @@ public class GameRoomManagerTest {
     assertNotSame(testPlayer, result, "Should NOT return the instance from the sessionPlayers map");
   }
 
-  @Test
-  public void joinRoom_Success_WhenRoomExistsAndNotFull() throws IOException {
-    // arrange
-    mockSessionPlayersMap.put(testSessionId, testPlayer);
-    gameRoomManager.setSessionPlayersMap(mockSessionPlayersMap);
+    @Test
+    public void joinRoom_Success_WhenRoomExistsAndNotFull() throws IOException {
+        // arrange
+        String sessionId = testSessionId;
+        given(mockSession.getId()).willReturn(sessionId);
+        given(mockSession.isOpen()).willReturn(true);
+        given(mockSession.getBasicRemote()).willReturn(mockBasicRemote);
 
-    given(mockRoom.isFull()).willReturn(false); // Room is not full
-    mockRoomsMap.put(testRoomId, mockRoom);
+        mockSessionPlayersMap.put(sessionId, testPlayer);
+        mockRoomsMap.put(testRoomId, mockRoom);
 
-    assertNull(mockSessionRoomsMap.get(testSessionId), "Precondition failed: Player should not be in a room yet");
+        // 注入 maps
+        gameRoomManager.setSessionPlayersMap(mockSessionPlayersMap);
+        gameRoomManager.setSessionRoomsMap(mockSessionRoomsMap);
+        gameRoomManager.setRooms(mockRoomsMap);
 
-    // act
-    boolean result = gameRoomManager.joinRoom(testRoomId, mockSession);
+        given(mockRoom.isFull()).willReturn(false);
 
-    // assert
-    assertTrue(result, "joinRoom should return true on success");
-    verify(mockRoom, times(1)).addPlayer(eq(testPlayer)); // Check addPlayer called once with the correct player
-    assertEquals(testRoomId, mockSessionRoomsMap.get(testSessionId), "sessionRooms map should contain the session-room mapping");
-    verify(mockRoom, times(1)).broadcastRoomStatus();
-    ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockBasicRemote, times(1)).sendText(messageCaptor.capture());
+        // act
+        boolean result = gameRoomManager.joinRoom(testRoomId, mockSession);
 
-    String sentMessage = messageCaptor.getValue();
-    assertTrue(sentMessage.contains("\"type\":\"ROOM_JOINED\""), "Sent message should have type ROOM_JOINED");
-    assertTrue(sentMessage.contains("\"roomId\":\"" + testRoomId + "\""), "Sent message should contain the correct roomId");
-  }
+        // assert
+        assertTrue(result, "joinRoom should return true on success");
+        verify(mockRoom).addPlayer(eq(testPlayer));
+        verify(mockRoom).broadcastRoomStatus();
+        assertEquals(testRoomId, mockSessionRoomsMap.get(sessionId));
+
+        // 检查消息内容
+        ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mockBasicRemote).sendText(messageCaptor.capture());
+
+        String message = messageCaptor.getValue();
+        assertTrue(message.contains("\"type\":\"ROOM_JOINED\""));
+        assertTrue(message.contains("\"roomId\":\"" + testRoomId + "\""));
+    }
+
 
   @Test
   public void joinRoom_Failure_WhenRoomIsFull() throws IOException {
@@ -236,58 +246,77 @@ public class GameRoomManagerTest {
     assertNull(mockSessionRoomsMap.get(testSessionId), "Session-room mapping should be removed");
   }
 
-  @Test
-  public void leaveRoom_Failure_WhenPlayerNotInAnyRoom() {
-    // arrange
-    mockSessionPlayersMap.put(testSessionId, testPlayer);
-    assertNull(mockSessionRoomsMap.get(testSessionId), "Precondition: Player should not be in sessionRooms");
+    @Test
+    public void leaveRoom_Failure_WhenPlayerNotInAnyRoom() {
+        // arrange
+        String sessionId = testSessionId;
+        given(mockSession.getId()).willReturn(sessionId);
+        mockSessionPlayersMap.put(sessionId, testPlayer);
 
-    // act
-    gameRoomManager.leaveRoom(mockSession);
+        // 注入 map
+        gameRoomManager.setSessionPlayersMap(mockSessionPlayersMap);
+        gameRoomManager.setSessionRoomsMap(mockSessionRoomsMap);
+        gameRoomManager.setRooms(mockRoomsMap);
 
-    // assert
-    verify(mockRoom, never()).removePlayer(any(Player.class));
-    verify(mockRoom, never()).isEmpty();
-    assertFalse(mockRoomsMap.containsKey(testRoomId));
-    verify(mockRoom, never()).broadcastRoomStatus();
-    assertTrue(mockSessionPlayersMap.containsKey(testSessionId));
-  }
+        // act
+        gameRoomManager.leaveRoom(mockSession);
 
-  @Test
-  public void createRoom_Success_ShouldCreateConfigureAndStoreRoom() {
-    // arrange
-    int maxPlayers = 4;
-    String roomName = "testRoom_tobeCreate";
-    Player creatorPlayer = testPlayer; // Use the player from setUp
-    String creatorSessionId = testSessionId;
-    Long creatorUserId = testUserId;
-    String creatorName = testNameforUser;
+        // assert
+        verify(mockRoom, never()).removePlayer(any(Player.class));
+        verify(mockRoom, never()).isEmpty();
+        verify(mockRoom, never()).broadcastRoomStatus();
 
-    // makesure player is in sessionPlayers map
-    mockSessionPlayersMap.put(creatorSessionId, creatorPlayer);
+        // 应该正确清除玩家和session信息
+        assertFalse(mockSessionPlayersMap.containsKey(sessionId));
+        assertFalse(mockSessionRoomsMap.containsKey(sessionId));
+    }
 
-    // act
-    GameRoom createdRoom = gameRoomManager.creatRoom(maxPlayers, creatorPlayer, roomName);
 
-    // assert
-    assertNotNull(createdRoom);
 
-    String createdRoomId = createdRoom.getRoomId();
-    assertNotNull(createdRoomId);
-    assertFalse(createdRoomId.isEmpty());
-    assertEquals(creatorName, createdRoom.getOwnerName());
-    assertEquals(creatorUserId, createdRoom.getOwnerId());
-    assertEquals(roomName, createdRoom.getRoomName());
+    @Test
+    public void createRoom_Success_ShouldCreateConfigureAndStoreRoom() {
+        // arrange
+        int maxPlayers = 4;
+        String roomName = "testRoom_tobeCreate";
+        Player creatorPlayer = testPlayer;
+        Session creatorSession = mockSession;
+        String creatorSessionId = testSessionId;
+        Long creatorUserId = testUserId;
+        String creatorName = testNameforUser;
 
-    assertTrue(mockRoomsMap.containsKey(createdRoomId));
-    assertSame(createdRoom, mockRoomsMap.get(createdRoomId));
+        // 将玩家注册进 sessionPlayersMap
+        mockSessionPlayersMap.put(creatorSessionId, creatorPlayer);
 
-    assertTrue(createdRoom.getPlayers().contains(creatorPlayer));
+        // mock session
+        given(creatorSession.getId()).willReturn(creatorSessionId);
+        given(creatorSession.isOpen()).willReturn(true);
 
-    assertEquals(createdRoomId, mockSessionRoomsMap.get(creatorSessionId));
-  }
+        // 注入 mock map
+        gameRoomManager.setSessionPlayersMap(mockSessionPlayersMap);
+        gameRoomManager.setSessionRoomsMap(mockSessionRoomsMap);
+        gameRoomManager.setRooms(mockRoomsMap);
 
-  @Test
+        // act
+        GameRoom createdRoom = gameRoomManager.createRoom(maxPlayers, creatorSession, roomName);
+
+        // assert
+        assertNotNull(createdRoom);
+        String createdRoomId = createdRoom.getRoomId();
+
+        assertNotNull(createdRoomId);
+        assertFalse(createdRoomId.isEmpty());
+        assertEquals(creatorName, createdRoom.getOwnerName());
+        assertEquals(creatorUserId, createdRoom.getOwnerId());
+        assertEquals(roomName, createdRoom.getRoomName());
+        assertSame(createdRoom, mockRoomsMap.get(createdRoomId));
+        assertTrue(createdRoom.getPlayers().contains(creatorPlayer));
+        assertEquals(createdRoomId, mockSessionRoomsMap.get(creatorSessionId));
+    }
+
+
+
+
+    @Test
   public void registerPlayer_Success_ShouldCreateAndStorePlayer() {
     // arrange
     String testToken = "testToken";

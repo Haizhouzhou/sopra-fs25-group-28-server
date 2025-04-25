@@ -14,12 +14,13 @@ import java.util.Set;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
+import javax.websocket.RemoteEndpoint;
+import javax.websocket.Session;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for the GameRoom class.
@@ -156,38 +157,59 @@ public class GameRoomTest {
     assertTrue(foundPlayer2);
   }
 
-  @Test
-  void broadcastGameState_WithGameAndPlayers_ShouldSendStateToAllPlayers() {
-    // arrange
-    assertNotNull(ReflectionTestUtils.getField(gameRoom, "game"));
-    given(mockGame.getGameInformation()).willReturn(mockGameSnapshot);
-    Set<Player> playersSet = gameRoom.getPlayers();
-    playersSet.add(mockPlayer1);
-    playersSet.add(mockPlayer2);
-    assertEquals(2, gameRoom.getCurrentPlayerCount());
+    @Test
+    void broadcastGameState_WithGameAndPlayers_ShouldSendStateToAllPlayers() {
+        // arrange
+        gameRoom.setGameInstance(mockGame); // 设置 mockGame 实例
 
-    ArgumentCaptor<MyWebSocketMessage> messageCaptor = ArgumentCaptor.forClass(MyWebSocketMessage.class);
+        Set<Player> playersSet = gameRoom.getPlayers();
+        playersSet.add(mockPlayer1);
+        playersSet.add(mockPlayer2);
 
-    // act
-    gameRoom.broadcastGameState();
+        // mock 玩家 session 和行为
+        Session mockSession1 = mock(Session.class);
+        Session mockSession2 = mock(Session.class);
+        RemoteEndpoint.Basic mockRemote1 = mock(RemoteEndpoint.Basic.class);
+        RemoteEndpoint.Basic mockRemote2 = mock(RemoteEndpoint.Basic.class);
 
-    // assert
-    verify(mockGame, times(1)).getGameInformation();
-    verify(mockPlayer1, times(1)).sendMessage(messageCaptor.capture());
-    verify(mockPlayer2, times(1)).sendMessage(messageCaptor.capture());
+        given(mockPlayer1.getSession()).willReturn(mockSession1);
+        given(mockPlayer2.getSession()).willReturn(mockSession2);
+        given(mockSession1.isOpen()).willReturn(true);
+        given(mockSession2.isOpen()).willReturn(true);
+        given(mockSession1.getBasicRemote()).willReturn(mockRemote1);
+        given(mockSession2.getBasicRemote()).willReturn(mockRemote2);
+
+        // game.getGameInformation() 返回 mock snapshot
+        given(mockGame.getGameInformation()).willReturn(mockGameSnapshot);
+
+        // 捕获消息
+        ArgumentCaptor<MyWebSocketMessage> messageCaptor1 = ArgumentCaptor.forClass(MyWebSocketMessage.class);
+        ArgumentCaptor<MyWebSocketMessage> messageCaptor2 = ArgumentCaptor.forClass(MyWebSocketMessage.class);
+
+        // act
+        gameRoom.broadcastGameState();
+
+        // assert
+        verify(mockGame, times(1)).getGameInformation();
+
+        verify(mockPlayer1, times(1)).sendMessage(messageCaptor1.capture());
+        verify(mockPlayer2, times(1)).sendMessage(messageCaptor2.capture());
+
+        MyWebSocketMessage msg1 = messageCaptor1.getValue();
+        MyWebSocketMessage msg2 = messageCaptor2.getValue();
+
+        assertEquals(MyWebSocketMessage.TYPE_SERVER_GAME_STATE, msg1.getType());
+        assertEquals(MyWebSocketMessage.TYPE_SERVER_GAME_STATE, msg2.getType());
+
+        assertEquals(gameRoom.getRoomId(), msg1.getRoomId());
+        assertEquals(gameRoom.getRoomId(), msg2.getRoomId());
+
+        assertSame(mockGameSnapshot, msg1.getContent());
+        assertSame(mockGameSnapshot, msg2.getContent());
+    }
 
 
-    List<MyWebSocketMessage> capturedMessages = messageCaptor.getAllValues();
-    assertEquals(2, capturedMessages.size()); // Ensure both captures happened
-
-    MyWebSocketMessage sentMessage = capturedMessages.get(0); // Check the first captured message
-    assertNotNull(sentMessage);
-    assertEquals(MyWebSocketMessage.TYPE_SERVER_GAME_STATE, sentMessage.getType()    );
-    assertEquals(testRoomId, sentMessage.getRoomId());
-    assertSame(mockGameSnapshot, sentMessage.getContent());
-  }
-
-  @Test
+    @Test
   void broadcastGameState_WhenGameIsNull_ShouldDoNothing() {
     // arrange
     ReflectionTestUtils.setField(gameRoom, "game", null);

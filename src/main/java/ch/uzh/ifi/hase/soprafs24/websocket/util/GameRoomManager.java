@@ -33,14 +33,29 @@ public class GameRoomManager {
 
     public Player registerPlayer(Session session, String token) {
         User correspondingUser = userService.getUserByToken(token);
-        Player player = new Player(session, correspondingUser.getName(), correspondingUser.getId());
-        sessionPlayers.put(session.getId(), player);
-        player.setAvatar(correspondingUser.getAvatar());
+        Long userId = correspondingUser.getId();
 
+        // 查找是否已有该用户的 Player 实例（用于重新连接时复用）
+        Player existing = sessionPlayers.values().stream()
+                .filter(p -> p.getUserId().equals(userId))
+                .findFirst()
+                .orElse(null);
+
+        Player player;
+        if (existing != null) {
+            player = existing;
+            player.setSession(session);
+        } else {
+            player = new Player(session, correspondingUser.getName(), userId);
+            sessionPlayers.put(session.getId(), player);
+        }
+
+        player.setAvatar(correspondingUser.getAvatar());
         System.out.println("[registerPlayer] avatar = " + correspondingUser.getAvatar());
 
         return player;
     }
+
 
     public void deregisterPlayer(Session session) {
         String sessionId = session.getId();
@@ -58,30 +73,42 @@ public class GameRoomManager {
     public Map<String, String> getSessionRoomsMap(){return sessionRooms;}
     public void setSessionRoomsMap(Map<String, String> sessionRooms){this.sessionRooms = sessionRooms;}
 
-    public GameRoom creatRoom(int maxPlayers, Player player, String roomName) {
+    public GameRoom createRoom(int maxPlayers, Session session, String roomName) {
+        Player player = getPlayerBySession(session);
+        if (player == null || session == null || !session.isOpen()) {
+            System.out.println("createRoom: session is null or closed");
+            return null;
+        }
+
         String roomId = generateRoomId();
         GameRoom room = new GameRoom(roomId, maxPlayers);
         room.setOwnerName(player.getName());
         room.setOwnerId(player.getUserId());
-        room.setRoomName(roomName); // 保存房间名
+        room.setRoomName(roomName);
+
         rooms.put(roomId, room);
         room.addPlayer(player);
-        sessionRooms.put(player.getSession().getId(), roomId);
+        sessionRooms.put(session.getId(), roomId);
+
         room.broadcastRoomStatus();
         return room;
     }
 
     public boolean joinRoom(String roomId, Session session) {
+        Player player = getPlayerBySession(session);
+        if (player == null || session == null || !session.isOpen()) {
+            System.out.println("joinRoom: session is null or closed");
+            return false;
+        }
+
         GameRoom room = rooms.get(roomId);
         if (room == null || room.isFull()) {
             return false;
         }
 
-        Player player = sessionPlayers.get(session.getId());
         room.addPlayer(player);
-
-        // 确保这行代码执行，将会话ID与房间ID关联起来
         sessionRooms.put(session.getId(), roomId);
+        sessionPlayers.put(session.getId(), player);
 
         room.broadcastRoomStatus();
 
@@ -98,6 +125,8 @@ public class GameRoomManager {
     }
 
     public void leaveRoom(Session session) {
+        if (session == null) return;
+
         String sessionId = session.getId();
         Player player = sessionPlayers.get(sessionId);
         String roomId = sessionRooms.get(sessionId);
@@ -108,13 +137,18 @@ public class GameRoomManager {
                 room.removePlayer(player);
                 if (room.isEmpty()) {
                     rooms.remove(roomId);
+                    System.out.println("Room " + roomId + " is empty and has been removed.");
                 } else {
                     room.broadcastRoomStatus();
                 }
             }
-            sessionRooms.remove(sessionId);
         }
+
+        sessionRooms.remove(sessionId);
+        sessionPlayers.remove(sessionId);
     }
+
+
 
 
     private String generateRoomId() {

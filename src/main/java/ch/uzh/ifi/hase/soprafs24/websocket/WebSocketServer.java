@@ -135,42 +135,51 @@ public class WebSocketServer {
                 }
             }
 
-            Player player = getPlayerFromMessage(session, message);
-            GameRoom room = roomManager.creatRoom(maxPlayers, player, roomName);
-            boolean joined = roomManager.joinRoom(room.getRoomId(), session);
-
-            if (joined) {
-                MyWebSocketMessage joinedMsg = new MyWebSocketMessage();
-                joinedMsg.setType(MyWebSocketMessage.TYPE_SERVER_ROOM_JOINED);
-                joinedMsg.setRoomId(room.getRoomId());
-                session.getBasicRemote().sendText(objectMapper.writeValueAsString(joinedMsg));
+            // 直接用 session 创建房间
+            GameRoom room = roomManager.createRoom(maxPlayers, session, roomName);
+            if (room == null) {
+                log.warn("❌ Failed to create room: session is closed");
+                return;
             }
+
+            // 给客户端发送 ROOM_JOINED 消息
+            MyWebSocketMessage joinedMsg = new MyWebSocketMessage();
+            joinedMsg.setType(MyWebSocketMessage.TYPE_SERVER_ROOM_JOINED);
+            joinedMsg.setRoomId(room.getRoomId());
+            session.getBasicRemote().sendText(objectMapper.writeValueAsString(joinedMsg));
+
         } catch (Exception e) {
             log.error("Failed to create room {}", e);
         }
     }
 
 
+
     private void handleJoinRoom(Session session, MyWebSocketMessage message) {
         boolean joined = roomManager.joinRoom(message.getRoomId(), session);
+        if (!joined) {
+            log.warn("joinRoom: session is null or closed");
+            return;
+        }
+
+        Player player = getPlayerFromMessage(session, message);
+        if (player == null) {
+            log.warn("No player found for session: {}", session.getId());
+            return;
+        }
 
         String clientSessionId = message.getSessionId();
-        Player player = getPlayerFromMessage(session, message);
-        if (clientSessionId != null && player != null) {
+        if (clientSessionId != null) {
             roomManager.registerClientSessionId(clientSessionId, player);
             log.info("✅ Registered clientSessionId {} → userId {}", clientSessionId, player.getUserId());
         }
 
-        if (joined) {
-            GameRoom room = roomManager.getRoom(message.getRoomId());
-            if (room != null) {
-                room.broadcastRoomStatus();
-            }
+        GameRoom room = roomManager.getRoom(message.getRoomId());
+        if (room != null) {
+            room.broadcastRoomStatus();
         }
-        // if(joined){
-        //   sendRoomJoinedMessage(session, message.getRoomId());
-        // }
     }
+
 
     private void handleLeaveRoom(Session session) {
         roomManager.leaveRoom(session);
@@ -267,13 +276,11 @@ public class WebSocketServer {
             Map<String, Object> content = (Map<String, Object>) message.getContent();
             log.info("PLAYER_STATUS content: {}", content);
 
-            // 检查 content 是否为 null 或空
             if (content == null || content.isEmpty()) {
                 log.warn("PLAYER_STATUS message with empty content");
                 return;
             }
 
-            // 检查 userId 和 status 字段是否存在
             if (!content.containsKey("userId") || !content.containsKey("status")) {
                 log.warn("PLAYER_STATUS missing required fields. Content: {}", content);
                 return;
@@ -287,16 +294,21 @@ public class WebSocketServer {
 
             GameRoom room = roomManager.getRoom(roomId);
             if (room != null) {
-                Player player = getPlayerFromMessage(session, message);
-                log.info("Found player: {}, userId: {}", player != null ? player.getName() : "null", player != null ? player.getUserId() : "null");
+                Player foundPlayer = null;
+                for (Player p : room.getPlayers()) {
+                    if (p.getUserId().equals(userId)) {
+                        foundPlayer = p;
+                        break;
+                    }
+                }
 
-                if (player != null && player.getUserId().equals(userId)) {
-                    log.info("Setting player {} status to {}", player.getName(), isReady);
-                    player.setStatus(isReady);
+                if (foundPlayer != null) {
+                    log.info("Setting player {} status to {}", foundPlayer.getName(), isReady);
+                    System.out.println("Player " + foundPlayer.getName() + " (id:" + userId + ") status changing from " + foundPlayer.getStatus() + " to " + isReady + " [instance: " + System.identityHashCode(foundPlayer) + "]");
+                    foundPlayer.setStatus(isReady);
                     room.broadcastRoomStatus();
                 } else {
-                    log.warn("Player mismatch or not found. Session player: {}, Requested userId: {}",
-                            player != null ? player.getUserId() : "null", userId);
+                    log.warn("Player not found in room: userId={}", userId);
                 }
             } else {
                 log.warn("Room not found: {}", roomId);
@@ -305,6 +317,7 @@ public class WebSocketServer {
             log.error("Error handling PLAYER_STATUS message: {}", e.getMessage(), e);
         }
     }
+
 
     /**
      * 用于处理房间内，所有玩家准备好后，房主开始游戏
