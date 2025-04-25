@@ -75,11 +75,11 @@ reason).
 
 ## Contributions Week 4 - [Begin Date] to [End Date]
 
-| **Student**                    | **Date**  | **Link to Commit**                                           | **Description**                                | **Relevance**                      |
-| ------------------------------ | --------- | ------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------- |
-| **Zizhou Luo (@Skiingseason)** | 2025.4.23 | [0dd7272](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/0dd72727f6c0c184d04209b980df4f1649bba86d) | fix sonarQube code coverage not visiable issue | important metrics for code quality |
-|                                |           |                                                              |                                                |                                    |
-|                                |           |                                                              |                                                |                                    |
+| **Student**                    | **Date**  | **Link to Commit**                                           | **Description**                                | **Relevance**                                                |
+| ------------------------------ | --------- | ------------------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------ |
+| **Zizhou Luo (@Skiingseason)** | 2025.4.23 | [0dd7272](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/0dd72727f6c0c184d04209b980df4f1649bba86d) | fix sonarQube code coverage not visiable issue | important metrics for code quality                           |
+|                                | 2025.4.25 | [3e9ccc2](https://github.com/Haizhouzhou/sopra-fs25-group-28-server/commit/3e9ccc259c5cdbfa40c3c99245c3c5e24a3b1396) | implemented test for multiple component        | helpful for making sure these component works and helpful for later code refactorization. |
+|                                |           |                                                              |                                                |                                                              |
 
 ---
 

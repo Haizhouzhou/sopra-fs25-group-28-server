@@ -43,38 +43,24 @@ public class GameRoomHandleTest {
 
   @BeforeEach
   void setUp() {
-    // Initialize mocks created with annotations (@Mock, @InjectMocks)
     MockitoAnnotations.openMocks(this);
 
-    // Create a new GameRoom instance for each test
     gameRoom = new GameRoom(testRoomId, testMaxPlayers);
-    gameRoom.setRoomName(testRoomName); // Set a name for testing
+    gameRoom.setRoomName(testRoomName);
 
     gameRoom.setGameInstance(mockGame);
 
-
-    // --- Manually add players to the private 'players' set ---
-    // The 'players' set in GameRoom is private, so use ReflectionTestUtils
-    // Ensure the type matches the actual implementation (e.g., ConcurrentHashMap.newKeySet())
     Set<Player> players = ConcurrentHashMap.newKeySet();
     players.add(mockPlayer1);
     players.add(mockPlayer2);
     ReflectionTestUtils.setField(gameRoom, "players", players);
 
-    // Basic player setup
-    // given(mockPlayer1.getUserId()).willReturn(1L);
-    // given(mockPlayer2.getUserId()).willReturn(2L);
-
   }
-
-  // ======================================
-  // Tests for handleBuyCard
-  // ======================================
 
   @Test
   void handleBuyCard_Success_CallsGameBuyCardAndReturnsTrue() {
     // arrange
-    given(mockGame.buyCard(mockPlayer1, validCardIdLong)).willReturn(true); // Simulate successful buy
+    given(mockGame.buyCard(mockPlayer1, validCardIdLong)).willReturn(true); // mock successful buy
 
     // act
     boolean result = gameRoom.handleBuyCard(mockPlayer1, validCardIdStr);
@@ -87,71 +73,63 @@ public class GameRoomHandleTest {
   @Test
   void handleBuyCard_GameLogicFails_CallsGameBuyCardAndReturnsFalse() {
     // arrange
-    given(mockGame.buyCard(mockPlayer1, validCardIdLong)).willReturn(false); // Simulate failed buy
+    given(mockGame.buyCard(mockPlayer1, validCardIdLong)).willReturn(false); // mock failed buy
 
     // act
     boolean result = gameRoom.handleBuyCard(mockPlayer1, validCardIdStr);
 
-    // Assert
+    // assert
     assertFalse(result, "handleBuyCard should return false when game logic fails");
     verify(mockGame, times(1)).buyCard(mockPlayer1, validCardIdLong);
   }
 
   @Test
   void handleBuyCard_GameIsNull_ReturnsFalse() {
-    // Arrange
-    // InjectMocks provides mockGame, but we can override it for this test
-    ReflectionTestUtils.setField(gameRoom, "game", null); // Ensure game is null
+    // arrange
+    ReflectionTestUtils.setField(gameRoom, "game", null); 
 
-    // Act
+    // act
     boolean result = gameRoom.handleBuyCard(mockPlayer1, validCardIdStr);
 
-    // Assert
+    // assert
     assertFalse(result, "handleBuyCard should return false when game instance is null");
-    // No need to verify mockGame interactions as it's null
   }
-
-  // ======================================
-  // Tests for handleReserveCard
-  // ======================================
 
   @Test
   void handleReserveCard_Success_CallsGameReserveCardAndReturnsTrue() {
-    // Arrange
-    given(mockGame.reserveCard(mockPlayer1, validCardIdLong)).willReturn(true); // Simulate successful reserve
+    // arrange
+    given(mockGame.reserveCard(mockPlayer1, validCardIdLong)).willReturn(true);
 
-    // Act
+    // act
     boolean result = gameRoom.handleReserveCard(mockPlayer1, validCardIdStr);
 
-    // Assert
+    // assert
     assertTrue(result, "handleReserveCard should return true on success");
-    verify(mockGame, times(1)).reserveCard(mockPlayer1, validCardIdLong); // Verify game.reserveCard was called
-    // We infer broadcasting happens because result is true
+    verify(mockGame, times(1)).reserveCard(mockPlayer1, validCardIdLong);
   }
 
   @Test
   void handleReserveCard_GameLogicFails_CallsGameReserveCardAndReturnsFalse() {
-    // Arrange
-    given(mockGame.reserveCard(mockPlayer1, validCardIdLong)).willReturn(false); // Simulate failed reserve
+    // arrange
+    given(mockGame.reserveCard(mockPlayer1, validCardIdLong)).willReturn(false);
 
-    // Act
+    // act
     boolean result = gameRoom.handleReserveCard(mockPlayer1, validCardIdStr);
 
-    // Assert
+    // assert
     assertFalse(result, "handleReserveCard should return false when game logic fails");
-    verify(mockGame, times(1)).reserveCard(mockPlayer1, validCardIdLong); // Verify game.reserveCard was still called
-    // We infer broadcasting does NOT happen because result is false
+    verify(mockGame, times(1)).reserveCard(mockPlayer1, validCardIdLong);
   }
 
   @Test
   void handleReserveCard_GameIsNull_ReturnsFalse() {
-    // Arrange
-    ReflectionTestUtils.setField(gameRoom, "game", null); // Ensure game is null
+    // arrange
+    ReflectionTestUtils.setField(gameRoom, "game", null);
 
-    // Act
+    // act
     boolean result = gameRoom.handleReserveCard(mockPlayer1, validCardIdStr);
 
-    // Assert
+    // assert
     assertFalse(result, "handleReserveCard should return false when game instance is null");
   }
 }
