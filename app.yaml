@@ -11,6 +11,7 @@ env: flex
 
 automatic_scaling:
   max_num_instances: 1
+  # min_num_instances: 1 # at least 1 instance running, so data in H2 database will not be throw away when no user acess?
 
 runtime_config:
   operating_system: "ubuntu22"
