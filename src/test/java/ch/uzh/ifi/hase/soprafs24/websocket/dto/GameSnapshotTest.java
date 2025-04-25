@@ -1,10 +1,5 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.dto;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.when;
-import org.mockito.MockedStatic;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,10 +7,16 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.MockedStatic;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 
 public class GameSnapshotTest {
@@ -58,6 +59,9 @@ public class GameSnapshotTest {
     Player player = mock(Player.class); // mock player
     List<Player> players = List.of(player);
 
+    GameRoom gameRoom = mock(GameRoom.class);
+    when(gameRoom.getRoomName()).thenReturn("test-gameRoom");
+
     Game game = mock(Game.class);
     when(game.getGameId()).thenReturn("test-game");
     when(game.getPlayers()).thenReturn(players);
@@ -68,6 +72,8 @@ public class GameSnapshotTest {
     when(game.getVisibleLevel2Cards()).thenReturn(new ArrayList<>());
     when(game.getVisibleLevel3Cards()).thenReturn(new ArrayList<>());
     when(game.getVisibleNoble()).thenReturn(new ArrayList<>());
+    when(game.getGameRoom()).thenReturn(gameRoom);
+
   
     try (MockedStatic<PlayerSnapshot> mockedStatic = mockStatic(PlayerSnapshot.class)) {
       mockedStatic.when(() -> PlayerSnapshot.createFromPlayer(player)).thenReturn(p1);
@@ -76,9 +82,14 @@ public class GameSnapshotTest {
       GameSnapshot snapshot = GameSnapshot.createFromGame(game);
 
       // Assert
+  
       assert snapshot.getGameId().equals("test-game");
       assert snapshot.getPlayerSnapshots().size() == 1;
       assert snapshot.getPlayerSnapshots().get(0).getUserId() == 1L;
+
+      ObjectMapper mapper = new ObjectMapper();
+      String json = mapper.writeValueAsString(snapshot);
+      System.out.println("Serialized GameSnapshot: " + json);
     }
   }
   
