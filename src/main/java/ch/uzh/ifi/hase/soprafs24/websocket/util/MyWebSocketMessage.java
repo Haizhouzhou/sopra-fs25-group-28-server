@@ -50,6 +50,7 @@ public class MyWebSocketMessage {
   public static final String TYPE_SERVER_ROOM_STATE = "ROOM_STATE";
   public static final String TYPE_SERVER_GAME_STATE = "GAME_STATE";
 
+  public static final String TYPE_SERVER_GAME_OVER = "GAME_OVER";
   public static final String TYPE_CLIENT_START_GAME = "START_GAME";
 
   // added, message about game
@@ -68,19 +69,19 @@ public class MyWebSocketMessage {
 
   private static final Set<String> VALID_SERVER_TYPES = Set.of(
     TYPE_SERVER_ROOM_CREATED, TYPE_SERVER_ROOM_JOINED, TYPE_SERVER_ROOM_LEFT, TYPE_SERVER_CHAT_MESSAGE, TYPE_SERVER_ROOM_STATE, TYPE_SERVER_ROOM_LIST, TYPE_SERVER_GAME_STATE,
-    TYPE_SERVER_ERROR, TYPE_SERVER_INFO, TYPE_SERVER_AI_HINT_RESULT
+    TYPE_SERVER_ERROR, TYPE_SERVER_INFO, TYPE_SERVER_AI_HINT_RESULT,TYPE_SERVER_GAME_OVER
   );
 
   private static final Set<String> ALL_VALID_TYPES = UnionSet(VALID_CLIENT_TYPES, VALID_SERVER_TYPES);
 
 
   public String getType(){return type;}
-  public boolean  setType(String type){
-    if(ALL_VALID_TYPES.contains(type)){
+
+  public void setType(String type) {
+      if (!ALL_VALID_TYPES.contains(type)) {
+          throw new IllegalArgumentException("Invalid message type: " + type);
+      }
       this.type = type;
-      return true;
-    }
-    return false;
   }
 
   public String getRoomId(){return roomId;}

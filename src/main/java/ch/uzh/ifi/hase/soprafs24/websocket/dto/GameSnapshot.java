@@ -17,8 +17,11 @@ public class GameSnapshot {
   private int currentPlayerIndex;
   private int currentRound;
   private Map<GemColor, Long> availableGems;
+  private Long victoryPoints;
+  private Map<GemColor, Long> bonusGems;
 
-  private List<Long> visibleLevel1cardIds = new ArrayList<>();
+
+    private List<Long> visibleLevel1cardIds = new ArrayList<>();
   private List<Long> visibleLevel2cardIds = new ArrayList<>();
   private List<Long> visibleLevel3cardIds = new ArrayList<>();
 
@@ -105,7 +108,7 @@ public class GameSnapshot {
     }
     snapshot.setPlayerSnapshots(playerSnapshots);
 
-    return snapshot;
+      return snapshot;
   }
 
 }

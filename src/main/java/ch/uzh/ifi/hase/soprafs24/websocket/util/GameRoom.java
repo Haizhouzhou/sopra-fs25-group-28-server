@@ -79,7 +79,7 @@ public class GameRoom {
 
       // 构造游戏结束消息
       MyWebSocketMessage message = new MyWebSocketMessage();
-      message.setType("GAME_OVER");
+      message.setType(MyWebSocketMessage.TYPE_SERVER_GAME_OVER);
       message.setRoomId(roomId);
 
       // 获取玩家信息

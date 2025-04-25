@@ -27,7 +27,7 @@ public class Game {
     FINISHED        // 游戏已结束
   }
 
-  private final Long VICTORYPOINTS = 5L;
+  private final Long VICTORYPOINTS = 1L;
 
   // unique id for the game
   private final String gameId;
