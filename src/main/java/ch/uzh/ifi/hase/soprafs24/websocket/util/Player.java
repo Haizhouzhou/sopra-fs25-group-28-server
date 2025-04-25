@@ -32,10 +32,8 @@ public class Player {
   private Map<GemColor, Long> bonusGems; //gems collect from development card
   private Long victoryPoints;
   public List<Card> reservedCards = new ArrayList<>();
-
-
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+  private final Object sendLock = new Object(); // 发送锁
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
   public Player(Session session, String name, Long userId){
     this.session = session;
@@ -140,7 +138,10 @@ public void setAvatar(String avatar) {
               messageStr = objectMapper.writeValueAsString(message); // 根据注解格式化 JSON
           }
 
-          session.getBasicRemote().sendText(messageStr);
+          synchronized (sendLock) {
+              session.getBasicRemote().sendText(messageStr);
+          }
+
           System.out.println("Message sent to user: " + messageStr);
 
       } catch (IOException e) {

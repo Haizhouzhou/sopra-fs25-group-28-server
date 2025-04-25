@@ -4,10 +4,12 @@ import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Card;
-
+import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import javax.websocket.Session;
 import java.lang.reflect.Field;
@@ -18,12 +20,17 @@ import static org.mockito.Mockito.*;
 
 public class PlayerActionServiceTest {
 
+    @Mock
+    private GameRoom mockGameRoom;
+
     private PlayerActionService service;
     private Game game;
     private Player player;
 
     @BeforeEach
     public void setup() {
+        MockitoAnnotations.openMocks(this);
+
         service = new PlayerActionService();
 
         // Mock WebSocket session
@@ -45,7 +52,7 @@ public class PlayerActionServiceTest {
         players.add(player);
 
         // Spy the Game to mock endTurn
-        Game realGame = new Game("test-game-id", players);
+        Game realGame = new Game(mockGameRoom, "test-game-id", players);
         Game spyGame = spy(realGame);
         doNothing().when(spyGame).endTurn();
         this.game = spyGame;

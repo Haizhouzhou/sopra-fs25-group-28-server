@@ -1,5 +1,11 @@
 package ch.uzh.ifi.hase.soprafs24.websocket;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -8,25 +14,19 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
-import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
-import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ch.uzh.ifi.hase.soprafs24.config.SpringContext;
+import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoomManager;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.GeminiHint;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.MyWebSocketMessage;
-
-import ch.uzh.ifi.hase.soprafs24.config.SpringContext;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 
 // TODO：modify endpoint
 @ServerEndpoint(value = "/WebServer/{tokenParam}",
@@ -37,6 +37,7 @@ public class WebSocketServer {
     private static Logger log = LoggerFactory.getLogger(WebSocketServer.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final GameRoomManager roomManager = SpringContext.getBean(GameRoomManager.class);
+    private final GeminiHint geminiHint = SpringContext.getBean(GeminiHint.class);
 
 
 //  private GameRoomManager roomManager;
@@ -90,10 +91,13 @@ public class WebSocketServer {
                 case MyWebSocketMessage.TYPE_CLIENT_BUY_CARD -> handleBuyCard(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_RESERVE_CARD -> handleReserveCard(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_END_TURN -> handleEndTurn(session, wsMessage);
-                case MyWebSocketMessage.TYPE_CLIENT_NOBLE_VISIT -> handleNobleVisit(session, wsMessage);
+                // case MyWebSocketMessage.TYPE_CLIENT_NOBLE_VISIT -> handleNobleVisit(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_AI_HINT -> handleAiHint(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_TAKE_THREE_GEMS -> handleTakeThreeGems(session, wsMessage);
                 case MyWebSocketMessage.TYPE_CLIENT_TAKE_DOUBLE_GEM -> handleTakeDoubleGem(session, wsMessage);
+
+                case MyWebSocketMessage.TYPE_CLIENT_GET_ROOM_STATE -> handleGetRoomState(session, wsMessage);
+
 
 
 
@@ -150,6 +154,12 @@ public class WebSocketServer {
             log.info("✅ Registered clientSessionId {} → userId {}", clientSessionId, player.getUserId());
         }
 
+        if (joined) {
+            GameRoom room = roomManager.getRoom(message.getRoomId());
+            if (room != null) {
+                room.broadcastRoomStatus();
+            }
+        }
         // if(joined){
         //   sendRoomJoinedMessage(session, message.getRoomId());
         // }
@@ -240,6 +250,11 @@ public class WebSocketServer {
         }
     }
 
+    /**
+     * 用于处理玩家在房间中改变“准备/未准备”状态
+     * @param session
+     * @param message
+     */
     private void handlePlayerStatus(Session session, MyWebSocketMessage message) {
         try {
             Map<String, Object> content = (Map<String, Object>) message.getContent();
@@ -284,6 +299,9 @@ public class WebSocketServer {
         }
     }
 
+    /**
+     * 用于处理房间内，所有玩家准备好后，房主开始游戏
+     */
     private void handleStartGame(Session session, MyWebSocketMessage message) {
         try {
             String roomId = message.getRoomId();
@@ -383,7 +401,7 @@ public class WebSocketServer {
     }
 
     /**
-     * 处理玩家购买卡牌的请求
+     * 游戏内，处理玩家购买卡牌的请求
      */
     private void handleBuyCard(Session session, MyWebSocketMessage message) {
         try {
@@ -396,14 +414,14 @@ public class WebSocketServer {
                 return;
             }
 
-            // 获取房间
+            // 从前端请求信息中，获取房间id
             GameRoom room = roomManager.getRoom(roomId);
             if (room == null) {
                 log.warn("Room not found: {}", roomId);
                 return;
             }
 
-            // 获取卡牌ID
+            // 从前端请求信息中，获取卡牌ID
             Map<String, Object> content = (Map<String, Object>) message.getContent();
             String target = (String) content.get("target");
 
@@ -467,7 +485,7 @@ public class WebSocketServer {
     }
 
     /**
-     * 处理玩家结束回合的请求
+     * 游戏内，处理玩家结束回合的请求
      */
     private void handleEndTurn(Session session, MyWebSocketMessage message) {
         try {
@@ -520,93 +538,80 @@ public class WebSocketServer {
     /**
      * 处理玩家访问贵族的请求
      */
-    private void handleNobleVisit(Session session, MyWebSocketMessage message) {
-        try {
-            // 获取房间ID和玩家
-            String roomId = message.getRoomId();
-            Player player = getPlayerFromMessage(session, message);
+    // private void handleNobleVisit(Session session, MyWebSocketMessage message) {
+    //     try {
+    //         // 获取房间ID和玩家
+    //         String roomId = message.getRoomId();
+    //         Player player = getPlayerFromMessage(session, message);
 
-            if (player == null) {
-                log.warn("Player not found for session");
-                return;
-            }
+    //         if (player == null) {
+    //             log.warn("Player not found for session");
+    //             return;
+    //         }
 
-            // 获取房间
-            GameRoom room = roomManager.getRoom(roomId);
-            if (room == null) {
-                log.warn("Room not found: {}", roomId);
-                return;
-            }
+    //         // 获取房间
+    //         GameRoom room = roomManager.getRoom(roomId);
+    //         if (room == null) {
+    //             log.warn("Room not found: {}", roomId);
+    //             return;
+    //         }
 
-            // 获取贵族ID
-            Map<String, Object> content = (Map<String, Object>) message.getContent();
-            String target = (String) content.get("target");
+    //         // 获取贵族ID
+    //         Map<String, Object> content = (Map<String, Object>) message.getContent();
+    //         String target = (String) content.get("target");
 
-            if (target == null) {
-                log.warn("No target noble specified");
-                return;
-            }
+    //         if (target == null) {
+    //             log.warn("No target noble specified");
+    //             return;
+    //         }
 
-            // 执行访问贵族操作
-            boolean success = room.handleNobleVisit(player, target);
+    //         // 执行访问贵族操作
+    //         boolean success = room.handleNobleVisit(player, target);
 
-            if (!success) {
-                // 发送错误消息给玩家
-                room.sendErrorToPlayer(player, "无法访问贵族，请检查是否是您的回合或是否满足贵族要求。");
-            }
-        } catch (Exception e) {
-            log.error("Error handling NOBLE_VISIT message: {}", e.getMessage(), e);
-        }
-    }
+    //         if (!success) {
+    //             // 发送错误消息给玩家
+    //             room.sendErrorToPlayer(player, "无法访问贵族，请检查是否是您的回合或是否满足贵族要求。");
+    //         }
+    //     } catch (Exception e) {
+    //         log.error("Error handling NOBLE_VISIT message: {}", e.getMessage(), e);
+    //     }
+    // }
 
     /**
-     * 处理玩家请求AI提示的请求
+     * 游戏内，处理玩家请求AI提示的请求
      */
     private void handleAiHint(Session session, MyWebSocketMessage message) {
         try {
-            // 获取房间ID和玩家
             String roomId = message.getRoomId();
             Player player = getPlayerFromMessage(session, message);
+            if (player == null) return;
 
-            if (player == null) {
-                log.warn("Player not found for session");
-                return;
-            }
-
-            // 获取房间
             GameRoom room = roomManager.getRoom(roomId);
-            if (room == null) {
-                log.warn("Room not found: {}", roomId);
-                return;
-            }
+            if (room == null) return;
 
-            // 获取房间的游戏实例
             Game game = room.getGame();
-            if (game == null) {
-                log.warn("Game not found in room: {}", roomId);
-                return;
-            }
+            if (game == null) return;
 
-            // 检查是否是玩家的回合
             if (!game.isPlayerTurn(player)) {
                 room.sendErrorToPlayer(player, "只能在您的回合请求提示。");
                 return;
             }
 
-            // 发送提示消息
-            MyWebSocketMessage hintMessage = new MyWebSocketMessage();
-            hintMessage.setType(MyWebSocketMessage.TYPE_SERVER_AI_HINT_RESULT);
-            hintMessage.setRoomId(roomId);
+            // GeminiHint
+            String hint = geminiHint.generateSplendorHint(game);
 
-            Map<String, String> content = new HashMap<>();
-            content.put("message", "此功能尚未实现，敬请期待！");
-            hintMessage.setContent(content);
+            // WebSocket return
+            MyWebSocketMessage hintMessage = new MyWebSocketMessage();
+            hintMessage.setType(MyWebSocketMessage.TYPE_SERVER_AI_HINT);
+            hintMessage.setRoomId(roomId);
+            hintMessage.setContent(Map.of("hint", hint));
 
             player.sendMessage(hintMessage);
         } catch (Exception e) {
             log.error("Error handling AI_HINT message: {}", e.getMessage(), e);
         }
     }
+
 
 
     private Player getPlayerFromMessage(Session session, MyWebSocketMessage message) {
@@ -626,6 +631,9 @@ public class WebSocketServer {
         return player;
     }
 
+    /**
+     * 游戏内，处理玩家拿三个不同颜色gem的请求
+     */
     private void handleTakeThreeGems(Session session, MyWebSocketMessage message) {
         try {
             String roomId = message.getRoomId();
@@ -647,7 +655,9 @@ public class WebSocketServer {
         }
     }
 
-
+    /**
+     * 游戏内，处理玩家拿两个相同颜色gems的请求
+     */
     private void handleTakeDoubleGem(Session session, MyWebSocketMessage message) {
         try {
             String roomId = message.getRoomId();
@@ -668,6 +678,15 @@ public class WebSocketServer {
             log.error("handleTakeDoubleGem error: ", e);
         }
     }
+
+    private void handleGetRoomState(Session session, MyWebSocketMessage message) {
+        String roomId = message.getRoomId();
+        GameRoom room = roomManager.getRoom(roomId);
+        if (room != null) {
+            room.broadcastRoomStatus(); // 或者只发给当前玩家也行
+        }
+    }
+
 
 
 
