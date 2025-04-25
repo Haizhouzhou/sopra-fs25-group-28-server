@@ -17,11 +17,11 @@ public class GameRoomManager {
 
     private final UserService userService;
 
-    private final Map<String, GameRoom> rooms = new ConcurrentHashMap<>();
-    private final Map<String, Player> sessionPlayers = new ConcurrentHashMap<>();
-    private final Map<String, String> sessionRooms = new ConcurrentHashMap<>();
+    private Map<String, GameRoom> rooms = new ConcurrentHashMap<>();
+    private Map<String, Player> sessionPlayers = new ConcurrentHashMap<>();
+    private Map<String, String> sessionRooms = new ConcurrentHashMap<>();
 
-    private final Map<Long, String> userIdToUsername = new ConcurrentHashMap<>();
+    private Map<Long, String> userIdToUsername = new ConcurrentHashMap<>();
 
     private final Map<String, Player> clientSessionIdToPlayerMap = new HashMap<>();
 
@@ -46,6 +46,17 @@ public class GameRoomManager {
         String sessionId = session.getId();
         sessionPlayers.remove(sessionId);
     }
+
+    /**
+     * getter and setter used for unit test
+     * 
+     */
+    public Map<String, GameRoom> getRooms(){return rooms;}
+    public void setRooms(Map<String, GameRoom> rooms){this.rooms = rooms;}
+    public Map<String, Player> getSessionPlayersMap(){return sessionPlayers;}
+    public void setSessionPlayersMap(Map<String, Player> sessionPlayers){this.sessionPlayers = sessionPlayers;}
+    public Map<String, String> getSessionRoomsMap(){return sessionRooms;}
+    public void setSessionRoomsMap(Map<String, String> sessionRooms){this.sessionRooms = sessionRooms;}
 
     public GameRoom creatRoom(int maxPlayers, Player player, String roomName) {
         String roomId = generateRoomId();
