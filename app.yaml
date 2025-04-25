@@ -2,4 +2,19 @@
 # https://cloud.google.com/appengine/docs/standard
 
 runtime: java17
-instance_class: F2
+# instance_class: F2
+
+
+# instance_class: F2 - this is standard environment specific according to GPT
+# runtime: java
+env: flex
+
+automatic_scaling:
+  max_num_instances: 1
+
+runtime_config:
+  operating_system: "ubuntu22"
+  runtime_version: "17"
+
+readiness_check:
+  app_start_timeout_sec: 600
