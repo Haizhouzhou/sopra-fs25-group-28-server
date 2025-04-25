@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
  */
 public class GameRoomTest {
 
-  // Class under test - we will use a real instance
+  // no default constructor, need to be initialize manually
   private GameRoom gameRoom;
 
   // Mocks for dependencies (Players)
