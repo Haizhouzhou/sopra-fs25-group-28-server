@@ -437,34 +437,45 @@ public class GameRoom {
         Set<String> uniqueColors = new HashSet<>(colors);
         if (uniqueColors.size() != 3) return false;
 
-        for (String colorStr : colors) {
-            GemColor color = GemColor.valueOf(colorStr.toUpperCase());
-            if (game.getAvailableGems().get(color) <= 0) return false;
+        // convert string to GemColor
+        List<GemColor> colorList = new ArrayList<>();
+        try {
+            for (String colorStr : colors) {
+                colorList.add(GemColor.valueOf(colorStr.toUpperCase()));
+            }
+        } catch (IllegalArgumentException e) {
+            // incorrect color string
+            return false;
         }
 
-        for (String colorStr : colors) {
-            GemColor color = GemColor.valueOf(colorStr.toUpperCase());
-            player.setGem(color, player.getGem(color) + 1);
-            game.getAvailableGems().put(color, game.getAvailableGems().get(color) - 1);
-        }
+        // call game.takeGems
+        boolean success = game.takeGems(player, colorList);
 
-        broadcastGameState();
-        return true;
+        if (success) {
+            broadcastGameState();
+        }
+        return success;
     }
 
 
     // 拿两个相同颜色
     public boolean handleTakeDoubleGem(Player player, String colorStr) {
-        if (game == null) return false;
+        if (game == null || colorStr == null) return false;
 
-        GemColor color = GemColor.valueOf(colorStr.toUpperCase());
-        if (game.getAvailableGems().get(color) < 4) return false;
+        GemColor color;
+        try {
+            color = GemColor.valueOf(colorStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
 
-        player.setGem(color, player.getGem(color) + 2);
-        game.getAvailableGems().put(color, game.getAvailableGems().get(color) - 2);
+        List<GemColor> colorList = List.of(color);
+        boolean success = game.takeGems(player, colorList);
 
-        broadcastGameState();
-        return true;
+        if (success) {
+            broadcastGameState();
+        }
+        return success;
     }
 
 }

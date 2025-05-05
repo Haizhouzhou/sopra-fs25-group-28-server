@@ -66,10 +66,13 @@ public class GameTakeGemsTest {
 
     @Test
     public void takeGems_Success_ThreeDifferentColors() {
+      // arrange
       List<GemColor> colors = Arrays.asList(GemColor.RED, GemColor.BLUE, GemColor.GREEN);
 
+      // act
       boolean result = game.takeGems(mockPlayer, colors);
 
+      // assert
       assertTrue(result);
       // Each color setGem should be called with 1
       for (GemColor color : colors) {
@@ -80,11 +83,13 @@ public class GameTakeGemsTest {
 
     @Test
     public void takeGems_Success_TwoSameColor() {
-      // Simulate taking two BLUE
+      // arrange
       List<GemColor> colors = Collections.singletonList(GemColor.BLUE);
 
+      // act
       boolean result = game.takeGems(mockPlayer, colors);
 
+      // assert
       assertTrue(result);
       verify(mockPlayer).setGem(eq(GemColor.BLUE), eq(2L));
       assertEquals(2L, mockAvailableGems.get(GemColor.BLUE));
@@ -92,72 +97,93 @@ public class GameTakeGemsTest {
 
     @Test
     public void takeGems_Fail_NotPlayerTurn() {
+      // arrange
       ReflectionTestUtils.setField(game, "currentPlayer", game.getPlayers().indexOf(mockOtherPlayer));
       List<GemColor> colors = Arrays.asList(GemColor.RED, GemColor.BLUE, GemColor.GREEN);
 
+      // act
       boolean result = game.takeGems(mockPlayer, colors);
 
+      // assert
       assertFalse(result);
       verify(mockPlayer, never()).setGem(any(), anyLong());
     }
 
     @Test
     public void takeGems_Fail_GameNotRunning() {
+      // arrange
       game.setGameState(Game.GameState.FINISHED);
       List<GemColor> colors = Arrays.asList(GemColor.RED, GemColor.BLUE, GemColor.GREEN);
 
+      // act
       boolean result = game.takeGems(mockPlayer, colors);
 
+      // assert
       assertFalse(result);
       verify(mockPlayer, never()).setGem(any(), anyLong());
     }
 
     @Test
     public void takeGems_Fail_TakeGoldDirectly() {
+      // arrange
       List<GemColor> colors = Arrays.asList(GemColor.GOLD, GemColor.BLUE, GemColor.RED);
 
+      // act
       boolean result = game.takeGems(mockPlayer, colors);
 
+      // assert
       assertFalse(result);
       verify(mockPlayer, never()).setGem(any(), anyLong());
     }
 
     @Test
     public void takeGems_Fail_InsufficientGemsForThreeDifferent() {
+      // arrange
       mockAvailableGems.put(GemColor.RED, 0L);
       List<GemColor> colors = Arrays.asList(GemColor.RED, GemColor.BLUE, GemColor.GREEN);
 
+      // act
       boolean result = game.takeGems(mockPlayer, colors);
 
+      // assert
       assertFalse(result);
       verify(mockPlayer, never()).setGem(any(), anyLong());
     }
 
     @Test
     public void takeGems_Fail_InsufficientGemsForDouble() {
+      // arrange
       mockAvailableGems.put(GemColor.BLUE, 2L);
       List<GemColor> colors = Collections.singletonList(GemColor.BLUE);
 
+      // act
       boolean result = game.takeGems(mockPlayer, colors);
 
+      // assert
       assertFalse(result);
       verify(mockPlayer, never()).setGem(any(), anyLong());
     }
 
     @Test
     public void takeGems_Fail_InvalidColorListSize() {
-      // Empty
+      // arrange, first situation: empty
       List<GemColor> colors = Collections.emptyList();
+      // act and assert
       assertFalse(game.takeGems(mockPlayer, colors));
-      // Two colors, not allowed
+
+      // arrange, second situation: Two colors
       List<GemColor> twoColors = Arrays.asList(GemColor.RED, GemColor.BLUE);
+      // act and assert
       assertFalse(game.takeGems(mockPlayer, twoColors));
       verify(mockPlayer, never()).setGem(any(), anyLong());
     }
 
     @Test
     public void takeGems_Fail_RepeatedColorInThree() {
+      // arrange
       List<GemColor> colors = Arrays.asList(GemColor.RED, GemColor.RED, GemColor.BLUE);
+     
+      // act and assert
       assertFalse(game.takeGems(mockPlayer, colors));
       verify(mockPlayer, never()).setGem(any(), anyLong());
     }

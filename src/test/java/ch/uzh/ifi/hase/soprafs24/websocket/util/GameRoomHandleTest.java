@@ -1,5 +1,6 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
+import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot; // Assuming GameSnapshot exists
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,10 +9,18 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -41,6 +50,9 @@ public class GameRoomHandleTest {
   private final String validCardIdStr = "123";
   private final Long validCardIdLong = 123L;
 
+  // Test data
+  private Map<GemColor, Long> mockGems;
+
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
@@ -55,6 +67,11 @@ public class GameRoomHandleTest {
     players.add(mockPlayer2);
     ReflectionTestUtils.setField(gameRoom, "players", players);
 
+    mockGems = new EnumMap<>(GemColor.class);
+    for (GemColor color : GemColor.values()) {
+      mockGems.put(color, 4L);
+    }
+    given(mockGame.getAvailableGems()).willReturn(mockGems);
   }
 
   @Test
@@ -66,7 +83,7 @@ public class GameRoomHandleTest {
     boolean result = gameRoom.handleBuyCard(mockPlayer1, validCardIdStr);
 
     // assert
-    assertTrue(result, "handleBuyCard should return true on success");
+    assertTrue(result);
     verify(mockGame, times(1)).buyCard(mockPlayer1, validCardIdLong);
   }
 
@@ -79,7 +96,7 @@ public class GameRoomHandleTest {
     boolean result = gameRoom.handleBuyCard(mockPlayer1, validCardIdStr);
 
     // assert
-    assertFalse(result, "handleBuyCard should return false when game logic fails");
+    assertFalse(result);
     verify(mockGame, times(1)).buyCard(mockPlayer1, validCardIdLong);
   }
 
@@ -92,7 +109,7 @@ public class GameRoomHandleTest {
     boolean result = gameRoom.handleBuyCard(mockPlayer1, validCardIdStr);
 
     // assert
-    assertFalse(result, "handleBuyCard should return false when game instance is null");
+    assertFalse(result);
   }
 
   @Test
@@ -104,7 +121,7 @@ public class GameRoomHandleTest {
     boolean result = gameRoom.handleReserveCard(mockPlayer1, validCardIdStr);
 
     // assert
-    assertTrue(result, "handleReserveCard should return true on success");
+    assertTrue(result);
     verify(mockGame, times(1)).reserveCard(mockPlayer1, validCardIdLong);
   }
 
@@ -117,7 +134,7 @@ public class GameRoomHandleTest {
     boolean result = gameRoom.handleReserveCard(mockPlayer1, validCardIdStr);
 
     // assert
-    assertFalse(result, "handleReserveCard should return false when game logic fails");
+    assertFalse(result);
     verify(mockGame, times(1)).reserveCard(mockPlayer1, validCardIdLong);
   }
 
@@ -130,6 +147,138 @@ public class GameRoomHandleTest {
     boolean result = gameRoom.handleReserveCard(mockPlayer1, validCardIdStr);
 
     // assert
-    assertFalse(result, "handleReserveCard should return false when game instance is null");
+    assertFalse(result);
   }
+
+  @Test
+  void handleTakeThreeGems_Success(){
+    // arrange
+    List<String> colors = Arrays.asList("red", "blue", "green");
+    given(mockGame.takeGems(eq(mockPlayer1), anyList())).willReturn(true);
+
+    // act
+    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, colors);
+
+    // assert
+    assertTrue(result);
+    verify(mockGame).takeGems(eq(mockPlayer1), anyList());
+  }
+
+  @Test
+  void handleTakeThreeGems_Fail_DuplicateColors() {
+    // arrange
+    List<String> colors = Arrays.asList("red", "red", "blue");
+
+    // act
+    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, colors);
+
+    // assert
+    assertFalse(result);
+  }
+
+  @Test
+  void handleTakeThreeGems_Fail_ColorsIsNull() {
+    // arrange
+    
+    // act
+    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, null);
+
+    // assert
+    assertFalse(result);
+    verify(mockGame, never()).takeGems(any(), anyList());
+  }
+
+  @Test
+  void handleTakeThreeGems_Fail_MoreThanThreeColor() {
+    // arrange
+    List<String> colors = Arrays.asList("green", "red", "blue", "black");
+
+    // act
+    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, colors);
+
+    // assert
+    assertFalse(result);
+    verify(mockGame, never()).takeGems(any(), anyList());
+  }
+
+  @Test
+  void handleTakeThreeGems_Fail_InvalidColor() {
+    // arrange
+    List<String> colors = Arrays.asList("incorrect_color", "red", "blue");
+
+    // act
+    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, colors);
+
+    // assert
+    assertFalse(result);
+    verify(mockGame, never()).takeGems(any(), anyList());
+  }
+
+  @Test
+  void handleTakeThreeGems_Fail_GameIsNull() {
+    // arrange
+    ReflectionTestUtils.setField(gameRoom, "game", null);
+    List<String> colors = Arrays.asList("red", "blue", "green");
+
+    // act
+    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, colors);
+
+    // assert
+    assertFalse(result);
+  }
+
+  @Test
+  void handleTakeDoubleGem_Success() {
+    // arrange
+    String colorStr = "blue";
+    GemColor color = GemColor.BLUE;
+    given(mockGame.takeGems(eq(mockPlayer1), eq(List.of(color)))).willReturn(true);
+
+    // act
+    boolean result = gameRoom.handleTakeDoubleGem(mockPlayer1, colorStr);
+
+    // assert
+    assertTrue(result);
+    verify(mockGame).takeGems(eq(mockPlayer1), eq(List.of(color)));
+  }
+
+  @Test
+  void handleTakeDoubleGem_Fail_GameIsNull() {
+    // arrange
+    ReflectionTestUtils.setField(gameRoom, "game", null);
+
+    // act
+    boolean result = gameRoom.handleTakeDoubleGem(mockPlayer1, "blue");
+
+    // assert
+    assertFalse(result);
+    verify(mockGame, never()).takeGems(any(), anyList());
+  }
+
+  @Test
+  void handleTakeDoubleGem_Fail_InvalidColor() {
+    // arrange
+    String colorStr = "incorrect_color";
+
+    // act
+    boolean result = gameRoom.handleTakeDoubleGem(mockPlayer1, colorStr);
+
+    // assert
+    assertFalse(result);
+    verify(mockGame, never()).takeGems(any(), anyList());
+  }
+
+  @Test
+  void handleTakeDoubleGem_Fail_ColorIsNull() {
+    // arrange
+    String colorStr = null;
+
+    // act
+    boolean result = gameRoom.handleTakeDoubleGem(mockPlayer1, colorStr);
+
+    // assert
+    assertFalse(result);
+    verify(mockGame, never()).takeGems(any(), anyList());
+  }
+
 }

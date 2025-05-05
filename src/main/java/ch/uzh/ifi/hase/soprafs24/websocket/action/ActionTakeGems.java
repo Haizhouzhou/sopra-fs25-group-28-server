@@ -1,14 +1,10 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.action;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
-import ch.uzh.ifi.hase.soprafs24.websocket.util.Card;
-
 
 public class ActionTakeGems extends Action<List<GemColor>>{
 
