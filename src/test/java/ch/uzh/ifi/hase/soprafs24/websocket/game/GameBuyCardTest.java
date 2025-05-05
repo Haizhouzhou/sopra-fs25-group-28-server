@@ -175,6 +175,12 @@ public class GameBuyCardTest {
     List<Card> mockReservedCards = new ArrayList<>();
     mockReservedCards.add(cardAbleToBuyReserved);
     given(mockPlayer.getReservedCards()).willReturn(mockReservedCards);
+
+    // 关键：让removeCardFromReserved真的移除集合
+    org.mockito.Mockito.doAnswer(invocation -> {
+      Card card = invocation.getArgument(0);
+      return mockReservedCards.remove(card);
+    }).when(mockPlayer).removeCardFromReserved(any(Card.class));
   }
 
   @Test

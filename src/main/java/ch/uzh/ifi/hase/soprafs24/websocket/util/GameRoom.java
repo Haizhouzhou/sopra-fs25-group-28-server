@@ -1,14 +1,19 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.websocket.Session;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
-
-import javax.websocket.Session;
-import java.io.IOException;
 
 
 public class GameRoom {
@@ -113,7 +118,7 @@ public class GameRoom {
 
 
 
-    private boolean getRoomStatus(){
+  private boolean getRoomStatus(){
     this.roomStatus = ROOM_READY;
     for(Player player : players){
       roomStatus = roomStatus && player.getStatus();
@@ -461,8 +466,5 @@ public class GameRoom {
         broadcastGameState();
         return true;
     }
-
-
-
 
 }
