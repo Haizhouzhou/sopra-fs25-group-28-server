@@ -83,40 +83,38 @@ public class GameRoom {
    * TODO: to be implemente
    */
   public void EndGame() {
-      if (game == null) {
-          System.out.println("尝试结束游戏，但 game 为 null");
-          return;
-      }
+    if (game == null) {
+    System.out.println("尝试结束游戏，但 game 为 null");
+    return;
+    }
 
-      System.out.println("游戏结束，开始广播最终结果");
+    System.out.println("游戏结束，开始广播最终结果");
 
-      // 构造游戏结束消息
-      MyWebSocketMessage message = new MyWebSocketMessage();
-      message.setType(MyWebSocketMessage.TYPE_SERVER_GAME_OVER);
-      message.setRoomId(roomId);
+    // 构造游戏结束消息
+    MyWebSocketMessage message = new MyWebSocketMessage();
+    message.setType(MyWebSocketMessage.TYPE_SERVER_GAME_OVER);
+    message.setRoomId(roomId);
 
-      // 获取玩家信息
-      List<Map<String, Object>> playerResults = new ArrayList<>();
-      for (Player p : players) {
-          Map<String, Object> pInfo = new HashMap<>();
-          pInfo.put("userId", p.getUserId());
-          pInfo.put("name", p.getName());
-          pInfo.put("avatar", p.getAvatar());
-          pInfo.put("victoryPoints", p.getVictoryPoints());
-          playerResults.add(pInfo);
-      }
+    // 获取玩家信息
+    List<Map<String, Object>> playerResults = new ArrayList<>();
+    for (Player p : players) {
+    Map<String, Object> pInfo = new HashMap<>();
+    pInfo.put("userId", p.getUserId());
+    pInfo.put("name", p.getName());
+    pInfo.put("avatar", p.getAvatar());
+    pInfo.put("victoryPoints", p.getVictoryPoints());
+    playerResults.add(pInfo);
+    }
 
-      // 包装成 content 发送
-      Map<String, Object> content = new HashMap<>();
-      content.put("players", playerResults);
-      content.put("winnerId", game.getWinnerId());
+    // 包装成 content 发送
+    Map<String, Object> content = new HashMap<>();
+    content.put("players", playerResults);
+    content.put("winnerId", game.getWinnerId());
 
-      message.setContent(content);
+    message.setContent(content);
 
-      broadcastMessage(message);
+    broadcastMessage(message);
   }
-
-
 
   private boolean getRoomStatus(){
     this.roomStatus = ROOM_READY;
@@ -233,11 +231,6 @@ public class GameRoom {
         System.out.println("Broadcasting room state: " + jsonMessage);
     }
 
-
-
-
-
-
   public void setOwnerName(String ownerName) {
       this.ownerName = ownerName;
   }
@@ -347,6 +340,9 @@ public class GameRoom {
         }
 
         // 结束回合
+        //game.endTurn的作用：更新游戏状态，更新要做行动的玩家，处理noble逻辑，判断是否有玩家胜出
+        //增加所有玩家进行同样数量轮次的逻辑：更改Game.GameState设置成FINISHED的节点，也就是在Game.endTurn中处理
+        //GameRoom中的handle EndTurn应该不需要更改
         game.endTurn();
 
         // 记录新的当前玩家

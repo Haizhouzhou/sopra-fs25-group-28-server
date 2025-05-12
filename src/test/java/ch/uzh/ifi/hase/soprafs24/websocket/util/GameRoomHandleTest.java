@@ -1,28 +1,32 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
-import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot; // Assuming GameSnapshot exists
-import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import java.util.Arrays;
-import java.util.EnumMap;
+import java.util.EnumMap; // Assuming GameSnapshot exists
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import org.mockito.Mock;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
+import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
+import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
 public class GameRoomHandleTest {
   
@@ -279,6 +283,79 @@ public class GameRoomHandleTest {
     // assert
     assertFalse(result);
     verify(mockGame, never()).takeGems(any(), anyList());
+  }
+
+  @Test
+  void handleEndTurn_Success_PlayerTurn_ReturnsTrueAndCallsGame() {
+    // arrange
+    // 当前回合玩家是mockPlayer1
+    given(mockGame.getCurrentPlayer()).willReturn(0);
+    given(mockGame.getPlayers()).willReturn(List.of(mockPlayer1, mockPlayer2));
+    given(mockPlayer1.getUserId()).willReturn(11L);
+    given(mockPlayer2.getUserId()).willReturn(22L);
+    given(mockGame.isPlayerTurn(mockPlayer1)).willReturn(true);
+    // 游戏未结束
+    given(mockGame.getGameState()).willReturn(Game.GameState.RUNNING);
+
+    // act
+    boolean result = gameRoom.handleEndTurn(mockPlayer1);
+
+    // assert
+    assertTrue(result);
+    verify(mockGame, times(1)).endTurn();
+    verify(mockGame, atLeastOnce()).getCurrentPlayer();
+    verify(mockGame, atLeastOnce()).getPlayers();
+    verify(mockGame, times(1)).isPlayerTurn(mockPlayer1);
+  }
+
+  @Test
+  void handleEndTurn_Fail_NotPlayersTurn_ReturnsFalse() {
+      // arrange
+      given(mockGame.getCurrentPlayer()).willReturn(0);
+      given(mockGame.getPlayers()).willReturn(List.of(mockPlayer1, mockPlayer2));
+      given(mockPlayer1.getUserId()).willReturn(11L);
+      given(mockGame.isPlayerTurn(mockPlayer1)).willReturn(false);
+
+      // act
+      boolean result = gameRoom.handleEndTurn(mockPlayer1);
+
+      // assert
+      assertFalse(result);
+      verify(mockGame, never()).endTurn();
+  }
+
+  @Test
+  void handleEndTurn_Fail_GameIsNull_ReturnsFalse() {
+    // arrange
+    ReflectionTestUtils.setField(gameRoom, "game", null);
+
+    // act
+    boolean result = gameRoom.handleEndTurn(mockPlayer1);
+
+    // assert
+    assertFalse(result);
+  }
+
+  @Test
+  void handleEndTurn_GameFinished_CallsEndGame() {
+    // arrange
+    given(mockGame.getCurrentPlayer()).willReturn(0);
+    given(mockGame.getPlayers()).willReturn(List.of(mockPlayer1, mockPlayer2));
+    given(mockPlayer1.getUserId()).willReturn(11L);
+    given(mockGame.isPlayerTurn(mockPlayer1)).willReturn(true);
+    // 回合结束后，游戏状态为FINISHED
+    given(mockGame.getGameState()).willReturn(Game.GameState.FINISHED);
+
+    // spy gameRoom以监控EndGame方法调用
+    GameRoom spyRoom = spy(gameRoom);
+
+    // act
+    boolean result = spyRoom.handleEndTurn(mockPlayer1);
+
+    // assert
+    assertTrue(result);
+    verify(spyRoom, times(1)).EndGame();
+    verify(mockGame, times(1)).endTurn();
   }
 
 }

@@ -12,13 +12,14 @@ import java.util.Stack;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
+import ch.uzh.ifi.hase.soprafs24.websocket.action.ActionBuyCard;
+import ch.uzh.ifi.hase.soprafs24.websocket.action.ActionReserveCard;
+import ch.uzh.ifi.hase.soprafs24.websocket.action.ActionTakeGems;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Card;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Noble;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
-
-import ch.uzh.ifi.hase.soprafs24.websocket.action.*;
 
 public class Game {
 
@@ -32,7 +33,7 @@ public class Game {
   private ActionReserveCard actionReserveCard = new ActionReserveCard();
   private ActionTakeGems actionTakeGems = new ActionTakeGems();
 
-  private final Long VICTORYPOINTS = 5L; //modified for M3 demo
+  public final Long VICTORYPOINTS = 5L; //modified for M3 demo
 
   // unique id for the game
   private final String gameId;
@@ -62,6 +63,9 @@ public class Game {
 
   // 游戏状态
   private GameState gameState = GameState.NOT_STARTED;
+
+  // TODO: final round handle
+  private boolean finalRound = false;
 
 
   // getters
@@ -100,35 +104,27 @@ public class Game {
     }
   }
 
-  private boolean finalRound = false;
-  private int winningPlayerIndex = -1;
-
-
-
-
-
-
   // constructor
   public Game(GameRoom gameRoom, String gameId, Set<Player> players) {
-        this.gameRoom = gameRoom;
-        this.gameId = gameId;
-        this.players = new ArrayList<>(players);
-        Collections.shuffle(this.players);
-   }
+    this.gameRoom = gameRoom;
+    this.gameId = gameId;
+    this.players = new ArrayList<>(players);
+    Collections.shuffle(this.players);
+  }
 
   public Long getWinnerId() {
     Player winner = null;
     Long maxPoints = -1L;
 
     for (Player player : players) {
-        if (player.getVictoryPoints() > maxPoints) {
-            maxPoints = player.getVictoryPoints();
-            winner = player;
-        }
+      if (player.getVictoryPoints() > maxPoints && player.getVictoryPoints() >= VICTORYPOINTS) {
+        maxPoints = player.getVictoryPoints();
+        winner = player;
+      }
     }
 
-     return winner != null ? winner.getUserId() : null;
-    }
+    return winner != null ? winner.getUserId() : null;
+  }
 
 
   public void initialize(){
@@ -244,97 +240,93 @@ public class Game {
    * @return true if there is player reach the condition of winning
    */
   public boolean checkVictoryCondition() {
-    if (!finalRound) {
-        for (int i = 0; i < players.size(); i++) {
-            Player player = players.get(i);
-            if (player.getVictoryPoints() >= VICTORYPOINTS) {
-                finalRound = true;
-                winningPlayerIndex = i;
-                return true;
-            }
-        }
-    }
-    return false;
-    }
-
-
-
-    // Game.java
-    public void endTurn() {
-        // 1. Refill empty visible card slots
-        fillVisibleCards(level1Deck, visibleLevel1Cards);
-        fillVisibleCards(level2Deck, visibleLevel2Cards);
-        fillVisibleCards(level3Deck, visibleLevel3Cards);
-
-        // 2. Check if the current player qualifies for a noble
-        noblePurchase(this);
-
-        // 3. Check for victory condition
-        checkVictoryCondition();
-
-        // 4. Increment round
-        currentRound++;
-
-        // 5. Advance to next player
-        Player currentTurnPlayer = players.get(currentPlayer);
-        System.out.println("回合结束，当前玩家: " + currentTurnPlayer.getUserId());
-
-        currentPlayer = (currentPlayer + 1) % players.size();
-
-        Player nextTurnPlayer = players.get(currentPlayer);
-        System.out.println("下一回合玩家: " + nextTurnPlayer.getUserId());
-        // Beende das Spiel, wenn wir die Runde nach Erreichen der Siegbedingung beenden
-        if (finalRound && currentPlayer == winningPlayerIndex) {
-          this.gameState = GameState.FINISHED;
-          System.out.println("Final round completed. Game finished.");
-}
-
-    }
-
-    public void noblePurchase(Game game) {
-      Player player = game.getPlayers().get(game.getCurrentPlayer());
-
-      for (Noble noble : new ArrayList<>(game.getVisibleNoble())) { // avoid concurrent modification
-        boolean qualifies = true;
-
-        for (Map.Entry<GemColor, Long> entry : noble.getCost().entrySet()) {
-          GemColor color = entry.getKey();
-          long required = entry.getValue();
-
-          if (player.getBonusGem(color) < required) {
-            qualifies = false;
-            break;
-          }
-        }
-
-        if (qualifies) {
-          // Award the noble
-          player.setVictoryPoints(player.getVictoryPoints() + noble.getPoints());
-
-          // Remove from board
-          game.getVisibleNoble().remove(noble);
-
-          // Optionally add to player's noble collection if needed in future
-          // player.getCollectedNobles().add(noble);
-
-          break; // Only one noble per turn
-        }
+    for(Player player : players){
+      if(player.getVictoryPoints() >= VICTORYPOINTS){
+        finalRound = true;
+        return true;
       }
     }
+    finalRound = false;
+    return false;
+  }
 
-    /**
-     * 获取玩家
-     * @param playerId 玩家ID
-     * @return 玩家对象，如果未找到则返回null
-     */
-    public Player getPlayerById(Long playerId) {
-        for (Player player : players) {
-            if (player.getUserId().equals(playerId)) {
-                return player;
-            }
-        }
-        return null;
+
+
+  // Game.java
+  public void endTurn() {
+    // 1. Refill empty visible card slots
+    fillVisibleAllVisibleCardsOnBoard();
+
+    // 2. Check if the current player qualifies for a noble
+    noblePurchase(this);
+
+    // 3. Check for victory condition
+    checkVictoryCondition();
+
+    // 4. if its finalRound and all players have player the same number of turns
+    if(finalRound && currentPlayer == players.size()-1){
+      setGameState(GameState.FINISHED);
+      System.out.println("Final round completed. Game finished.");
+      return; // return here？
     }
+
+    // 5. Increment round
+    currentRound++;
+
+    // 6. Advance to next player
+    // Player currentTurnPlayer = players.get(currentPlayer);
+    // System.out.println("回合结束，当前玩家: " + currentTurnPlayer.getUserId());
+
+    currentPlayer = (currentPlayer + 1) % players.size();
+
+    // Player nextTurnPlayer = players.get(currentPlayer);
+    // System.out.println("下一回合玩家: " + nextTurnPlayer.getUserId());
+  }
+
+  public void noblePurchase(Game game) {
+    Player player = game.getPlayers().get(game.getCurrentPlayer());
+
+    for (Noble noble : new ArrayList<>(game.getVisibleNoble())) { // avoid concurrent modification
+      boolean qualifies = true;
+
+      for (Map.Entry<GemColor, Long> entry : noble.getCost().entrySet()) {
+        GemColor color = entry.getKey();
+        long required = entry.getValue();
+
+        if (player.getBonusGem(color) < required) {
+          qualifies = false;
+          break;
+        }
+      }
+
+      if (qualifies) {
+        // Award the noble
+        player.setVictoryPoints(player.getVictoryPoints() + noble.getPoints());
+
+        // Remove from board
+        game.getVisibleNoble().remove(noble);
+
+        // Optionally add to player's noble collection if needed in future
+        // player.getCollectedNobles().add(noble);
+
+        break; // Only one noble per turn
+      }
+    }
+  }
+
+  /**
+   * 获取玩家
+   * @param playerId 玩家ID
+   * @return 玩家对象，如果未找到则返回null
+   */
+  public Player getPlayerById(Long playerId) {
+    for (Player player : players) {
+      if (player.getUserId().equals(playerId)) {
+        return player;
+      }
+    }
+    return null;
+  }
 
     /**
      * 检查是否是玩家的回合
