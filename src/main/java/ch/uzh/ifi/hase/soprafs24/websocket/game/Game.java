@@ -12,6 +12,7 @@ import java.util.Stack;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
+import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.websocket.action.ActionBuyCard;
 import ch.uzh.ifi.hase.soprafs24.websocket.action.ActionReserveCard;
 import ch.uzh.ifi.hase.soprafs24.websocket.action.ActionTakeGems;
@@ -20,6 +21,7 @@ import ch.uzh.ifi.hase.soprafs24.websocket.util.Card;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Noble;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
+
 
 public class Game {
 
@@ -32,6 +34,8 @@ public class Game {
   private ActionBuyCard actionBuyCard = new ActionBuyCard();
   private ActionReserveCard actionReserveCard = new ActionReserveCard();
   private ActionTakeGems actionTakeGems = new ActionTakeGems();
+  private LeaderboardService leaderboardService;
+
 
   public final Long VICTORYPOINTS = 5L; //modified for M3 demo
 
@@ -103,6 +107,10 @@ public class Game {
       return false;
     }
   }
+  public void setLeaderboardService(LeaderboardService leaderboardService) {
+    this.leaderboardService = leaderboardService;
+}
+
 
   // constructor
   public Game(GameRoom gameRoom, String gameId, Set<Player> players) {
@@ -263,25 +271,27 @@ public class Game {
     // 3. Check for victory condition
     checkVictoryCondition();
 
-    // 4. if its finalRound and all players have player the same number of turns
-    if(finalRound && currentPlayer == players.size()-1){
-      setGameState(GameState.FINISHED);
-      System.out.println("Final round completed. Game finished.");
-      return; // return here？
+    // 4. if it's final round and all players have played the same number of turns
+    if (finalRound && currentPlayer == players.size() - 1) {
+        setGameState(GameState.FINISHED);
+        System.out.println("Final round completed. Game finished.");
+
+        Long winnerId = getWinnerId();
+        if (winnerId != null && leaderboardService != null) {
+            leaderboardService.addWinForPlayer(winnerId);
+            System.out.println("Leaderboard updated for player ID: " + winnerId);
+        }
+
+        return;
     }
 
     // 5. Increment round
     currentRound++;
 
     // 6. Advance to next player
-    // Player currentTurnPlayer = players.get(currentPlayer);
-    // System.out.println("回合结束，当前玩家: " + currentTurnPlayer.getUserId());
-
     currentPlayer = (currentPlayer + 1) % players.size();
+}
 
-    // Player nextTurnPlayer = players.get(currentPlayer);
-    // System.out.println("下一回合玩家: " + nextTurnPlayer.getUserId());
-  }
 
   public void noblePurchase(Game game) {
     Player player = game.getPlayers().get(game.getCurrentPlayer());
