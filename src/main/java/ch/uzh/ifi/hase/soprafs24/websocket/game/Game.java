@@ -14,9 +14,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Card;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Noble;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
-import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
 
 import ch.uzh.ifi.hase.soprafs24.websocket.action.*;
 
@@ -99,6 +99,11 @@ public class Game {
       return false;
     }
   }
+
+  private boolean finalRound = false;
+  private int winningPlayerIndex = -1;
+
+
 
 
 
@@ -238,15 +243,22 @@ public class Game {
    *
    * @return true if there is player reach the condition of winning
    */
-  public boolean checkVictoryCondition(){
-    for(Player player : players){
-      if(player.getVictoryPoints() >= VICTORYPOINTS){
-        this.gameState = GameState.FINISHED;
-        return true;
-      }
+  public boolean checkVictoryCondition() {
+    if (!finalRound) {
+        for (int i = 0; i < players.size(); i++) {
+            Player player = players.get(i);
+            if (player.getVictoryPoints() >= VICTORYPOINTS) {
+                finalRound = true;
+                winningPlayerIndex = i;
+                return true;
+            }
+        }
     }
     return false;
-  }
+    }
+
+
+
     // Game.java
     public void endTurn() {
         // 1. Refill empty visible card slots
@@ -271,6 +283,12 @@ public class Game {
 
         Player nextTurnPlayer = players.get(currentPlayer);
         System.out.println("下一回合玩家: " + nextTurnPlayer.getUserId());
+        // Beende das Spiel, wenn wir die Runde nach Erreichen der Siegbedingung beenden
+        if (finalRound && currentPlayer == winningPlayerIndex) {
+          this.gameState = GameState.FINISHED;
+          System.out.println("Final round completed. Game finished.");
+}
+
     }
 
     public void noblePurchase(Game game) {
