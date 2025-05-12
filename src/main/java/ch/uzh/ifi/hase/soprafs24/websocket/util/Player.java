@@ -42,18 +42,26 @@ public class Player {
     this.status = PLAYER_NOT_READY;
   }
 
-  // define getter
+  // getters
   public Session getSession(){return session;}
   public String getName(){return name;}
 
   public boolean getStatus(){return status;}
-    public void setStatus(boolean status) {
-        System.out.println("Player " + this.name + " (id:" + this.userId +
-                ") status changing from " + this.status +
-                " to " + status + " [instance: " +
-                System.identityHashCode(this) + "]");
-        this.status = status;
+  public void setStatus(boolean status) {
+      System.out.println("Player " + this.name + " (id:" + this.userId +
+              ") status changing from " + this.status +
+              " to " + status + " [instance: " +
+              System.identityHashCode(this) + "]");
+      this.status = status;
+  }
+
+  public boolean removeCardFromReserved(Card targetCard){
+    if(reservedCards.contains(targetCard)){
+      reservedCards.remove(targetCard);
+      return true;
     }
+    return false;
+  }
 
   public Long getUserId(){return userId;}
   public void setUserId(Long userId){this.userId = userId;}
@@ -86,15 +94,11 @@ public class Player {
   public List<Card> getReservedCards(){return reservedCards;}
 
 
-public String getAvatar() {
-    return avatar;
-}
+  public String getAvatar() {return avatar;}
 
-public void setAvatar(String avatar) {
-    this.avatar = avatar;
-}
+  public void setAvatar(String avatar) {this.avatar = avatar;}
 
-public void setSession(Session session) {this.session = session;}
+  public void setSession(Session session) {this.session = session;}
 
   // called when intialized a game
   public void initializeGameStatus(){

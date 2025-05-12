@@ -1,14 +1,19 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.websocket.Session;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
-
-import javax.websocket.Session;
-import java.io.IOException;
 
 
 public class GameRoom {
@@ -78,42 +83,40 @@ public class GameRoom {
    * TODO: to be implemente
    */
   public void EndGame() {
-      if (game == null) {
-          System.out.println("尝试结束游戏，但 game 为 null");
-          return;
-      }
+    if (game == null) {
+    System.out.println("尝试结束游戏，但 game 为 null");
+    return;
+    }
 
-      System.out.println("游戏结束，开始广播最终结果");
+    System.out.println("游戏结束，开始广播最终结果");
 
-      // 构造游戏结束消息
-      MyWebSocketMessage message = new MyWebSocketMessage();
-      message.setType(MyWebSocketMessage.TYPE_SERVER_GAME_OVER);
-      message.setRoomId(roomId);
+    // 构造游戏结束消息
+    MyWebSocketMessage message = new MyWebSocketMessage();
+    message.setType(MyWebSocketMessage.TYPE_SERVER_GAME_OVER);
+    message.setRoomId(roomId);
 
-      // 获取玩家信息
-      List<Map<String, Object>> playerResults = new ArrayList<>();
-      for (Player p : players) {
-          Map<String, Object> pInfo = new HashMap<>();
-          pInfo.put("userId", p.getUserId());
-          pInfo.put("name", p.getName());
-          pInfo.put("avatar", p.getAvatar());
-          pInfo.put("victoryPoints", p.getVictoryPoints());
-          playerResults.add(pInfo);
-      }
+    // 获取玩家信息
+    List<Map<String, Object>> playerResults = new ArrayList<>();
+    for (Player p : players) {
+    Map<String, Object> pInfo = new HashMap<>();
+    pInfo.put("userId", p.getUserId());
+    pInfo.put("name", p.getName());
+    pInfo.put("avatar", p.getAvatar());
+    pInfo.put("victoryPoints", p.getVictoryPoints());
+    playerResults.add(pInfo);
+    }
 
-      // 包装成 content 发送
-      Map<String, Object> content = new HashMap<>();
-      content.put("players", playerResults);
-      content.put("winnerId", game.getWinnerId());
+    // 包装成 content 发送
+    Map<String, Object> content = new HashMap<>();
+    content.put("players", playerResults);
+    content.put("winnerId", game.getWinnerId());
 
-      message.setContent(content);
+    message.setContent(content);
 
-      broadcastMessage(message);
+    broadcastMessage(message);
   }
 
-
-
-    private boolean getRoomStatus(){
+  private boolean getRoomStatus(){
     this.roomStatus = ROOM_READY;
     for(Player player : players){
       roomStatus = roomStatus && player.getStatus();
@@ -228,11 +231,6 @@ public class GameRoom {
         System.out.println("Broadcasting room state: " + jsonMessage);
     }
 
-
-
-
-
-
   public void setOwnerName(String ownerName) {
       this.ownerName = ownerName;
   }
@@ -342,6 +340,9 @@ public class GameRoom {
         }
 
         // 结束回合
+        //game.endTurn的作用：更新游戏状态，更新要做行动的玩家，处理noble逻辑，判断是否有玩家胜出
+        //增加所有玩家进行同样数量轮次的逻辑：更改Game.GameState设置成FINISHED的节点，也就是在Game.endTurn中处理
+        //GameRoom中的handle EndTurn应该不需要更改
         game.endTurn();
 
         // 记录新的当前玩家
@@ -432,37 +433,45 @@ public class GameRoom {
         Set<String> uniqueColors = new HashSet<>(colors);
         if (uniqueColors.size() != 3) return false;
 
-        for (String colorStr : colors) {
-            GemColor color = GemColor.valueOf(colorStr.toUpperCase());
-            if (game.getAvailableGems().get(color) <= 0) return false;
+        // convert string to GemColor
+        List<GemColor> colorList = new ArrayList<>();
+        try {
+            for (String colorStr : colors) {
+                colorList.add(GemColor.valueOf(colorStr.toUpperCase()));
+            }
+        } catch (IllegalArgumentException e) {
+            // incorrect color string
+            return false;
         }
 
-        for (String colorStr : colors) {
-            GemColor color = GemColor.valueOf(colorStr.toUpperCase());
-            player.setGem(color, player.getGem(color) + 1);
-            game.getAvailableGems().put(color, game.getAvailableGems().get(color) - 1);
-        }
+        // call game.takeGems
+        boolean success = game.takeGems(player, colorList);
 
-        broadcastGameState();
-        return true;
+        if (success) {
+            broadcastGameState();
+        }
+        return success;
     }
 
 
     // 拿两个相同颜色
     public boolean handleTakeDoubleGem(Player player, String colorStr) {
-        if (game == null) return false;
+        if (game == null || colorStr == null) return false;
 
-        GemColor color = GemColor.valueOf(colorStr.toUpperCase());
-        if (game.getAvailableGems().get(color) < 4) return false;
+        GemColor color;
+        try {
+            color = GemColor.valueOf(colorStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
 
-        player.setGem(color, player.getGem(color) + 2);
-        game.getAvailableGems().put(color, game.getAvailableGems().get(color) - 2);
+        List<GemColor> colorList = List.of(color);
+        boolean success = game.takeGems(player, colorList);
 
-        broadcastGameState();
-        return true;
+        if (success) {
+            broadcastGameState();
+        }
+        return success;
     }
-
-
-
 
 }

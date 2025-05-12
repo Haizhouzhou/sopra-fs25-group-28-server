@@ -62,7 +62,7 @@ public class GameReserveCardTest {
       initialPlayers = new HashSet<>();
       initialPlayers.add(mockPlayer);
       initialPlayers.add(mockOtherPlayer);
-      // Assuming constructor Game(String gameId, Set<Player> players)
+
       game = new Game(mockGameRoom, testRoomId, initialPlayers);
       // If GameRoom needed: game = new Game(mockGameRoom, testRoomId, initialPlayers);
 
