@@ -17,8 +17,8 @@ public class GameSnapshot {
   private int currentPlayerIndex;
   private int currentRound;
   private Map<GemColor, Long> availableGems;
-  private Long victoryPoints;
-  private Map<GemColor, Long> bonusGems;
+  // private Long victoryPoints;
+  // private Map<GemColor, Long> bonusGems;
 
 
     private List<Long> visibleLevel1cardIds = new ArrayList<>();

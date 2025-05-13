@@ -4,18 +4,20 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import ch.uzh.ifi.hase.soprafs24.rest.dto.GeminiHelper.Candidate;
+
 // 最外层响应对象
 @JsonIgnoreProperties(ignoreUnknown=true) //忽略JSON中有但是类中没有定义的字段
 public class GeminiAPIResponse {
   private List<Candidate> candidates;
-  private UsageMetadata usageMetadata;
+  // private UsageMetadata usageMetadata;
   private String modelVersion; // optional
 
   // getter and setter
   public List<Candidate> getCandidates() { return candidates; }
   public void setCandidates(List<Candidate> candidates) { this.candidates = candidates; }
-  public UsageMetadata getUsageMetadata() { return usageMetadata; }
-  public void setUsageMetadata(UsageMetadata usageMetadata) { this.usageMetadata = usageMetadata; }
+  // public UsageMetadata getUsageMetadata() { return usageMetadata; }
+  // public void setUsageMetadata(UsageMetadata usageMetadata) { this.usageMetadata = usageMetadata; }
   public String getModelVersion() { return modelVersion; }
   public void setModelVersion(String modelVersion) { this.modelVersion = modelVersion; }
 
@@ -35,74 +37,21 @@ public class GeminiAPIResponse {
 
 }
 
-// 候选回应对象
-@JsonIgnoreProperties(ignoreUnknown = true)
-class Candidate{
-  private Content content;
-  private String finishReason;
+// // 使用量元数据对象
+// @JsonIgnoreProperties(ignoreUnknown = true)
+// class UsageMetadata {
+//   private int promptTokenCount;
+//   private int candidatesTokenCount;
+//   private int totalTokenCount;
+//   // promptTokensDetails 和 candidatesTokensDetails 是列表，如果需要可以定义更详细的 DTO
+//   // private List<Map<String, Object>> promptTokensDetails;
+//   // private List<Map<String, Object>> candidatesTokensDetails;
 
-  // 可以添加 List<SafetyRating> safetyRatings; 等其他字段
-  // private Double avgLogprobs; // 如果需要可以添加
-
-  // Getters and Setters
-  public Content getContent() { return content; }
-  public void setContent(Content content) { this.content = content; }
-  public String getFinishReason() { return finishReason; }
-  public void setFinishReason(String finishReason) { this.finishReason = finishReason; }
-  // public Double getAvgLogprobs() { return avgLogprobs; }
-  // public void setAvgLogprobs(Double avgLogprobs) { this.avgLogprobs = avgLogprobs; }
-
-  // 辅助方法：从此 Candidate 中提取文本
-  public String extractText() {
-    if (content != null && content.getParts() != null && !content.getParts().isEmpty()) {
-      Part firstPart = content.getParts().get(0);
-      if (firstPart != null) {
-        return firstPart.getText();
-      }
-    }
-    return null; // 或 "" （空字符串）
-  }
-}
-
-// 内容对象
-@JsonIgnoreProperties(ignoreUnknown = true)
-class Content{
-  private List<Part> parts;
-  private String role;
-
-  // Getters and Setters
-  public List<Part> getParts() { return parts; }
-  public void setParts(List<Part> parts) { this.parts = parts; }
-  public String getRole() { return role; }
-  public void setRole(String role) { this.role = role; }
-}
-
-// 部分内容对象
-@JsonIgnoreProperties(ignoreUnknown = true)
-class Part {
-    private String text;
-    // 可能还有其他字段，如 "inlineData" 等，根据需要添加
-
-    // Getters and Setters
-    public String getText() { return text; }
-    public void setText(String text) { this.text = text; }
-}
-
-// 使用量元数据对象
-@JsonIgnoreProperties(ignoreUnknown = true)
-class UsageMetadata {
-    private int promptTokenCount;
-    private int candidatesTokenCount;
-    private int totalTokenCount;
-    // promptTokensDetails 和 candidatesTokensDetails 是列表，如果需要可以定义更详细的 DTO
-    // private List<Map<String, Object>> promptTokensDetails;
-    // private List<Map<String, Object>> candidatesTokensDetails;
-
-    // Getters and Setters
-    public int getPromptTokenCount() { return promptTokenCount; }
-    public void setPromptTokenCount(int promptTokenCount) { this.promptTokenCount = promptTokenCount; }
-    public int getCandidatesTokenCount() { return candidatesTokenCount; }
-    public void setCandidatesTokenCount(int candidatesTokenCount) { this.candidatesTokenCount = candidatesTokenCount; }
-    public int getTotalTokenCount() { return totalTokenCount; }
-    public void setTotalTokenCount(int totalTokenCount) { this.totalTokenCount = totalTokenCount; }
-}
+//   // Getters and Setters
+//   public int getPromptTokenCount() { return promptTokenCount; }
+//   public void setPromptTokenCount(int promptTokenCount) { this.promptTokenCount = promptTokenCount; }
+//   public int getCandidatesTokenCount() { return candidatesTokenCount; }
+//   public void setCandidatesTokenCount(int candidatesTokenCount) { this.candidatesTokenCount = candidatesTokenCount; }
+//   public int getTotalTokenCount() { return totalTokenCount; }
+//   public void setTotalTokenCount(int totalTokenCount) { this.totalTokenCount = totalTokenCount; }
+// }

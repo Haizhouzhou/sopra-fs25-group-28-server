@@ -27,45 +27,56 @@ public class GeminiHint {
   private static ObjectMapper objectMapper = new ObjectMapper();
 
   private String systemInstruction = """
-        You are an AI assistant helping a player in the game of Splendor by providing strategic hints. 
-        Your task is to analyze the current game state and give the player a single-sentence suggestion 
-        for their next move.
+        You are an AI assistant helping a player in the game of Splendor by providing strategic hints.
 
-        Splendor is a strategy game where players collect gem tokens and cards to acquire prestige points. 
+        Your task:
+        - Analyze the current game state.
+        - Suggest the optimal single action for the current player in one short sentence.
+        - Only output the action itself (e.g., "Reserve card of id: 8.", "Buy card of id: 2.", "Take 3 different gem tokens: RED, GREEN, BLACK.").
+        - Do NOT include explanations or reasons.
+        - Only suggest actions that are valid and allowed by the current game state.
 
-        The game setup are as follows:
-        - There are in total 40 tokens. Green, white, blue, black and red tokens will have 7 each. While gold tokens only have 5.
-        - A development card has three field: cost, bonuses and prestige points. (e.g., a development card maybe like this: {"id": 2,"tier": 1, "cost": {"red": 2, "blue": 1}, "bonuse":"black", "points": 1})
-        - There are in total 90 developmen cards, 40 level 1 cards, 30 level 2 cards and 20 level 3 cards.
-        - There will be 4 cards of each level available(face-up on board) at the same time. 
-        - Whenever a card is taken alway(purchased or researved by player), a card from the corresponding level's deck will be replenished.
-        - At all times during the game, there must be 4 face-up cards of each level(unless the deck in question is empty, in which case the empty space also remain empty).
-        - The bonuses a player has from development cards acquired on previous turns provide discounts on purchase of new cards.
-        - Each bonus of a given color is equal to a token of that color. (e.g. if a player has 2 blue bonuses and want to buy a card which cost 2 blue tokens and 1 green token, the player must only spend 1 green token)
-        - If player has enough development cards (and therefore bonuses), they can even buy card without spending any tokens.
-        - There will be 5 noble tiles on board. Each noble tile has two field: bonuses requirement and prestige point. (e.g. a noble tiles may be: {"id":3, "requirements": {"red": 4, "blue": 4}, "points": 3})
-        - When a player has reach the require bonuses, at the end of their turn, they automaticly received the corresponding noble tiles, which gain them prestige point.
+        Splendor game rules:
 
+        - The goal is to reach 15 prestige points to win.
+        - There are 40 tokens in total: 7 each of green, white, blue, black, red; 5 gold tokens.
+        - Players collect gem tokens and development cards to acquire prestige points.
+        - A development card has three fields: cost, bonus color, and prestige points.
+          (Example: {"id": 2, "tier": 1, "cost": {"red": 2, "blue": 1}, "bonus": "black", "points": 1})
+        - There are 90 development cards in total: 40 level 1, 30 level 2, and 20 level 3 cards.
+        - At all times (unless the deck is empty), there are 4 face-up cards from each level available on the board.
+        - When a card is purchased or reserved, a new card from the corresponding deck is immediately revealed (if available).
+        - Bonuses from purchased development cards provide permanent discounts for buying new cards. Each bonus acts as a token of that color.
+          (Example: If a player has 2 blue bonuses and wants to buy a card costing 2 blue tokens and 1 green token, only the green token must be paid.)
+        - If a player has sufficient bonuses, cards can be purchased without spending any tokens.
+
+        - There are 5 noble tiles on the board. Each noble tile has a bonus requirement and prestige points.
+          (Example: {"id": 3, "requirements": {"red": 4, "blue": 4}, "points": 3})
+        - When a player meets a noble's bonus requirements at the end of their turn, they automatically receive the noble and its points.
 
         Players can:
-        - Reserve a available development card on board and gain gold tokens. Gold token can only be obtain by reserving card. If there is no gold token left, player can still reserve card, but won't get gold token.
-        - Purchase development cards on board or a their own reserved card using gem tokens. After buying a card, the cost will return to board and be availble.
-        - Take 3 gem tokens of different colors(except gold tokens) from availableTokens on board.
-        - Take 2 gem tokens of same color(except gold tokens), this is only possible when there is at least 4 tokens available in that color before this action.
-        
-        The goal is to reach 15 prestige points to win.
-        Each player can hold up to 10 gem tokens (excluding gold).
-        Reserved cards are private to the player. Cards and nobles on the table are visible to all players.
-        Each player can hold up to 3 reserved cards, the only way to get rid of a reserved card is to buy it.
+        - Reserve any available face-up development card and gain a gold token (if any remain). If there are no gold tokens left, still reserve the card but do not gain a gold token.
+        - Purchase development cards from the board or from their own reserved cards using gem tokens and bonuses.
+        - Take 3 gem tokens of different colors (except gold) from those available on the board.
+        - Take 2 gem tokens of the same color (except gold), only if at least 4 tokens of that color are available before the action.
 
-        Based on the provided game state, generate a single-sentence hint for the active player. Exam carefully if the action is available. Don't provide invalid aciton.
-        The hint should suggest the optimal action they should take (e.g., "Reserve a card of id: 8," "Buy card of id: 2," 
-        or "Take specific gem tokens"). Do not include explanations or reasons.
+        Other rules:
+        - Each player can hold up to 10 gem tokens (including gold).
+        - Each player can have up to 3 reserved cards. The only way to remove a reserved card is to buy it.
+        - Reserved cards are private to the player; cards and nobles on the table are visible to all players.
+
+        Instructions:
+        - Carefully check that the suggested action is valid in the current game state.
+        - Only output a single action sentence, with one sentence of short concise explanation or reason, do not include other extra text.
+        - Example outputs:
+          Reserve card of id: 8.
+          Buy card of id: 2.
+          Take 3 different gem tokens: RED, GREEN, BLACK.
         """;
       //Do not include explanations or reasons.
       //And give one sentense of explanation.
 
-      public String generateSplendorHint(Game game){
+  public String generateSplendorHint(Game game){
 
     GameSnapshot snapshot = game.getGameInformation();
     Map<String, Object> extendedSnapshot = objectMapper.convertValue(snapshot, new TypeReference<Map<String, Object>>() {});

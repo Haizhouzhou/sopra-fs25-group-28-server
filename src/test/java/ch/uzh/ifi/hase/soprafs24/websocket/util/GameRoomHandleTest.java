@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import org.mockito.Mock;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -32,6 +33,7 @@ public class GameRoomHandleTest {
   
   // no default constructor, need to be initialize manually
   private GameRoom gameRoom;
+  private GameRoom spyRoom;
 
   // Mocks for dependencies (Players)
   @Mock
@@ -71,6 +73,9 @@ public class GameRoomHandleTest {
     players.add(mockPlayer2);
     ReflectionTestUtils.setField(gameRoom, "players", players);
 
+    spyRoom = spy(gameRoom);
+    doNothing().when(spyRoom).broadcastGameState();
+
     mockGems = new EnumMap<>(GemColor.class);
     for (GemColor color : GemColor.values()) {
       mockGems.put(color, 4L);
@@ -84,7 +89,7 @@ public class GameRoomHandleTest {
     given(mockGame.buyCard(mockPlayer1, validCardIdLong)).willReturn(true); // mock successful buy
 
     // act
-    boolean result = gameRoom.handleBuyCard(mockPlayer1, validCardIdStr);
+    boolean result = spyRoom.handleBuyCard(mockPlayer1, validCardIdStr);
 
     // assert
     assertTrue(result);
@@ -97,7 +102,7 @@ public class GameRoomHandleTest {
     given(mockGame.buyCard(mockPlayer1, validCardIdLong)).willReturn(false); // mock failed buy
 
     // act
-    boolean result = gameRoom.handleBuyCard(mockPlayer1, validCardIdStr);
+    boolean result = spyRoom.handleBuyCard(mockPlayer1, validCardIdStr);
 
     // assert
     assertFalse(result);
@@ -107,10 +112,10 @@ public class GameRoomHandleTest {
   @Test
   void handleBuyCard_GameIsNull_ReturnsFalse() {
     // arrange
-    ReflectionTestUtils.setField(gameRoom, "game", null); 
+    ReflectionTestUtils.setField(spyRoom, "game", null); 
 
     // act
-    boolean result = gameRoom.handleBuyCard(mockPlayer1, validCardIdStr);
+    boolean result = spyRoom.handleBuyCard(mockPlayer1, validCardIdStr);
 
     // assert
     assertFalse(result);
@@ -122,7 +127,7 @@ public class GameRoomHandleTest {
     given(mockGame.reserveCard(mockPlayer1, validCardIdLong)).willReturn(true);
 
     // act
-    boolean result = gameRoom.handleReserveCard(mockPlayer1, validCardIdStr);
+    boolean result = spyRoom.handleReserveCard(mockPlayer1, validCardIdStr);
 
     // assert
     assertTrue(result);
@@ -135,7 +140,7 @@ public class GameRoomHandleTest {
     given(mockGame.reserveCard(mockPlayer1, validCardIdLong)).willReturn(false);
 
     // act
-    boolean result = gameRoom.handleReserveCard(mockPlayer1, validCardIdStr);
+    boolean result = spyRoom.handleReserveCard(mockPlayer1, validCardIdStr);
 
     // assert
     assertFalse(result);
@@ -145,10 +150,10 @@ public class GameRoomHandleTest {
   @Test
   void handleReserveCard_GameIsNull_ReturnsFalse() {
     // arrange
-    ReflectionTestUtils.setField(gameRoom, "game", null);
+    ReflectionTestUtils.setField(spyRoom, "game", null);
 
     // act
-    boolean result = gameRoom.handleReserveCard(mockPlayer1, validCardIdStr);
+    boolean result = spyRoom.handleReserveCard(mockPlayer1, validCardIdStr);
 
     // assert
     assertFalse(result);
@@ -161,7 +166,7 @@ public class GameRoomHandleTest {
     given(mockGame.takeGems(eq(mockPlayer1), anyList())).willReturn(true);
 
     // act
-    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, colors);
+    boolean result = spyRoom.handleTakeThreeGems(mockPlayer1, colors);
 
     // assert
     assertTrue(result);
@@ -174,7 +179,7 @@ public class GameRoomHandleTest {
     List<String> colors = Arrays.asList("red", "red", "blue");
 
     // act
-    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, colors);
+    boolean result = spyRoom.handleTakeThreeGems(mockPlayer1, colors);
 
     // assert
     assertFalse(result);
@@ -185,7 +190,7 @@ public class GameRoomHandleTest {
     // arrange
     
     // act
-    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, null);
+    boolean result = spyRoom.handleTakeThreeGems(mockPlayer1, null);
 
     // assert
     assertFalse(result);
@@ -198,7 +203,7 @@ public class GameRoomHandleTest {
     List<String> colors = Arrays.asList("green", "red", "blue", "black");
 
     // act
-    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, colors);
+    boolean result = spyRoom.handleTakeThreeGems(mockPlayer1, colors);
 
     // assert
     assertFalse(result);
@@ -211,7 +216,7 @@ public class GameRoomHandleTest {
     List<String> colors = Arrays.asList("incorrect_color", "red", "blue");
 
     // act
-    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, colors);
+    boolean result = spyRoom.handleTakeThreeGems(mockPlayer1, colors);
 
     // assert
     assertFalse(result);
@@ -221,11 +226,11 @@ public class GameRoomHandleTest {
   @Test
   void handleTakeThreeGems_Fail_GameIsNull() {
     // arrange
-    ReflectionTestUtils.setField(gameRoom, "game", null);
+    ReflectionTestUtils.setField(spyRoom, "game", null);
     List<String> colors = Arrays.asList("red", "blue", "green");
 
     // act
-    boolean result = gameRoom.handleTakeThreeGems(mockPlayer1, colors);
+    boolean result = spyRoom.handleTakeThreeGems(mockPlayer1, colors);
 
     // assert
     assertFalse(result);
@@ -239,7 +244,7 @@ public class GameRoomHandleTest {
     given(mockGame.takeGems(eq(mockPlayer1), eq(List.of(color)))).willReturn(true);
 
     // act
-    boolean result = gameRoom.handleTakeDoubleGem(mockPlayer1, colorStr);
+    boolean result = spyRoom.handleTakeDoubleGem(mockPlayer1, colorStr);
 
     // assert
     assertTrue(result);
@@ -249,10 +254,10 @@ public class GameRoomHandleTest {
   @Test
   void handleTakeDoubleGem_Fail_GameIsNull() {
     // arrange
-    ReflectionTestUtils.setField(gameRoom, "game", null);
+    ReflectionTestUtils.setField(spyRoom, "game", null);
 
     // act
-    boolean result = gameRoom.handleTakeDoubleGem(mockPlayer1, "blue");
+    boolean result = spyRoom.handleTakeDoubleGem(mockPlayer1, "blue");
 
     // assert
     assertFalse(result);
@@ -265,7 +270,7 @@ public class GameRoomHandleTest {
     String colorStr = "incorrect_color";
 
     // act
-    boolean result = gameRoom.handleTakeDoubleGem(mockPlayer1, colorStr);
+    boolean result = spyRoom.handleTakeDoubleGem(mockPlayer1, colorStr);
 
     // assert
     assertFalse(result);
@@ -278,7 +283,7 @@ public class GameRoomHandleTest {
     String colorStr = null;
 
     // act
-    boolean result = gameRoom.handleTakeDoubleGem(mockPlayer1, colorStr);
+    boolean result = spyRoom.handleTakeDoubleGem(mockPlayer1, colorStr);
 
     // assert
     assertFalse(result);
@@ -298,7 +303,7 @@ public class GameRoomHandleTest {
     given(mockGame.getGameState()).willReturn(Game.GameState.RUNNING);
 
     // act
-    boolean result = gameRoom.handleEndTurn(mockPlayer1);
+    boolean result = spyRoom.handleEndTurn(mockPlayer1);
 
     // assert
     assertTrue(result);
@@ -317,7 +322,7 @@ public class GameRoomHandleTest {
       given(mockGame.isPlayerTurn(mockPlayer1)).willReturn(false);
 
       // act
-      boolean result = gameRoom.handleEndTurn(mockPlayer1);
+      boolean result = spyRoom.handleEndTurn(mockPlayer1);
 
       // assert
       assertFalse(result);
@@ -327,10 +332,10 @@ public class GameRoomHandleTest {
   @Test
   void handleEndTurn_Fail_GameIsNull_ReturnsFalse() {
     // arrange
-    ReflectionTestUtils.setField(gameRoom, "game", null);
+    ReflectionTestUtils.setField(spyRoom, "game", null);
 
     // act
-    boolean result = gameRoom.handleEndTurn(mockPlayer1);
+    boolean result = spyRoom.handleEndTurn(mockPlayer1);
 
     // assert
     assertFalse(result);
@@ -345,9 +350,6 @@ public class GameRoomHandleTest {
     given(mockGame.isPlayerTurn(mockPlayer1)).willReturn(true);
     // 回合结束后，游戏状态为FINISHED
     given(mockGame.getGameState()).willReturn(Game.GameState.FINISHED);
-
-    // spy gameRoom以监控EndGame方法调用
-    GameRoom spyRoom = spy(gameRoom);
 
     // act
     boolean result = spyRoom.handleEndTurn(mockPlayer1);

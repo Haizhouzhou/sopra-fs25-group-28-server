@@ -528,10 +528,18 @@ public class WebSocketServer {
             Game game = room.getGame();
             if (game == null) return;
 
+            if(player.hintAvailable == false){
+                room.sendErrorToPlayer(player, "only 1 hint per player per game");
+                return;
+            }
+
             if (!game.isPlayerTurn(player)) {
                 room.sendErrorToPlayer(player, "只能在您的回合请求提示。");
                 return;
             }
+
+
+            player.hintAvailable = false;
 
             // GeminiHint
             String hint = geminiHint.generateSplendorHint(game);
