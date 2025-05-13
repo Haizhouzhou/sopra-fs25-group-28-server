@@ -17,6 +17,7 @@ public class Player {
   private static final boolean PLAYER_NOT_READY = false;
   private static final boolean PLAYER_READY = true;
 
+  public boolean hintAvailable = true;
 
   private Session session;
   private String name;

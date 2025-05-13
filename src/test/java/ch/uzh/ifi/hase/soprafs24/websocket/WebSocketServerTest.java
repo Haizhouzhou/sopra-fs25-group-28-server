@@ -366,6 +366,7 @@ public class WebSocketServerTest {
     String expectedHint = "Buy the blue card.";
     given(mockGame.isPlayerTurn(mockPlayer)).willReturn(true); // Assume it's player's turn
     given(geminiHint.generateSplendorHint(mockGame)).willReturn(expectedHint);
+    mockPlayer.hintAvailable = true;
 
     // act
     webSocketServer.onMessage(mockSession, jsonMessage);
