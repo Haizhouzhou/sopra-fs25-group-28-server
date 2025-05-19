@@ -130,29 +130,29 @@ public class Player {
    * @param message either a String or a WebSocketMessage Object
    */
   public void sendMessage(Object message) {
-      if (session == null || !session.isOpen()) {
-          System.err.println("WebSocket session is closed. Cannot send message.");
-          return;
+    if (session == null || !session.isOpen()) {
+      System.err.println("WebSocket session is closed. Cannot send message.");
+      return;
+    }
+
+    try {
+      String messageStr;
+      if (message instanceof String) {
+        messageStr = (String) message;
+      } else {
+        messageStr = objectMapper.writeValueAsString(message); // 根据注解格式化 JSON
       }
 
-      try {
-          String messageStr;
-          if (message instanceof String) {
-              messageStr = (String) message;
-          } else {
-              messageStr = objectMapper.writeValueAsString(message); // 根据注解格式化 JSON
-          }
-
-          synchronized (sendLock) {
-              session.getBasicRemote().sendText(messageStr);
-          }
-
-          System.out.println("Message sent to user: " + messageStr);
-
-      } catch (IOException e) {
-          System.err.println("Failed to send message to user:");
-          e.printStackTrace();
+      synchronized (sendLock) {
+        session.getBasicRemote().sendText(messageStr);
       }
+
+      System.out.println("Message sent to user: " + messageStr);
+
+    } catch (IOException e) {
+      System.err.println("Failed to send message to user:");
+      e.printStackTrace();
+    }
   }
 
 

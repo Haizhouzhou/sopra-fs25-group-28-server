@@ -1,12 +1,19 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.Session;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.User;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
@@ -20,6 +27,8 @@ public class GameRoomManager {
     private Map<String, GameRoom> rooms = new ConcurrentHashMap<>();
     private Map<String, Player> sessionPlayers = new ConcurrentHashMap<>();
     private Map<String, String> sessionRooms = new ConcurrentHashMap<>();
+
+    private final Set<Session> lobbySessions = ConcurrentHashMap.newKeySet();
 
     private Map<Long, String> userIdToUsername = new ConcurrentHashMap<>();
 
@@ -53,6 +62,9 @@ public class GameRoomManager {
         player.setAvatar(correspondingUser.getAvatar());
         System.out.println("[registerPlayer] avatar = " + correspondingUser.getAvatar());
 
+        // 加入lobby
+        lobbySessions.add(session);
+
         return player;
     }
 
@@ -60,6 +72,7 @@ public class GameRoomManager {
     public void deregisterPlayer(Session session) {
         String sessionId = session.getId();
         sessionPlayers.remove(sessionId);
+        lobbySessions.remove(session); // 这条需要吗？
     }
 
     /**
@@ -90,6 +103,9 @@ public class GameRoomManager {
         room.addPlayer(player);
         sessionRooms.put(session.getId(), roomId);
 
+        // 加入了房间，离开lobby
+        lobbySessions.remove(session);
+
         room.broadcastRoomStatus();
         return room;
     }
@@ -110,6 +126,9 @@ public class GameRoomManager {
         sessionRooms.put(session.getId(), roomId);
         sessionPlayers.put(session.getId(), player);
 
+        // 离开lobby
+        lobbySessions.remove(session);
+
         room.broadcastRoomStatus();
 
         try {
@@ -118,7 +137,8 @@ public class GameRoomManager {
             joinedMessage.put("roomId", roomId);
             session.getBasicRemote().sendText(JsonUtils.toJson(joinedMessage));
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            System.out.println("GameRoomManager.joinRoom Exception :"+ e);
         }
 
         return true;
@@ -145,11 +165,10 @@ public class GameRoomManager {
         }
 
         sessionRooms.remove(sessionId);
-        sessionPlayers.remove(sessionId);
+        // sessionPlayers.remove(sessionId);
+        // 重新加入lobby
+        lobbySessions.add(session);
     }
-
-
-
 
     private String generateRoomId() {
         return UUID.randomUUID().toString().substring(0, 8);
@@ -219,5 +238,25 @@ public class GameRoomManager {
         return clientSessionIdToPlayerMap.get(clientSessionId);
     }
 
+    public void broadcastToLobby(Object message){
+        String msgJson;
+        try {
+            msgJson = new ObjectMapper().writeValueAsString(message);
+        } catch (Exception e) {
+            System.out.println("broadcastToLobby, write message as string fail: " + e);
+            return;
+        }
+
+        for(Session session:lobbySessions){
+            if(session.isOpen()){
+                try {
+                    session.getBasicRemote().sendText(msgJson);
+                    
+                } catch (Exception e) {
+                    System.out.println("broadcastToLobby, send message to sessionRemote fail: " + e);
+                }
+            }
+        }
+    }
 
 }

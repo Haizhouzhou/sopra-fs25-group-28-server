@@ -267,7 +267,7 @@ public class GameRoomManagerTest {
         verify(mockRoom, never()).broadcastRoomStatus();
 
         // 应该正确清除玩家和session信息
-        assertFalse(mockSessionPlayersMap.containsKey(sessionId));
+        // assertFalse(mockSessionPlayersMap.containsKey(sessionId)); //逻辑已修改，不该在这里清除sessionPlayer
         assertFalse(mockSessionRoomsMap.containsKey(sessionId));
     }
 
