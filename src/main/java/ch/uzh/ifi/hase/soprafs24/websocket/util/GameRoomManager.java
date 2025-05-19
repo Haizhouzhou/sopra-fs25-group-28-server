@@ -1,6 +1,10 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.Session;
@@ -9,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ch.uzh.ifi.hase.soprafs24.entity.User;
+import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
+
 
 
 @Component
@@ -24,12 +30,16 @@ public class GameRoomManager {
     private Map<Long, String> userIdToUsername = new ConcurrentHashMap<>();
 
     private final Map<String, Player> clientSessionIdToPlayerMap = new HashMap<>();
+    private final LeaderboardService leaderboardService;
+
 
 
     @Autowired
-    public GameRoomManager(UserService userService) {
-        this.userService = userService;
+    public GameRoomManager(UserService userService, LeaderboardService leaderboardService) {
+    this.userService = userService;
+    this.leaderboardService = leaderboardService;
     }
+
 
     public Player registerPlayer(Session session, String token) {
         User correspondingUser = userService.getUserByToken(token);
@@ -81,7 +91,7 @@ public class GameRoomManager {
         }
 
         String roomId = generateRoomId();
-        GameRoom room = new GameRoom(roomId, maxPlayers);
+        GameRoom room = new GameRoom(roomId, maxPlayers, leaderboardService);
         room.setOwnerName(player.getName());
         room.setOwnerId(player.getUserId());
         room.setRoomName(roomName);
