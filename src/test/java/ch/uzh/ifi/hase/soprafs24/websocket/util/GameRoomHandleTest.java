@@ -26,6 +26,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
+import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
+import ch.uzh.ifi.hase.soprafs24.service.UserService;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
@@ -34,6 +36,12 @@ public class GameRoomHandleTest {
   // no default constructor, need to be initialize manually
   private GameRoom gameRoom;
   private GameRoom spyRoom;
+
+  @Mock
+  private UserService userService;
+
+  @Mock
+  private LeaderboardService leaderboardService;
 
   // Mocks for dependencies (Players)
   @Mock
@@ -63,7 +71,7 @@ public class GameRoomHandleTest {
   void setUp() {
     MockitoAnnotations.openMocks(this);
 
-    gameRoom = new GameRoom(testRoomId, testMaxPlayers);
+    gameRoom = new GameRoom(testRoomId, testMaxPlayers, leaderboardService);
     gameRoom.setRoomName(testRoomName);
 
     gameRoom.setGameInstance(mockGame);

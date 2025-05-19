@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.websocket.Session;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
+import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
@@ -31,13 +32,17 @@ public class GameRoom {
   private String roomName = "";
   private Long ownerId;
   private String ownerName;
+  private final LeaderboardService leaderboardService;
 
 
-  public GameRoom(String roomId, int maxPlayer){
+
+  public GameRoom(String roomId, int maxPlayer, LeaderboardService leaderboardService) {
     this.roomId = roomId;
     this.maxPlayer = maxPlayer;
+    this.leaderboardService = leaderboardService;
     this.roomStatus = ROOM_WAITING;
-  }
+}
+
 
   public String getRoomId(){return roomId;}
 
@@ -84,37 +89,42 @@ public class GameRoom {
    */
   public void EndGame() {
     if (game == null) {
-    System.out.println("尝试结束游戏，但 game 为 null");
-    return;
+        System.out.println("尝试结束游戏，但 game 为 null");
+        return;
     }
 
     System.out.println("游戏结束，开始广播最终结果");
 
-    // 构造游戏结束消息
+    // 🏆 Record the win
+    Long winnerId = game.getWinnerId();
+    if (winnerId != null) {
+        leaderboardService.addWinForPlayer(winnerId);
+        System.out.println("Leaderboard updated for winner ID: " + winnerId);
+    }
+
+    // 🎯 Broadcast final results
     MyWebSocketMessage message = new MyWebSocketMessage();
     message.setType(MyWebSocketMessage.TYPE_SERVER_GAME_OVER);
     message.setRoomId(roomId);
 
-    // 获取玩家信息
     List<Map<String, Object>> playerResults = new ArrayList<>();
     for (Player p : players) {
-    Map<String, Object> pInfo = new HashMap<>();
-    pInfo.put("userId", p.getUserId());
-    pInfo.put("name", p.getName());
-    pInfo.put("avatar", p.getAvatar());
-    pInfo.put("victoryPoints", p.getVictoryPoints());
-    playerResults.add(pInfo);
+        Map<String, Object> pInfo = new HashMap<>();
+        pInfo.put("userId", p.getUserId());
+        pInfo.put("name", p.getName());
+        pInfo.put("avatar", p.getAvatar());
+        pInfo.put("victoryPoints", p.getVictoryPoints());
+        playerResults.add(pInfo);
     }
 
-    // 包装成 content 发送
     Map<String, Object> content = new HashMap<>();
     content.put("players", playerResults);
-    content.put("winnerId", game.getWinnerId());
+    content.put("winnerId", winnerId);
 
     message.setContent(content);
-
     broadcastMessage(message);
-  }
+}
+
 
   private boolean getRoomStatus(){
     this.roomStatus = ROOM_READY;

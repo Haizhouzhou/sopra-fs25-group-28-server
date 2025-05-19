@@ -273,14 +273,15 @@ public class Game {
 
     // 4. if it's final round and all players have played the same number of turns
     if (finalRound && currentPlayer == players.size() - 1) {
-        setGameState(GameState.FINISHED);
-        System.out.println("Final round completed. Game finished.");
-
         Long winnerId = getWinnerId();
         if (winnerId != null && leaderboardService != null) {
             leaderboardService.addWinForPlayer(winnerId);
             System.out.println("Leaderboard updated for player ID: " + winnerId);
         }
+        setGameState(GameState.FINISHED);
+        System.out.println("Final round completed. Game finished.");
+
+
 
         return;
     }
