@@ -76,7 +76,7 @@ public class UserService {
 
   public User userLogout(User loginCredential){
     User userByToken = userRepository.findByToken(loginCredential.getToken());
-    System.out.println("token:"+loginCredential.getToken());
+    // System.out.println("token:"+loginCredential.getToken());
     if(userByToken == null){
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user by token not found, logout failed");
     }
@@ -176,34 +176,34 @@ public class UserService {
     return edituser;
   }
 
-  /**
-   * A helper methods that generate random name
-   */
-  private String generateRandomName(){
-    final String PREFIX = "user_";
-    final int LENGTH = 8;
+  // /**
+  //  * A helper methods that generate random name
+  //  */
+  // private String generateRandomName(){
+  //   final String PREFIX = "user_";
+  //   final int LENGTH = 8;
 
-    String uuid = UUID.randomUUID().toString().replace("-", "");
-    int startIndex = ThreadLocalRandom.current().nextInt(uuid.length() - LENGTH + 1);
-    String suffix = uuid.substring(startIndex, startIndex + LENGTH);
+  //   String uuid = UUID.randomUUID().toString().replace("-", "");
+  //   int startIndex = ThreadLocalRandom.current().nextInt(uuid.length() - LENGTH + 1);
+  //   String suffix = uuid.substring(startIndex, startIndex + LENGTH);
 
-    return PREFIX + suffix;    
-  }
+  //   return PREFIX + suffix;    
+  // }
 
-  /**
-   * A helper methods that generate random name when Creating new user
-   * if the generated random name duplicate with existing name, generate a new one
-   * 
-   * @return generatedName
-   */
-  private String generateUniqueRandomUsername(){
-    final int MAX_GEN_ATTEMPT = 10;
-    for (int i = 0;i<MAX_GEN_ATTEMPT;i++){
-      String generatedName = generateRandomName();
-      if (userRepository.findByName(generatedName) == null){
-        return generatedName;
-      }
-    }
-    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "fail to generate unique name for new user, please try again");
-  }
+  // /**
+  //  * A helper methods that generate random name when Creating new user
+  //  * if the generated random name duplicate with existing name, generate a new one
+  //  * 
+  //  * @return generatedName
+  //  */
+  // private String generateUniqueRandomUsername(){
+  //   final int MAX_GEN_ATTEMPT = 10;
+  //   for (int i = 0;i<MAX_GEN_ATTEMPT;i++){
+  //     String generatedName = generateRandomName();
+  //     if (userRepository.findByName(generatedName) == null){
+  //       return generatedName;
+  //     }
+  //   }
+  //   throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "fail to generate unique name for new user, please try again");
+  // }
 }

@@ -12,7 +12,6 @@ import java.util.Stack;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
-import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.websocket.action.ActionBuyCard;
 import ch.uzh.ifi.hase.soprafs24.websocket.action.ActionReserveCard;
 import ch.uzh.ifi.hase.soprafs24.websocket.action.ActionTakeGems;
@@ -34,8 +33,6 @@ public class Game {
   private ActionBuyCard actionBuyCard = new ActionBuyCard();
   private ActionReserveCard actionReserveCard = new ActionReserveCard();
   private ActionTakeGems actionTakeGems = new ActionTakeGems();
-  private LeaderboardService leaderboardService;
-
 
   public final Long VICTORYPOINTS = 5L; //modified for M3 demo
 
@@ -107,10 +104,6 @@ public class Game {
       return false;
     }
   }
-  public void setLeaderboardService(LeaderboardService leaderboardService) {
-    this.leaderboardService = leaderboardService;
-}
-
 
   // constructor
   public Game(GameRoom gameRoom, String gameId, Set<Player> players) {
@@ -273,17 +266,10 @@ public class Game {
 
     // 4. if it's final round and all players have played the same number of turns
     if (finalRound && currentPlayer == players.size() - 1) {
-        Long winnerId = getWinnerId();
-        if (winnerId != null && leaderboardService != null) {
-            leaderboardService.addWinForPlayer(winnerId);
-            System.out.println("Leaderboard updated for player ID: " + winnerId);
-        }
-        setGameState(GameState.FINISHED);
-        System.out.println("Final round completed. Game finished.");
+      setGameState(GameState.FINISHED);
+      System.out.println("Final round completed. Game finished.");
 
-
-
-        return;
+      return;
     }
 
     // 5. Increment round

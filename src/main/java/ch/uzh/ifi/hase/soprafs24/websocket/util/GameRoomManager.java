@@ -145,7 +145,6 @@ public class GameRoomManager {
             joinedMessage.put("roomId", roomId);
             session.getBasicRemote().sendText(JsonUtils.toJson(joinedMessage));
         } catch (Exception e) {
-            // e.printStackTrace();
             System.out.println("GameRoomManager.joinRoom Exception :"+ e);
         }
 

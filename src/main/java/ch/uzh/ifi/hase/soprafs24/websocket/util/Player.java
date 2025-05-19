@@ -150,8 +150,7 @@ public class Player {
       System.out.println("Message sent to user: " + messageStr);
 
     } catch (IOException e) {
-      System.err.println("Failed to send message to user:");
-      e.printStackTrace();
+      System.err.println("Failed to send message to user:" + e);
     }
   }
 

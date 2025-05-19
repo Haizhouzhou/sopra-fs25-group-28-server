@@ -77,6 +77,7 @@ public class WebSocketServerTest {
   private final Long testUserId = 1L;
 
   @BeforeEach
+  // @SuppressWarnings("unused")
   void setUp() throws IOException { 
     MockitoAnnotations.openMocks(this);
     // mock session setup

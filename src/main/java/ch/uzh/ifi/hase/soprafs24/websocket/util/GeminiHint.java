@@ -1,6 +1,5 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -24,7 +23,7 @@ public class GeminiHint {
   @Autowired
   private GeminiService geminiService;
 
-  private static ObjectMapper objectMapper = new ObjectMapper();
+  private final static ObjectMapper objectMapper = new ObjectMapper();
 
   private String systemInstruction = """
         You are an AI assistant helping a player in the game of Splendor by providing strategic hints.

@@ -244,7 +244,7 @@ public class GameRoom {
                 try {
                     session.getBasicRemote().sendText(jsonMessage);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.err.println("IOException " + e);
                 }
             } else {
                 System.out.println("Skipping closed session for player: " + player.getName());
@@ -481,7 +481,6 @@ public class GameRoom {
             System.out.println("游戏状态广播完成");
         } catch (Exception e) {
             System.err.println("广播游戏状态时出错: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 

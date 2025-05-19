@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs24.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +61,7 @@ public class UserServiceTest {
   }
 
   @Test
-  public void createUser_duplicateName_throwsException() {
+  void createUser_duplicateName_throwsException() {
     // given -> a first user has already been created
     userService.createUser(testUser);
 
@@ -74,7 +75,7 @@ public class UserServiceTest {
   }
 
   @Test
-  public void createUser_duplicateInputs_throwsException() {
+  void createUser_duplicateInputs_throwsException() {
     // given -> a first user has already been created
     userService.createUser(testUser);
 
@@ -85,6 +86,78 @@ public class UserServiceTest {
     // then -> attempt to create second user with same user -> check that an error
     // is thrown
     assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+  }
+
+  @Test
+  void userLogout_validToken_shouldLogoutAndChangeTokenAndStatus(){
+    // arrange
+    User userInDb = new User();
+    userInDb.setId(2L);
+    userInDb.setName("userInDB");
+    userInDb.setUsername("usernameInDB");
+    userInDb.setPassword("passwordInDB");
+    userInDb.setToken("oldToken");
+
+    User input = new User();
+    input.setToken("oldToken");
+
+    Mockito.when(userRepository.findByToken("oldToken")).thenReturn(userInDb);
+    Mockito.when(userRepository.saveAndFlush(Mockito.any())).thenReturn(userInDb);
+
+    // act
+    User result = userService.userLogout(input);
+
+    // assert
+    Mockito.verify(userRepository).findByToken("oldToken");
+    Mockito.verify(userRepository).saveAndFlush(userInDb);
+
+    assertEquals(UserStatus.OFFLINE, userInDb.getStatus());
+    assertNotNull(userInDb.getToken());
+    assertNotEquals("oldToken", userInDb.getToken()); // token 应该已改变
+    assertEquals(userInDb, result);
+  }
+
+  @Test
+  void userLogout_invalidToken_shouldThrowException() {
+    // arrange
+    User input = new User();
+    input.setToken("notExistToken");
+    Mockito.when(userRepository.findByToken("notExistToken")).thenReturn(null);
+
+    // act and assert
+    assertThrows(ResponseStatusException.class, () -> userService.userLogout(input));
+  }
+
+  @Test
+  void getUserByToken_tokenExists_shouldReturnUser() {
+    // assert
+    User userInDb = new User();
+    userInDb.setId(2L);
+    userInDb.setName("userInDB");
+    userInDb.setUsername("usernameInDB");
+    userInDb.setPassword("passwordInDB");
+    userInDb.setToken("tokenInDB");
+    Mockito.when(userRepository.findByToken("tokenInDB")).thenReturn(userInDb);
+
+    // act
+    User result = userService.getUserByToken("tokenInDB");
+
+    // assert
+    Mockito.verify(userRepository).findByToken("tokenInDB");
+    assertEquals(userInDb, result);
+  }
+
+  @Test
+  void getUserByToken_tokenNotExist_shouldReturnNull() {
+    // arrange
+    Mockito.when(userRepository.findByToken("noSuchToken")).thenReturn(null);
+
+    // act
+    User result = userService.getUserByToken("noSuchToken");
+
+    // assert
+    Mockito.verify(userRepository).findByToken("noSuchToken");
+    assertEquals(null, result);
   }
 
 }
