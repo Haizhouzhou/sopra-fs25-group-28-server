@@ -21,7 +21,6 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ch.uzh.ifi.hase.soprafs24.config.SpringContext;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
 import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoomManager;
@@ -151,6 +150,8 @@ public class WebSocketServer {
         } catch (Exception e) {
             log.error("Failed to create room {}", e);
         }
+
+        broadcastRoomListToLobby();
     }
 
 
@@ -178,11 +179,15 @@ public class WebSocketServer {
         if (room != null) {
             room.broadcastRoomStatus();
         }
+
+        broadcastRoomListToLobby();
     }
 
 
     private void handleLeaveRoom(Session session) {
         roomManager.leaveRoom(session);
+
+        broadcastRoomListToLobby();
     }
 
     private void handleMessage(Session session, MyWebSocketMessage message) {
@@ -264,6 +269,33 @@ public class WebSocketServer {
         } catch (IOException e) {
             log.error("Failed to send room list", e);
         }
+    }
+
+    private void broadcastRoomListToLobby(){
+
+        // 获取房间列表信息
+        List<GameRoom> roomList = roomManager.getAllRooms();
+        
+        // log.info("🧪 getAllRooms result: {}", roomList);
+
+        List<Map<String, Object>> roomSummaries = new ArrayList<>();
+        for (GameRoom room : roomList) {
+            Map<String, Object> info = new HashMap<>();
+            info.put("roomId", room.getRoomId());
+            info.put("roomName", room.getRoomName());
+            info.put("owner", room.getOwnerName());
+            info.put("players", room.getCurrentPlayerCount());
+            info.put("maxPlayers", room.getMaxPlayer());
+            roomSummaries.add(info);
+        }
+
+        MyWebSocketMessage response = new MyWebSocketMessage();
+        response.setType(MyWebSocketMessage.TYPE_SERVER_ROOM_LIST);
+        response.setRoomId(null);
+        response.setSessionId(null);
+        response.setContent(roomSummaries);
+        
+        roomManager.broadcastToLobby(response);
     }
 
     /**

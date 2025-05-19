@@ -1,26 +1,36 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
-import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
-
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
+import ch.uzh.ifi.hase.soprafs24.service.UserService;
+import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
+import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
 /**
  * Unit tests for the GameRoom class.
@@ -29,6 +39,12 @@ public class GameRoomTest {
 
   // no default constructor, need to be initialize manually
   private GameRoom gameRoom;
+
+  @MockBean
+  private UserService userService;
+
+  @MockBean
+  private LeaderboardService leaderboardService;
 
   // Mocks for dependencies (Players)
   @Mock
@@ -54,7 +70,7 @@ public class GameRoomTest {
     MockitoAnnotations.openMocks(this);
 
     // Create a new GameRoom instance for each test
-    gameRoom = new GameRoom(testRoomId, testMaxPlayers);
+    gameRoom = new GameRoom(testRoomId, testMaxPlayers, leaderboardService);
     gameRoom.setRoomName(testRoomName); // Set a name for testing
 
     gameRoom.setGameInstance(mockGame);

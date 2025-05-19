@@ -8,10 +8,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.websocket.Session;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
+import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
@@ -26,18 +31,26 @@ public class GameRoom {
   private Set<Player> players = ConcurrentHashMap.newKeySet();
   private boolean roomStatus;
   private Game game;
+  
+  protected final ScheduledExecutorService roundTimerExecutor = Executors.newSingleThreadScheduledExecutor();
+  protected  ScheduledFuture<?> roundTimerFuture; // 当前回合的timer
+  protected final long ROUND_TIMEOUT_MILLIS = 35000; // 后端限制35秒
 
 
   private String roomName = "";
   private Long ownerId;
   private String ownerName;
+  private final LeaderboardService leaderboardService;
 
 
-  public GameRoom(String roomId, int maxPlayer){
+
+  public GameRoom(String roomId, int maxPlayer, LeaderboardService leaderboardService) {
     this.roomId = roomId;
     this.maxPlayer = maxPlayer;
+    this.leaderboardService = leaderboardService;
     this.roomStatus = ROOM_WAITING;
-  }
+}
+
 
   public String getRoomId(){return roomId;}
 
@@ -76,6 +89,10 @@ public class GameRoom {
     game = new Game(this, roomId, players);
     game.initialize();
     System.out.println("Game started in room: " + roomId);
+
+    // Start the first timer
+    Player firstPlayer = game.getPlayers().get(game.getCurrentPlayer());
+    startRoundTimer(firstPlayer);
   }
 
   /**
@@ -84,37 +101,43 @@ public class GameRoom {
    */
   public void EndGame() {
     if (game == null) {
-    System.out.println("尝试结束游戏，但 game 为 null");
-    return;
+        System.out.println("尝试结束游戏，但 game 为 null");
+        return;
     }
 
     System.out.println("游戏结束，开始广播最终结果");
 
-    // 构造游戏结束消息
+    // 🏆 Record the win
+    // TODO: 确认leaderboard的entry
+    Long winnerId = game.getWinnerId();
+    if (winnerId != null) {
+        leaderboardService.addWinForPlayer(winnerId);
+        System.out.println("Leaderboard updated for winner ID: " + winnerId);
+    }
+
+    // 🎯 Broadcast final results
     MyWebSocketMessage message = new MyWebSocketMessage();
     message.setType(MyWebSocketMessage.TYPE_SERVER_GAME_OVER);
     message.setRoomId(roomId);
 
-    // 获取玩家信息
     List<Map<String, Object>> playerResults = new ArrayList<>();
     for (Player p : players) {
-    Map<String, Object> pInfo = new HashMap<>();
-    pInfo.put("userId", p.getUserId());
-    pInfo.put("name", p.getName());
-    pInfo.put("avatar", p.getAvatar());
-    pInfo.put("victoryPoints", p.getVictoryPoints());
-    playerResults.add(pInfo);
+        Map<String, Object> pInfo = new HashMap<>();
+        pInfo.put("userId", p.getUserId());
+        pInfo.put("name", p.getName());
+        pInfo.put("avatar", p.getAvatar());
+        pInfo.put("victoryPoints", p.getVictoryPoints());
+        playerResults.add(pInfo);
     }
 
-    // 包装成 content 发送
     Map<String, Object> content = new HashMap<>();
     content.put("players", playerResults);
-    content.put("winnerId", game.getWinnerId());
+    content.put("winnerId", winnerId);
 
     message.setContent(content);
-
     broadcastMessage(message);
-  }
+}
+
 
   private boolean getRoomStatus(){
     this.roomStatus = ROOM_READY;
@@ -142,13 +165,13 @@ public class GameRoom {
       playerInfo.put("name",player.getName());
       playerInfo.put("avatar", player.getAvatar()); // 添加
 
-        playersInfo.add(playerInfo);
+      playersInfo.add(playerInfo);
     }
 
     roomInfo.put("players",playersInfo);
     roomInfo.put("roomName", roomName);
 
-      return roomInfo;
+    return roomInfo;
   }
 
   public void addPlayer(Player player){
@@ -256,6 +279,36 @@ public class GameRoom {
       return this.game;
   }
 
+  /**
+   * activate timer
+   */
+  public void startRoundTimer(Player currentPlayer){
+    // deactivate old timer
+    cancelRoundTimer();
+
+    Session session = currentPlayer.getSession();
+    if(session == null || !session.isOpen()){
+        // System.out.println("[Timer] 玩家离线，自动跳过回合: " + currentPlayer.getUserId());
+        handleEndTurn(currentPlayer);
+    }else{
+        roundTimerFuture = roundTimerExecutor.schedule(() -> {
+            // System.out.println("[Timer] 玩家超时未操作，自动跳过回合: " + currentPlayer.getUserId());
+            // timer时间到 handleEndTurn
+            handleEndTurn(currentPlayer);
+        }, ROUND_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+    }
+
+  }
+
+  /**
+   * deactivate timer
+   */
+  public void cancelRoundTimer(){
+    if (roundTimerFuture != null && !roundTimerFuture.isDone()){
+        roundTimerFuture.cancel(true);
+    }
+  }
+
     /**
      * 处理玩家购买卡牌的操作
      * @param player 玩家
@@ -327,17 +380,20 @@ public class GameRoom {
         Player currentTurnPlayer = game.getPlayers().get(currentPlayerIndex);
         Long currentPlayerId = currentTurnPlayer.getUserId();
 
-        System.out.println("当前玩家索引: " + currentPlayerIndex);
-        System.out.println("尝试结束回合的玩家ID: " + playerId);
-        System.out.println("当前回合玩家ID: " + currentPlayerId);
+        // System.out.println("当前玩家索引: " + currentPlayerIndex);
+        // System.out.println("尝试结束回合的玩家ID: " + playerId);
+        // System.out.println("当前回合玩家ID: " + currentPlayerId);
 
         // 检查是否是该玩家的回合
         boolean isTurn = game.isPlayerTurn(player);
-        System.out.println("是否是玩家的回合: " + isTurn);
+        // System.out.println("是否是玩家的回合: " + isTurn);
 
         if (!isTurn) {
             return false;
         }
+
+        // deactivate timer 
+        cancelRoundTimer();
 
         // 结束回合
         //game.endTurn的作用：更新游戏状态，更新要做行动的玩家，处理noble逻辑，判断是否有玩家胜出
@@ -348,8 +404,8 @@ public class GameRoom {
         // 记录新的当前玩家
         int newCurrentPlayerIndex = game.getCurrentPlayer();
         Player newCurrentPlayer = game.getPlayers().get(newCurrentPlayerIndex);
-        System.out.println("新的当前玩家索引: " + newCurrentPlayerIndex);
-        System.out.println("新的当前玩家ID: " + newCurrentPlayer.getUserId());
+        // System.out.println("新的当前玩家索引: " + newCurrentPlayerIndex);
+        // System.out.println("新的当前玩家ID: " + newCurrentPlayer.getUserId());
 
         // 发送游戏状态更新到所有玩家
         broadcastGameState();
@@ -357,6 +413,27 @@ public class GameRoom {
         // 检查游戏是否结束
         if (game.getGameState() == Game.GameState.FINISHED) {
             EndGame();
+            roundTimerExecutor.shutdownNow();
+        }else{
+            // activate new timer for next online player
+            List<Player> playerList = game.getPlayers();
+            int totalPlayers = playerList.size();
+            int idx = game.getCurrentPlayer();
+            boolean foundOnline = false;
+            for (int i = 0; i < totalPlayers; i++) {
+                Player next = playerList.get(idx);
+                Session session = next.getSession();
+                if (session != null && session.isOpen()) {
+                    foundOnline = true;
+                    startRoundTimer(next);
+                    break;
+                }
+                idx = (idx + 1) % totalPlayers;
+            }
+            // 如果没有在线玩家，不再递归
+            if (!foundOnline) {
+                System.out.println("所有玩家都离线，停止定时器递归。");
+            }
         }
 
         return true;
@@ -474,4 +551,11 @@ public class GameRoom {
         return success;
     }
 
+    public void manuallyDestroyTimer(){
+        if (roundTimerExecutor != null && !roundTimerExecutor.isShutdown()) {
+            roundTimerExecutor.shutdownNow();
+        }
+        // 你可以在这里加别的资源清理
+        System.out.println("GameRoom " + roomId + " destroyed.");
+    }
 }
