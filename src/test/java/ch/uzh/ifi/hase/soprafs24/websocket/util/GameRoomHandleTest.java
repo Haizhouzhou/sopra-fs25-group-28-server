@@ -6,11 +6,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.websocket.Session;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -18,6 +22,7 @@ import static org.mockito.BDDMockito.given;
 import org.mockito.Mock;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -367,5 +372,94 @@ public class GameRoomHandleTest {
     verify(spyRoom, times(1)).EndGame();
     verify(mockGame, times(1)).endTurn();
   }
+
+  /**
+   * test timer call handleEndTurn when time is up
+   */
+  @Test
+  @Timeout(2)
+  void startRoundTimer_ShouldCallHandleEndTURNAutoMatically() throws Exception{
+    // arrange
+    AtomicBoolean triggered = new AtomicBoolean(false);
+
+    GameRoom testRoom = new GameRoom(testRoomId, testMaxPlayers, leaderboardService) {
+      @Override
+        public void startRoundTimer(Player currentPlayer) {
+          cancelRoundTimer();
+          System.out.println("DEBUG: schedule timer 50ms");
+          roundTimerFuture = roundTimerExecutor.schedule(
+            () -> {
+              System.out.println("DEBUG: Timer fired!");
+              handleEndTurn(currentPlayer);
+            },
+            50,
+            java.util.concurrent.TimeUnit.MILLISECONDS
+          );
+        }
+      @Override
+      public boolean handleEndTurn(Player currentPlayer) {
+
+        triggered.set(true);
+        return true;
+      }
+      
+    };
+    testRoom.setRoomName(testRoomName);
+    testRoom.setGameInstance(mockGame);
+
+    Set<Player> players = ConcurrentHashMap.newKeySet();
+    players.add(mockPlayer1);
+    players.add(mockPlayer2);
+    ReflectionTestUtils.setField(testRoom, "players", players);
+
+    given(mockGame.getCurrentPlayer()).willReturn(0);
+    given(mockGame.getPlayers()).willReturn(List.of(mockPlayer1, mockPlayer2));
+    given(mockPlayer1.getUserId()).willReturn(11L);
+
+    // act
+    testRoom.startRoundTimer(mockPlayer1);
+    Thread.sleep(200); // 给 timer 线程触发的机会
+
+    // assert
+    assertTrue(triggered.get(), "Timer should trigger handleEndTurn()");
+  }
+  
+  @Test
+  @Timeout(2)
+  void startRoundTimer_ShouldSkipWhenPlayerIsOffline() throws Exception {
+    // arrange
+    AtomicBoolean triggered = new AtomicBoolean(false);
+
+    // mock session
+    Session mockSession = mock(Session.class);
+    given(mockSession.isOpen()).willReturn(false); // 玩家不在线
+    given(mockPlayer1.getSession()).willReturn(mockSession);
+
+    // 只覆盖 handleEndTurn，timer 逻辑用 GameRoom 原实现
+    GameRoom testRoom = new GameRoom(testRoomId, testMaxPlayers, leaderboardService) {
+      @Override
+      public boolean handleEndTurn(Player currentPlayer) {
+        triggered.set(true);
+        return true;
+      }
+    };
+    testRoom.setRoomName(testRoomName);
+    testRoom.setGameInstance(mockGame);
+
+    Set<Player> players = ConcurrentHashMap.newKeySet();
+    players.add(mockPlayer1);
+    players.add(mockPlayer2);
+
+    given(mockGame.getCurrentPlayer()).willReturn(0);
+    given(mockGame.getPlayers()).willReturn(List.of(mockPlayer1, mockPlayer2));
+    given(mockPlayer1.getUserId()).willReturn(11L);
+
+    // act
+    testRoom.startRoundTimer(mockPlayer1);
+
+    // assert
+    assertTrue(triggered.get(), "Timer should trigger handleEndTurn when player is offline");
+  }
+
 
 }

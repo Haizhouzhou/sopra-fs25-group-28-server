@@ -165,6 +165,7 @@ public class GameRoomManager {
                 room.removePlayer(player);
                 if (room.isEmpty()) {
                     rooms.remove(roomId);
+                    room.manuallyDestroyTimer();
                     System.out.println("Room " + roomId + " is empty and has been removed.");
                 } else {
                     room.broadcastRoomStatus();
