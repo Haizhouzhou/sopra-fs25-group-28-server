@@ -485,6 +485,32 @@ public class GameRoom {
         }
     }
 
+    public void updateGameStateForPlayer(Player requestPlayer){
+        if (game == null || requestPlayer == null) return;
+
+        try {
+            // 获取最新游戏状态
+            GameSnapshot snapshot = game.getGameInformation();
+
+            // 创建消息
+            MyWebSocketMessage message = new MyWebSocketMessage();
+            message.setType(MyWebSocketMessage.TYPE_SERVER_GAME_STATE);
+            message.setRoomId(roomId);
+            message.setContent(snapshot);
+
+            Session session = requestPlayer.getSession();
+            if (session != null && session.isOpen()) {
+                System.out.println("正在向玩家 " + requestPlayer.getUserId() + " 发送游戏状态");
+                requestPlayer.sendMessage(message);
+            } else {
+                System.out.println("跳过玩家 " + requestPlayer.getUserId() + "：连接已关闭");
+            }
+
+        } catch (Exception e) {
+            System.err.println("更新游戏状态时出错: " + e.getMessage());
+        }
+    }
+
     /**
      * 发送错误消息给指定玩家
      * @param player 玩家

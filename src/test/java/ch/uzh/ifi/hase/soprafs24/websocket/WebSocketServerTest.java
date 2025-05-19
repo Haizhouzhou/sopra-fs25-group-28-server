@@ -1,30 +1,43 @@
 package ch.uzh.ifi.hase.soprafs24.websocket;
 
-import ch.uzh.ifi.hase.soprafs24.websocket.util.*;
-import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
-import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
-import java.io.IOException;
-import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import org.mockito.MockitoAnnotations;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
+import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoomManager;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.GeminiHint;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.MyWebSocketMessage;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 
 public class WebSocketServerTest {
 
@@ -428,4 +441,91 @@ public class WebSocketServerTest {
     // assert
     verify(mockRoom).broadcastRoomStatus();
   }
+
+  @Test
+  void broadcastRoomListToLobby_shouldCallRoomManagerAndBroadcast() {
+    // arrange
+    given(roomManager.getAllRooms()).willReturn(List.of(mockRoom));
+    given(mockRoom.getRoomId()).willReturn("id1");
+    given(mockRoom.getRoomName()).willReturn("Room1");
+    given(mockRoom.getOwnerName()).willReturn("Owner1");
+    given(mockRoom.getCurrentPlayerCount()).willReturn(2);
+    given(mockRoom.getMaxPlayer()).willReturn(4);
+
+    // act
+    webSocketServer.broadcastRoomListToLobby();
+
+    // assert
+    ArgumentCaptor<MyWebSocketMessage> msgCaptor = ArgumentCaptor.forClass(MyWebSocketMessage.class);
+    verify(roomManager).broadcastToLobby(msgCaptor.capture());
+
+    MyWebSocketMessage sentMsg = msgCaptor.getValue();
+    assertEquals(MyWebSocketMessage.TYPE_SERVER_ROOM_LIST, sentMsg.getType());
+    assertTrue(sentMsg.getContent() instanceof List);
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> content = (List<Map<String, Object>>) sentMsg.getContent();
+    assertEquals(1, content.size());
+    assertEquals("id1", content.get(0).get("roomId"));
+    assertEquals("Room1", content.get(0).get("roomName"));
+    assertEquals("Owner1", content.get(0).get("owner"));
+    assertEquals(2, content.get(0).get("players"));
+    assertEquals(4, content.get(0).get("maxPlayers"));
+  }
+
+  @Test
+  void handleGetGameState_shouldCallUpdateGameStateForPlayer() throws IOException {
+    // arrange
+    MyWebSocketMessage wsMessage = new MyWebSocketMessage();
+    wsMessage.setType(MyWebSocketMessage.TYPE_CLIENT_GET_GAME_STATE);
+    wsMessage.setRoomId(testRoomId);
+    wsMessage.setSessionId(testSessionId);
+    String jsonMessage = objectMapper.writeValueAsString(wsMessage);
+
+    given(roomManager.getPlayerByClientSessionId(testSessionId)).willReturn(mockPlayer);
+
+    // act
+    webSocketServer.onMessage(mockSession, jsonMessage);
+
+    // assert
+    verify(mockRoom).updateGameStateForPlayer(mockPlayer);
+  }
+
+  @Test
+  void handleGetGameState_playerNull_shouldNotCallUpdateGameState() throws IOException {
+    // arrange
+    given(roomManager.getPlayerByClientSessionId(testSessionId)).willReturn(null);
+    given(roomManager.getPlayerBySession(mockSession)).willReturn(null);
+
+    MyWebSocketMessage wsMessage = new MyWebSocketMessage();
+    wsMessage.setType(MyWebSocketMessage.TYPE_CLIENT_GET_GAME_STATE);
+    wsMessage.setRoomId(testRoomId);
+    wsMessage.setSessionId(testSessionId);
+    String jsonMessage = objectMapper.writeValueAsString(wsMessage);
+
+    // act
+    webSocketServer.onMessage(mockSession, jsonMessage);
+
+    // assert
+    verify(mockRoom, never()).updateGameStateForPlayer(any());
+  }
+
+  @Test
+  void handleGetGameState_roomNull_shouldNotCallUpdateGameState() throws IOException {
+    // arrange
+    given(roomManager.getRoom(testRoomId)).willReturn(null);
+    given(roomManager.getPlayerByClientSessionId(testSessionId)).willReturn(mockPlayer);
+
+    MyWebSocketMessage wsMessage = new MyWebSocketMessage();
+    wsMessage.setType(MyWebSocketMessage.TYPE_CLIENT_GET_GAME_STATE);
+    wsMessage.setRoomId(testRoomId);
+    wsMessage.setSessionId(testSessionId);
+    String jsonMessage = objectMapper.writeValueAsString(wsMessage);
+
+    // act
+    webSocketServer.onMessage(mockSession, jsonMessage);
+
+    // assert
+    verify(mockRoom, never()).updateGameStateForPlayer(any());
+  }
+
 }

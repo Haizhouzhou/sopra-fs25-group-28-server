@@ -104,7 +104,7 @@ public class WebSocketServer {
 
                 case MyWebSocketMessage.TYPE_CLIENT_GET_ROOM_STATE -> handleGetRoomState(session, wsMessage);
 
-
+                case MyWebSocketMessage.TYPE_CLIENT_GET_GAME_STATE -> handleGetGameState(session, wsMessage);
 
 
                 default -> log.warn("Unknown message type: {}", messageType);
@@ -271,7 +271,7 @@ public class WebSocketServer {
         }
     }
 
-    private void broadcastRoomListToLobby(){
+    protected void broadcastRoomListToLobby(){
 
         // 获取房间列表信息
         List<GameRoom> roomList = roomManager.getAllRooms();
@@ -588,7 +588,7 @@ public class WebSocketServer {
         }
     }
 
-    private Player getPlayerFromMessage(Session session, MyWebSocketMessage message) {
+    protected Player getPlayerFromMessage(Session session, MyWebSocketMessage message) {
         String clientSessionId = message.getSessionId();
         Player player = null;
 
@@ -659,6 +659,15 @@ public class WebSocketServer {
         if (room != null) {
             room.broadcastRoomStatus(); // 或者只发给当前玩家也行
         }
+    }
+
+    private void handleGetGameState(Session session, MyWebSocketMessage message){
+        String roomId = message.getRoomId();
+        GameRoom room = roomManager.getRoom(roomId);
+        Player player = getPlayerFromMessage(session, message);
+        if (player == null || room == null) return;
+
+        room.updateGameStateForPlayer(player);
     }
 
 }
