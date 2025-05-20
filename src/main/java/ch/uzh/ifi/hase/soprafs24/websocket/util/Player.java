@@ -99,6 +99,7 @@ public class Player {
   public void setAvatar(String avatar) {this.avatar = avatar;}
 
   public void setSession(Session session) {this.session = session;}
+  
 
   // called when intialized a game
   public void initializeGameStatus(){
@@ -153,6 +154,7 @@ public class Player {
           e.printStackTrace();
       }
   }
+
 
 
     @Override

@@ -51,8 +51,11 @@ public interface DTOMapper {
   @Mapping(source = "id", target = "id")
   @Mapping(source = "username", target = "username")
   @Mapping(source = "status", target = "status")
+  @Mapping(source = "wincounter", target = "wincounter")
   UserListGetDTO convertUserToUserListGetDTO(User user);
+
   
+
   default User convertUserPostDTOtoEntityWithDefaults(UserPostDTO userPostDTO) {
     User user = convertUserPostDTOtoEntity(userPostDTO);
     user.setWincounter(0); // set default win counter
