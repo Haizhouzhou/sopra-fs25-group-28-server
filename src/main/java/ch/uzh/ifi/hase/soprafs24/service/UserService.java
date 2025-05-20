@@ -73,6 +73,22 @@ public class UserService {
 
     return userByUsername;
   }
+    public void incrementWincounter(Long userId) {
+    User user = userRepository.findById(userId).orElse(null);
+    if (user != null) {
+      user.setWincounter(user.getWincounter() + 1);
+      userRepository.saveAndFlush(user);
+    } else {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for ID: " + userId);
+    }
+  }
+  public List<User> getUsersSortedByWins() {
+    List<User> users = userRepository.findAll();
+    users.sort((u1, u2) -> Integer.compare(u2.getWincounter(), u1.getWincounter())); // Descending
+    return users;
+}
+
+
 
   public User userLogout(User loginCredential){
     User userByToken = userRepository.findByToken(loginCredential.getToken());

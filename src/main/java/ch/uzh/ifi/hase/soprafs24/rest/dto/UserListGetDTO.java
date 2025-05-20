@@ -14,6 +14,8 @@ public class UserListGetDTO {
 
   private String avatar;
 
+  private int wincounter;
+
   public Long getId(){
     return id;
   }
@@ -50,6 +52,13 @@ public class UserListGetDTO {
   public String getAvatar() {return avatar;}
 
   public void setAvatar(String avatar) {this.avatar = avatar;}
+
+  public int getWincounter() {
+    return wincounter;
+}
+public void setWincounter(int wincounter) {
+    this.wincounter = wincounter;
+}
 
   
 }
