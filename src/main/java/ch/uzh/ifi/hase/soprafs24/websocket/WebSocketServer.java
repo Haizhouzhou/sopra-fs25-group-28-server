@@ -104,7 +104,7 @@ public class WebSocketServer {
 
                 case MyWebSocketMessage.TYPE_CLIENT_GET_ROOM_STATE -> handleGetRoomState(session, wsMessage);
 
-
+                case MyWebSocketMessage.TYPE_CLIENT_GET_GAME_STATE -> handleGetGameState(session, wsMessage);
 
 
                 default -> log.warn("Unknown message type: {}", messageType);
@@ -169,11 +169,11 @@ public class WebSocketServer {
             return;
         }
 
-        String clientSessionId = message.getSessionId();
-        if (clientSessionId != null) {
-            roomManager.registerClientSessionId(clientSessionId, player);
-            log.info("✅ Registered clientSessionId {} → userId {}", clientSessionId, player.getUserId());
-        }
+        // String clientSessionId = message.getSessionId();
+        // if (clientSessionId != null) {
+        //     roomManager.registerClientSessionId(clientSessionId, player);
+        //     log.info("✅ Registered clientSessionId {} → userId {}", clientSessionId, player.getUserId());
+        // }
 
         GameRoom room = roomManager.getRoom(message.getRoomId());
         if (room != null) {
@@ -271,7 +271,7 @@ public class WebSocketServer {
         }
     }
 
-    private void broadcastRoomListToLobby(){
+    protected void broadcastRoomListToLobby(){
 
         // 获取房间列表信息
         List<GameRoom> roomList = roomManager.getAllRooms();
@@ -588,19 +588,20 @@ public class WebSocketServer {
         }
     }
 
-    private Player getPlayerFromMessage(Session session, MyWebSocketMessage message) {
+    protected Player getPlayerFromMessage(Session session, MyWebSocketMessage message) {
         String clientSessionId = message.getSessionId();
         Player player = null;
 
         if (clientSessionId != null) {
-            player = roomManager.getPlayerByClientSessionId(clientSessionId);
-            log.info("getPlayerByClientSessionId: {}, resolved to: {}", clientSessionId, player != null ? player.getUserId() : "null");
+            player = roomManager.getPlayerBySession(session);
+            // player = roomManager.getPlayerByClientSessionId(clientSessionId);
+            log.info("getPlayerBySession, SessionId :{}, player.getUserId():{}", session.getId(), player != null ? player.getUserId() : "null");
         }
 
-        if (player == null) {
-            player = roomManager.getPlayerBySession(session);
-            log.info("fallback to getPlayerBySession: {}", player != null ? player.getUserId() : "null");
-        }
+        // if (player == null) {
+        //     player = roomManager.getPlayerBySession(session);
+        //     log.info("fallback to getPlayerBySession: {}", player != null ? player.getUserId() : "null");
+        // }
 
         return player;
     }
@@ -659,6 +660,15 @@ public class WebSocketServer {
         if (room != null) {
             room.broadcastRoomStatus(); // 或者只发给当前玩家也行
         }
+    }
+
+    private void handleGetGameState(Session session, MyWebSocketMessage message){
+        String roomId = message.getRoomId();
+        GameRoom room = roomManager.getRoom(roomId);
+        Player player = getPlayerFromMessage(session, message);
+        if (player == null || room == null) return;
+
+        room.updateGameStateForPlayer(player);
     }
 
 }

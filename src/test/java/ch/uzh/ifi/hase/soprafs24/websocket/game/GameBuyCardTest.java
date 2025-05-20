@@ -68,12 +68,13 @@ public class GameBuyCardTest {
   private List<Card> visibleLevel2Cards;
   private List<Card> visibleLevel3Cards;
   private Stack<Card> level1Deck;
-  private Stack<Card> level2Deck;
-  private Stack<Card> level3Deck;
-  private List<Player> playersInGame;
+  // private Stack<Card> level2Deck;
+  // private Stack<Card> level3Deck;
+  // private List<Player> playersInGame;
 
   @BeforeEach
-  private void setUp(){
+  @SuppressWarnings("unused")
+  void setUp(){
     MockitoAnnotations.openMocks(this);
 
     // card setup

@@ -175,57 +175,57 @@ public class GameRoomTest {
 
     @Test
     void broadcastGameState_WithGameAndPlayers_ShouldSendStateToAllPlayers() {
-        // arrange
-        gameRoom.setGameInstance(mockGame); // 设置 mockGame 实例
+      // arrange
+      gameRoom.setGameInstance(mockGame); // 设置 mockGame 实例
 
-        Set<Player> playersSet = gameRoom.getPlayers();
-        playersSet.add(mockPlayer1);
-        playersSet.add(mockPlayer2);
+      Set<Player> playersSet = gameRoom.getPlayers();
+      playersSet.add(mockPlayer1);
+      playersSet.add(mockPlayer2);
 
-        // mock 玩家 session 和行为
-        Session mockSession1 = mock(Session.class);
-        Session mockSession2 = mock(Session.class);
-        RemoteEndpoint.Basic mockRemote1 = mock(RemoteEndpoint.Basic.class);
-        RemoteEndpoint.Basic mockRemote2 = mock(RemoteEndpoint.Basic.class);
+      // mock 玩家 session 和行为
+      Session mockSession1 = mock(Session.class);
+      Session mockSession2 = mock(Session.class);
+      RemoteEndpoint.Basic mockRemote1 = mock(RemoteEndpoint.Basic.class);
+      RemoteEndpoint.Basic mockRemote2 = mock(RemoteEndpoint.Basic.class);
 
-        given(mockPlayer1.getSession()).willReturn(mockSession1);
-        given(mockPlayer2.getSession()).willReturn(mockSession2);
-        given(mockSession1.isOpen()).willReturn(true);
-        given(mockSession2.isOpen()).willReturn(true);
-        given(mockSession1.getBasicRemote()).willReturn(mockRemote1);
-        given(mockSession2.getBasicRemote()).willReturn(mockRemote2);
+      given(mockPlayer1.getSession()).willReturn(mockSession1);
+      given(mockPlayer2.getSession()).willReturn(mockSession2);
+      given(mockSession1.isOpen()).willReturn(true);
+      given(mockSession2.isOpen()).willReturn(true);
+      given(mockSession1.getBasicRemote()).willReturn(mockRemote1);
+      given(mockSession2.getBasicRemote()).willReturn(mockRemote2);
 
-        // game.getGameInformation() 返回 mock snapshot
-        given(mockGame.getGameInformation()).willReturn(mockGameSnapshot);
+      // game.getGameInformation() 返回 mock snapshot
+      given(mockGame.getGameInformation()).willReturn(mockGameSnapshot);
 
-        // 捕获消息
-        ArgumentCaptor<MyWebSocketMessage> messageCaptor1 = ArgumentCaptor.forClass(MyWebSocketMessage.class);
-        ArgumentCaptor<MyWebSocketMessage> messageCaptor2 = ArgumentCaptor.forClass(MyWebSocketMessage.class);
+      // 捕获消息
+      ArgumentCaptor<MyWebSocketMessage> messageCaptor1 = ArgumentCaptor.forClass(MyWebSocketMessage.class);
+      ArgumentCaptor<MyWebSocketMessage> messageCaptor2 = ArgumentCaptor.forClass(MyWebSocketMessage.class);
 
-        // act
-        gameRoom.broadcastGameState();
+      // act
+      gameRoom.broadcastGameState();
 
-        // assert
-        verify(mockGame, times(1)).getGameInformation();
+      // assert
+      verify(mockGame, times(1)).getGameInformation();
 
-        verify(mockPlayer1, times(1)).sendMessage(messageCaptor1.capture());
-        verify(mockPlayer2, times(1)).sendMessage(messageCaptor2.capture());
+      verify(mockPlayer1, times(1)).sendMessage(messageCaptor1.capture());
+      verify(mockPlayer2, times(1)).sendMessage(messageCaptor2.capture());
 
-        MyWebSocketMessage msg1 = messageCaptor1.getValue();
-        MyWebSocketMessage msg2 = messageCaptor2.getValue();
+      MyWebSocketMessage msg1 = messageCaptor1.getValue();
+      MyWebSocketMessage msg2 = messageCaptor2.getValue();
 
-        assertEquals(MyWebSocketMessage.TYPE_SERVER_GAME_STATE, msg1.getType());
-        assertEquals(MyWebSocketMessage.TYPE_SERVER_GAME_STATE, msg2.getType());
+      assertEquals(MyWebSocketMessage.TYPE_SERVER_GAME_STATE, msg1.getType());
+      assertEquals(MyWebSocketMessage.TYPE_SERVER_GAME_STATE, msg2.getType());
 
-        assertEquals(gameRoom.getRoomId(), msg1.getRoomId());
-        assertEquals(gameRoom.getRoomId(), msg2.getRoomId());
+      assertEquals(gameRoom.getRoomId(), msg1.getRoomId());
+      assertEquals(gameRoom.getRoomId(), msg2.getRoomId());
 
-        assertSame(mockGameSnapshot, msg1.getContent());
-        assertSame(mockGameSnapshot, msg2.getContent());
+      assertSame(mockGameSnapshot, msg1.getContent());
+      assertSame(mockGameSnapshot, msg2.getContent());
     }
 
 
-    @Test
+  @Test
   void broadcastGameState_WhenGameIsNull_ShouldDoNothing() {
     // arrange
     ReflectionTestUtils.setField(gameRoom, "game", null);
@@ -259,5 +259,106 @@ public class GameRoomTest {
     verify(mockPlayer2, never()).sendMessage(any());
   }
 
+  @Test
+  void updateGameStateForPlayer_ShouldSendStateToOnlyThatPlayer() {
+    // arrange
+    gameRoom.setGameInstance(mockGame);
+
+    // mock 1个玩家
+    Set<Player> playersSet = gameRoom.getPlayers();
+    playersSet.add(mockPlayer1);
+
+    // mock 玩家 session 和行为
+    Session mockSession1 = mock(Session.class);
+    RemoteEndpoint.Basic mockRemote1 = mock(RemoteEndpoint.Basic.class);
+
+    given(mockPlayer1.getSession()).willReturn(mockSession1);
+    given(mockSession1.isOpen()).willReturn(true);
+    given(mockSession1.getBasicRemote()).willReturn(mockRemote1);
+
+    // game.getGameInformation() 返回 mock snapshot
+    given(mockGame.getGameInformation()).willReturn(mockGameSnapshot);
+
+    // 捕获消息
+    ArgumentCaptor<MyWebSocketMessage> messageCaptor = ArgumentCaptor.forClass(MyWebSocketMessage.class);
+
+    // act
+    gameRoom.updateGameStateForPlayer(mockPlayer1);
+
+    // assert
+    verify(mockGame, times(1)).getGameInformation();
+    verify(mockPlayer1, times(1)).sendMessage(messageCaptor.capture());
+
+    MyWebSocketMessage msg = messageCaptor.getValue();
+
+    assertEquals(MyWebSocketMessage.TYPE_SERVER_GAME_STATE, msg.getType());
+    assertEquals(gameRoom.getRoomId(), msg.getRoomId());
+    assertSame(mockGameSnapshot, msg.getContent());
+  }
+
+  @Test
+  void updateGameStateForPlayer_SessionClosed_ShouldNotSend() {
+    // arrange
+    Set<Player> playersSet = gameRoom.getPlayers();
+    playersSet.add(mockPlayer1);
+
+    Session mockSession1 = mock(Session.class);
+    given(mockPlayer1.getSession()).willReturn(mockSession1);
+    given(mockSession1.isOpen()).willReturn(false); // session 关闭
+
+    given(mockGame.getGameInformation()).willReturn(mockGameSnapshot);
+
+    // act
+    gameRoom.updateGameStateForPlayer(mockPlayer1);
+
+    // assert
+    verify(mockPlayer1, never()).sendMessage(any(MyWebSocketMessage.class));
+  }
+
+  @Test
+  void updateGameStateForPlayer_GameIsNull_ShouldDoNothing() {
+    // arrange
+    ReflectionTestUtils.setField(gameRoom, "game", null);
+
+    Set<Player> playersSet = gameRoom.getPlayers();
+    playersSet.add(mockPlayer1);
+
+    Session mockSession1 = mock(Session.class);
+    given(mockPlayer1.getSession()).willReturn(mockSession1);
+    given(mockSession1.isOpen()).willReturn(true);
+
+    // act
+    gameRoom.updateGameStateForPlayer(mockPlayer1);
+
+    // assert
+    verify(mockPlayer1, never()).sendMessage(any(MyWebSocketMessage.class));
+  }
+
+  @Test
+  void updateGameStateForPlayer_SessionIsNull_ShouldNotSend() {
+    // arrange
+    Set<Player> playersSet = gameRoom.getPlayers();
+    playersSet.add(mockPlayer1);
+
+    given(mockPlayer1.getSession()).willReturn(null); // session 为 null
+
+    given(mockGame.getGameInformation()).willReturn(mockGameSnapshot);
+
+    // act
+    gameRoom.updateGameStateForPlayer(mockPlayer1);
+
+    // assert
+    verify(mockPlayer1, never()).sendMessage(any(MyWebSocketMessage.class));
+  }
+
+  @Test
+  void updateGameStateForPlayer_PlayerIsNull_ShouldDoNothing() {
+    // arrange
+
+    // act
+    gameRoom.updateGameStateForPlayer(null);
+
+    // assert
+  }
 
 }
