@@ -181,7 +181,7 @@ public class WebSocketServerTest {
 
     // assert
     verify(roomManager).joinRoom(testRoomId, mockSession);
-    verify(roomManager).registerClientSessionId(testSessionId, mockPlayer);
+    // verify(roomManager).registerClientSessionId(testSessionId, mockPlayer);
     verify(mockRoom).broadcastRoomStatus();
   }
 
@@ -482,7 +482,7 @@ public class WebSocketServerTest {
     wsMessage.setSessionId(testSessionId);
     String jsonMessage = objectMapper.writeValueAsString(wsMessage);
 
-    given(roomManager.getPlayerByClientSessionId(testSessionId)).willReturn(mockPlayer);
+    given(roomManager.getPlayerBySession(mockSession)).willReturn(mockPlayer);
 
     // act
     webSocketServer.onMessage(mockSession, jsonMessage);
@@ -494,7 +494,7 @@ public class WebSocketServerTest {
   @Test
   void handleGetGameState_playerNull_shouldNotCallUpdateGameState() throws IOException {
     // arrange
-    given(roomManager.getPlayerByClientSessionId(testSessionId)).willReturn(null);
+    // given(roomManager.getPlayerByClientSessionId(testSessionId)).willReturn(null);
     given(roomManager.getPlayerBySession(mockSession)).willReturn(null);
 
     MyWebSocketMessage wsMessage = new MyWebSocketMessage();
@@ -514,7 +514,7 @@ public class WebSocketServerTest {
   void handleGetGameState_roomNull_shouldNotCallUpdateGameState() throws IOException {
     // arrange
     given(roomManager.getRoom(testRoomId)).willReturn(null);
-    given(roomManager.getPlayerByClientSessionId(testSessionId)).willReturn(mockPlayer);
+    given(roomManager.getPlayerBySession(mockSession)).willReturn(mockPlayer);
 
     MyWebSocketMessage wsMessage = new MyWebSocketMessage();
     wsMessage.setType(MyWebSocketMessage.TYPE_CLIENT_GET_GAME_STATE);

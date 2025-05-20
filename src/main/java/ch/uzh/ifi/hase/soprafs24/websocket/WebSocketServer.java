@@ -169,11 +169,11 @@ public class WebSocketServer {
             return;
         }
 
-        String clientSessionId = message.getSessionId();
-        if (clientSessionId != null) {
-            roomManager.registerClientSessionId(clientSessionId, player);
-            log.info("✅ Registered clientSessionId {} → userId {}", clientSessionId, player.getUserId());
-        }
+        // String clientSessionId = message.getSessionId();
+        // if (clientSessionId != null) {
+        //     roomManager.registerClientSessionId(clientSessionId, player);
+        //     log.info("✅ Registered clientSessionId {} → userId {}", clientSessionId, player.getUserId());
+        // }
 
         GameRoom room = roomManager.getRoom(message.getRoomId());
         if (room != null) {
@@ -593,14 +593,15 @@ public class WebSocketServer {
         Player player = null;
 
         if (clientSessionId != null) {
-            player = roomManager.getPlayerByClientSessionId(clientSessionId);
-            log.info("getPlayerByClientSessionId: {}, resolved to: {}", clientSessionId, player != null ? player.getUserId() : "null");
+            player = roomManager.getPlayerBySession(session);
+            // player = roomManager.getPlayerByClientSessionId(clientSessionId);
+            log.info("getPlayerBySession, SessionId :{}, player.getUserId():{}", session.getId(), player != null ? player.getUserId() : "null");
         }
 
-        if (player == null) {
-            player = roomManager.getPlayerBySession(session);
-            log.info("fallback to getPlayerBySession: {}", player != null ? player.getUserId() : "null");
-        }
+        // if (player == null) {
+        //     player = roomManager.getPlayerBySession(session);
+        //     log.info("fallback to getPlayerBySession: {}", player != null ? player.getUserId() : "null");
+        // }
 
         return player;
     }

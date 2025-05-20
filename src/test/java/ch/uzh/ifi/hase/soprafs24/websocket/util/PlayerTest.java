@@ -9,7 +9,6 @@ import org.mockito.MockitoAnnotations;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.websocket.Session;
 
@@ -130,6 +131,7 @@ public class Player {
    * @param message either a String or a WebSocketMessage Object
    */
   public void sendMessage(Object message) {
+    // System.out.println("Player.sendMessage内, session.getId() =  " + session.getId() + ", isOpen = " + session.isOpen());
     if (session == null || !session.isOpen()) {
       System.err.println("WebSocket session is closed. Cannot send message.");
       return;
@@ -143,6 +145,8 @@ public class Player {
         messageStr = objectMapper.writeValueAsString(message); // 根据注解格式化 JSON
       }
 
+      // System.out.println("Player.sendMessage内, synchronized (sendLock)之前");
+      // System.out.println("Player.sendMessage内, session.getId() =  " + session.getId() + ", isOpen = " + session.isOpen());
       synchronized (sendLock) {
         session.getBasicRemote().sendText(messageStr);
       }
@@ -151,23 +155,23 @@ public class Player {
 
     } catch (IOException e) {
       System.err.println("Failed to send message to user:" + e);
+      // System.err.println("Current thread interrupted? " + Thread.currentThread().isInterrupted());
+      // e.printStackTrace();
     }
   }
 
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Player)) return false;
+    Player player = (Player) o;
+    return Objects.equals(userId, player.userId);
+  }
 
-        Player player = (Player) o;
-
-        return userId != null && userId.equals(player.userId);
-    }
-
-    @Override
-    public int hashCode() {
-        return userId != null ? userId.hashCode() : 0;
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(userId);
+  }
 
 }

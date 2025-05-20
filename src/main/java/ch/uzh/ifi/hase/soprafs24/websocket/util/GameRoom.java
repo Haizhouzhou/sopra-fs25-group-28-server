@@ -287,12 +287,13 @@ public class GameRoom {
     cancelRoundTimer();
 
     Session session = currentPlayer.getSession();
+    System.out.println("玩家：" + currentPlayer.getName() + "连接状态：isOpen() = " + session.isOpen());
     if(session == null || !session.isOpen()){
-        // System.out.println("[Timer] 玩家离线，自动跳过回合: " + currentPlayer.getUserId());
+        System.out.println("[Timer] 玩家离线，自动跳过回合: " + currentPlayer.getUserId());
         handleEndTurn(currentPlayer);
     }else{
         roundTimerFuture = roundTimerExecutor.schedule(() -> {
-            // System.out.println("[Timer] 玩家超时未操作，自动跳过回合: " + currentPlayer.getUserId());
+            System.out.println("[Timer] 玩家超时未操作，自动跳过回合: " + currentPlayer.getUserId());
             // timer时间到 handleEndTurn
             handleEndTurn(currentPlayer);
         }, ROUND_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
@@ -305,7 +306,7 @@ public class GameRoom {
    */
   public void cancelRoundTimer(){
     if (roundTimerFuture != null && !roundTimerFuture.isDone()){
-        roundTimerFuture.cancel(true);
+        roundTimerFuture.cancel(false); // change true to false to avoid interrupt message sending
     }
   }
 
@@ -380,18 +381,19 @@ public class GameRoom {
         Player currentTurnPlayer = game.getPlayers().get(currentPlayerIndex);
         Long currentPlayerId = currentTurnPlayer.getUserId();
 
-        // System.out.println("当前玩家索引: " + currentPlayerIndex);
-        // System.out.println("尝试结束回合的玩家ID: " + playerId);
-        // System.out.println("当前回合玩家ID: " + currentPlayerId);
+        System.out.println("当前玩家索引: " + currentPlayerIndex);
+        System.out.println("尝试结束回合的玩家ID: " + playerId);
+        System.out.println("当前回合玩家ID: " + currentPlayerId);
 
         // 检查是否是该玩家的回合
         boolean isTurn = game.isPlayerTurn(player);
-        // System.out.println("是否是玩家的回合: " + isTurn);
+        System.out.println("是否是玩家的回合: " + isTurn);
 
         if (!isTurn) {
             return false;
         }
 
+        System.out.println("deactivate timer");
         // deactivate timer 
         cancelRoundTimer();
 
@@ -399,13 +401,14 @@ public class GameRoom {
         //game.endTurn的作用：更新游戏状态，更新要做行动的玩家，处理noble逻辑，判断是否有玩家胜出
         //增加所有玩家进行同样数量轮次的逻辑：更改Game.GameState设置成FINISHED的节点，也就是在Game.endTurn中处理
         //GameRoom中的handle EndTurn应该不需要更改
+        System.out.println("调用game.endTurn");
         game.endTurn();
 
         // 记录新的当前玩家
         int newCurrentPlayerIndex = game.getCurrentPlayer();
         Player newCurrentPlayer = game.getPlayers().get(newCurrentPlayerIndex);
-        // System.out.println("新的当前玩家索引: " + newCurrentPlayerIndex);
-        // System.out.println("新的当前玩家ID: " + newCurrentPlayer.getUserId());
+        System.out.println("新的当前玩家索引: " + newCurrentPlayerIndex);
+        System.out.println("新的当前玩家ID: " + newCurrentPlayer.getUserId());
 
         // 发送游戏状态更新到所有玩家
         broadcastGameState();
@@ -413,7 +416,11 @@ public class GameRoom {
         // 检查游戏是否结束
         if (game.getGameState() == Game.GameState.FINISHED) {
             EndGame();
-            roundTimerExecutor.shutdownNow();
+            System.out.println("game.getGameState == FINISH, 销毁timer");
+            // roundTimerExecutor.shutdownNow();
+            Executors.newSingleThreadScheduledExecutor().schedule(
+                () -> roundTimerExecutor.shutdownNow(), 1, TimeUnit.SECONDS);
+            // 或者直接用 roundTimerExecutor.shutdown();
         }else{
             // activate new timer for next online player
             List<Player> playerList = game.getPlayers();
