@@ -598,11 +598,6 @@ public class WebSocketServer {
             log.info("getPlayerBySession, SessionId :{}, player.getUserId():{}", session.getId(), player != null ? player.getUserId() : "null");
         }
 
-        // if (player == null) {
-        //     player = roomManager.getPlayerBySession(session);
-        //     log.info("fallback to getPlayerBySession: {}", player != null ? player.getUserId() : "null");
-        // }
-
         return player;
     }
 

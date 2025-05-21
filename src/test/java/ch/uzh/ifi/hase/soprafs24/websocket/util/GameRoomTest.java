@@ -372,7 +372,7 @@ public class GameRoomTest {
 
     // act & assert
     assertDoesNotThrow(() -> gameRoom.startGame());
-    assertNotNull(gameRoom.getGameInstance());
+    assertNotNull(gameRoom.getGame());
   }
 
   @Test

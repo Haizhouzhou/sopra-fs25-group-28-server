@@ -1,20 +1,31 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.game;
 
-import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
-import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
-import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import java.util.*;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 
 public class GameTakeGemsTest {
 
@@ -93,6 +104,29 @@ public class GameTakeGemsTest {
       assertTrue(result);
       verify(mockPlayer).setGem(eq(GemColor.BLUE), eq(2L));
       assertEquals(2L, mockAvailableGems.get(GemColor.BLUE));
+    }
+
+    @Test
+    void takeGems_Fail_MoreThenTenGemsAfterAction(){
+      // arrange
+      List<GemColor> colors = Arrays.asList(GemColor.RED, GemColor.BLUE, GemColor.GREEN);
+      for (GemColor color : GemColor.values()) {
+        when(mockPlayer.getGem(color)).thenReturn(3L);
+      }
+
+      // act
+      boolean result = game.takeGems(mockPlayer, colors);
+
+      // assert
+      assertFalse(result);
+      verify(mockPlayer, never()).setGem(any(), anyLong());
+
+      // arrange
+      colors = Collections.singletonList(GemColor.BLUE);
+      // act
+      result = game.takeGems(mockPlayer, colors);
+      assertFalse(result);
+      verify(mockPlayer, never()).setGem(any(), anyLong());
     }
 
     @Test
