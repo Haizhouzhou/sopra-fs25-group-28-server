@@ -32,6 +32,14 @@ public class ActionTakeGems extends Action<List<GemColor>>{
       return false;
     }
 
+    Long totalGems = 0L;
+    for(GemColor color : GemColor.values()){
+      totalGems += player.getGem(color);
+    }
+    if((totalGems + ((colorList.size() == 3 ) ? 3 : 1) )> 10){
+      return false; // Player can have at most 10 gems
+    }
+
     return true;
   }
   

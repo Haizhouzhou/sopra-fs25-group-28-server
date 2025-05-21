@@ -233,6 +233,7 @@ public class WebSocketServerTest {
     given(mockRoom.getOwnerName()).willReturn("Owner");
     given(mockRoom.getCurrentPlayerCount()).willReturn(2);
     given(mockRoom.getMaxPlayer()).willReturn(4);
+    given(mockGame.getGameState()).willReturn(Game.GameState.RUNNING);
 
 
     // act
@@ -244,31 +245,31 @@ public class WebSocketServerTest {
     verify(mockRemoteEndpoint).sendText(stringCaptor.capture());
   }
 
-    @Test
-    void handlePlayerStatus_shouldSetStatusAndBroadcast() throws IOException {
-        // arrange
-        boolean targetStatus = true;
-        MyWebSocketMessage wsMessage = new MyWebSocketMessage();
-        wsMessage.setType(MyWebSocketMessage.TYPE_CLIENT_PLAYER_STATUS);
-        wsMessage.setRoomId(testRoomId);
-        wsMessage.setSessionId(testSessionId);
-        wsMessage.setContent(Map.of("userId", testUserId, "status", targetStatus));
-        String jsonMessage = objectMapper.writeValueAsString(wsMessage);
+  @Test
+  void handlePlayerStatus_shouldSetStatusAndBroadcast() throws IOException {
+    // arrange
+    boolean targetStatus = true;
+    MyWebSocketMessage wsMessage = new MyWebSocketMessage();
+    wsMessage.setType(MyWebSocketMessage.TYPE_CLIENT_PLAYER_STATUS);
+    wsMessage.setRoomId(testRoomId);
+    wsMessage.setSessionId(testSessionId);
+    wsMessage.setContent(Map.of("userId", testUserId, "status", targetStatus));
+    String jsonMessage = objectMapper.writeValueAsString(wsMessage);
 
-        // mock player behavior
-        given(mockPlayer.getUserId()).willReturn(testUserId);
-        Set<Player> playersInRoom = Set.of(mockPlayer);
-        given(mockRoom.getPlayers()).willReturn(playersInRoom);
-        given(roomManager.getRoom(testRoomId)).willReturn(mockRoom);
-        given(roomManager.getPlayerBySession(mockSession)).willReturn(mockPlayer);
+    // mock player behavior
+    given(mockPlayer.getUserId()).willReturn(testUserId);
+    Set<Player> playersInRoom = Set.of(mockPlayer);
+    given(mockRoom.getPlayers()).willReturn(playersInRoom);
+    given(roomManager.getRoom(testRoomId)).willReturn(mockRoom);
+    given(roomManager.getPlayerBySession(mockSession)).willReturn(mockPlayer);
 
-        // act
-        webSocketServer.onMessage(mockSession, jsonMessage);
+    // act
+    webSocketServer.onMessage(mockSession, jsonMessage);
 
-        // assert
-        verify(mockPlayer).setStatus(targetStatus);
-        verify(mockRoom).broadcastRoomStatus();
-    }
+    // assert
+    verify(mockPlayer).setStatus(targetStatus);
+    verify(mockRoom).broadcastRoomStatus();
+  }
 
 
 
@@ -452,6 +453,10 @@ public class WebSocketServerTest {
     given(mockRoom.getOwnerName()).willReturn("Owner1");
     given(mockRoom.getCurrentPlayerCount()).willReturn(2);
     given(mockRoom.getMaxPlayer()).willReturn(4);
+
+    given(mockRoom.getGame()).willReturn(mockGame);
+    given(mockGame.getGameState()).willReturn(Game.GameState.RUNNING);
+
 
     // act
     webSocketServer.broadcastRoomListToLobby();

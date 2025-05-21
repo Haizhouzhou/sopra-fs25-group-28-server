@@ -354,10 +354,8 @@ public class GameRoomTest {
   void updateGameStateForPlayer_PlayerIsNull_ShouldDoNothing() {
     // arrange
 
-    // act
-    gameRoom.updateGameStateForPlayer(null);
-
-    // assert
+    // act & assert
+    assertDoesNotThrow(() -> gameRoom.updateGameStateForPlayer(null));
   }
 
  @Test
@@ -374,7 +372,7 @@ public class GameRoomTest {
 
     // act & assert
     assertDoesNotThrow(() -> gameRoom.startGame());
-    assertNotNull(gameRoom.getGameInstance());
+    assertNotNull(gameRoom.getGame());
   }
 
   @Test

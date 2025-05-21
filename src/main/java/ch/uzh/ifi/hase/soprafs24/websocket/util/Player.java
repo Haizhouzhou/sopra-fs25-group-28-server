@@ -18,8 +18,6 @@ public class Player {
   private static final boolean PLAYER_NOT_READY = false;
   private static final boolean PLAYER_READY = true;
 
-  public boolean hintAvailable = true;
-
   private Session session;
   private String name;
   private String avatar;
@@ -34,6 +32,9 @@ public class Player {
   private Map<GemColor, Long> bonusGems; //gems collect from development card
   private Long victoryPoints;
   public List<Card> reservedCards = new ArrayList<>();
+  public boolean hintAvailable = true;
+
+
   private final Object sendLock = new Object(); // 发送锁
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -125,6 +126,9 @@ public class Player {
 
     // reset reserved cards
     this.reservedCards = new ArrayList<>();
+
+    // reset  hintAvailable
+    this.hintAvailable = true;
 
     this.victoryPoints = 0L;
 

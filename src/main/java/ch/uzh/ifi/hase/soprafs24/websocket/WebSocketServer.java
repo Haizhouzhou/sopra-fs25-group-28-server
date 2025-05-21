@@ -167,12 +167,6 @@ public class WebSocketServer {
             return;
         }
 
-        // String clientSessionId = message.getSessionId();
-        // if (clientSessionId != null) {
-        //     roomManager.registerClientSessionId(clientSessionId, player);
-        //     log.info("✅ Registered clientSessionId {} → userId {}", clientSessionId, player.getUserId());
-        // }
-
         GameRoom room = roomManager.getRoom(message.getRoomId());
         if (room != null) {
             room.broadcastRoomStatus();
@@ -250,6 +244,9 @@ public class WebSocketServer {
             info.put("owner", room.getOwnerName());
             info.put("players", room.getCurrentPlayerCount());
             info.put("maxPlayers", room.getMaxPlayer());
+            // 加一个 game Status来阻止加入正在进行的游戏
+            String gameStatus = room.getGame() != null ? room.getGame().getGameState().toString() : null;
+            info.put("gameStatus", gameStatus);
             roomSummaries.add(info);
         }
 
@@ -281,6 +278,10 @@ public class WebSocketServer {
             info.put("owner", room.getOwnerName());
             info.put("players", room.getCurrentPlayerCount());
             info.put("maxPlayers", room.getMaxPlayer());
+            // 加一个game status来阻止加入正在进行的游戏    NOT_STARTED, RUNNING, FINISHED
+            String gameStatus = room.getGame() != null ? room.getGame().getGameState().toString() : null;
+            info.put("gameStatus", gameStatus);
+
             roomSummaries.add(info);
         }
 
@@ -592,11 +593,6 @@ public class WebSocketServer {
             // player = roomManager.getPlayerByClientSessionId(clientSessionId);
             log.info("getPlayerBySession, SessionId :{}, player.getUserId():{}", session.getId(), player != null ? player.getUserId() : "null");
         }
-
-        // if (player == null) {
-        //     player = roomManager.getPlayerBySession(session);
-        //     log.info("fallback to getPlayerBySession: {}", player != null ? player.getUserId() : "null");
-        // }
 
         return player;
     }

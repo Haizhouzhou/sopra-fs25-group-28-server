@@ -83,11 +83,16 @@ public class Game {
   public GameRoom getGameRoom() {return this.gameRoom;}
   public Long getAvailableGemOfColor(GemColor color){return availableGems.get(color);}
 
+  public int getLevel1CardDeckSize(){return level1Deck.size();}
+  public int getLevel2CardDeckSize(){return level2Deck.size();}
+  public int getLevel3CardDeckSize(){return level3Deck.size();}
+
   // setters
   public void setGameState(GameState gameState){this.gameState = gameState;}
   public void setAvailableGemOfColor(GemColor color, Long amount){
     availableGems.put(color, amount);
   }
+  public void setCurrentPlayer(int currentPlayerIdx){this.currentPlayer = currentPlayerIdx;}
 
   // other helper methods of modifying game board
   public boolean removeCardFromBoard(Card targetcard){
