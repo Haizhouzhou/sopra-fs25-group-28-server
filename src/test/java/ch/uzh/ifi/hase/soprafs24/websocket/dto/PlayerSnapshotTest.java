@@ -2,6 +2,9 @@ package ch.uzh.ifi.hase.soprafs24.websocket.dto;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -64,10 +67,9 @@ public class PlayerSnapshotTest {
 
     //assert
     System.out.println("Serialized PlayerSnapshot: " + json);
-
-    assert Objects.equals(ctx.read("$.userId", Long.class), p1.getUserId());
-
-    assert Objects.equals(ctx.read("$.gems.GREEN", Long.class), p1.getAllGems().get(GemColor.GREEN));
+    assertNotNull(json);
+    assertEquals(p1.getUserId(), ctx.read("$.userId", Long.class));
+    assertEquals(p1.getAllGems().get(GemColor.GREEN), ctx.read("$.gems.GREEN", Long.class));
   }
   
 }

@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -83,9 +85,10 @@ public class GameSnapshotTest {
 
       // Assert
   
-      assert snapshot.getGameId().equals("test-game");
-      assert snapshot.getPlayerSnapshots().size() == 1;
-      assert snapshot.getPlayerSnapshots().get(0).getUserId() == 1L;
+      assertNotNull(snapshot);
+      assertEquals("test-game", snapshot.getGameId());
+      assertEquals(1, snapshot.getPlayerSnapshots().size());
+      assertEquals(1L, snapshot.getPlayerSnapshots().get(0).getUserId());
 
       ObjectMapper mapper = new ObjectMapper();
       String json = mapper.writeValueAsString(snapshot);
