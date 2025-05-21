@@ -390,8 +390,7 @@ public class GameRoom {
         System.out.println("新的当前玩家索引: " + newCurrentPlayerIndex);
         System.out.println("新的当前玩家ID: " + newCurrentPlayer.getUserId());
 
-        // 发送游戏状态更新到所有玩家
-        broadcastGameState();
+        // broadcastGameState();
 
         // 检查游戏是否结束
         if (game.getGameState() == Game.GameState.FINISHED) {
@@ -412,6 +411,7 @@ public class GameRoom {
                 Session session = next.getSession();
                 if (session != null && session.isOpen()) {
                     foundOnline = true;
+                    game.setCurrentPlayer(idx);
                     startRoundTimer(next);
                     break;
                 }
@@ -422,6 +422,9 @@ public class GameRoom {
                 System.out.println("所有玩家都离线，停止定时器递归。");
             }
         }
+        
+        // 发送游戏状态更新到所有玩家
+        broadcastGameState();
 
         return true;
     }

@@ -17,11 +17,12 @@ public class GameSnapshot {
   private int currentPlayerIndex;
   private int currentRound;
   private Map<GemColor, Long> availableGems;
-  // private Long victoryPoints;
-  // private Map<GemColor, Long> bonusGems;
+  
+  protected int level1CardDeckSize;
+  protected int level2CardDeckSize;
+  protected int level3CardDeckSize;
 
-
-    private List<Long> visibleLevel1cardIds = new ArrayList<>();
+  private List<Long> visibleLevel1cardIds = new ArrayList<>();
   private List<Long> visibleLevel2cardIds = new ArrayList<>();
   private List<Long> visibleLevel3cardIds = new ArrayList<>();
 
@@ -79,6 +80,13 @@ public class GameSnapshot {
     }
   }
 
+  protected int getLevel1CardDeckSize(){return level1CardDeckSize;}
+  protected int getLevel2CardDeckSize(){return level2CardDeckSize;}
+  protected int getLevel3CardDeckSize(){return level3CardDeckSize;}
+  protected void setLevel1CardDeckSize(int level1CardDeckSize){this.level1CardDeckSize = level1CardDeckSize;}
+  protected void setLevel2CardDeckSize(int level2CardDeckSize){this.level2CardDeckSize = level2CardDeckSize;}
+  protected void setLevel3CardDeckSize(int level3CardDeckSize){this.level3CardDeckSize = level3CardDeckSize;}
+
   public List<PlayerSnapshot> getPlayerSnapshots(){return playerSnapshots;}
   public void setPlayerSnapshots(List<PlayerSnapshot> playerSnapshots){this.playerSnapshots = playerSnapshots;}
 
@@ -101,6 +109,10 @@ public class GameSnapshot {
     snapshot.setVisibleNobleIds(game.getVisibleNoble());
 
     snapshot.setRoomName(game.getGameRoom().getRoomName());
+
+    snapshot.setLevel1CardDeckSize(game.getLevel1CardDeckSize());
+    snapshot.setLevel2CardDeckSize(game.getLevel2CardDeckSize());
+    snapshot.setLevel3CardDeckSize(game.getLevel3CardDeckSize());
 
     List<PlayerSnapshot> playerSnapshots = new ArrayList<>();
     for(Player player : game.getPlayers()){

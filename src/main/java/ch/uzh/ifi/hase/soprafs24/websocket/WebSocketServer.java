@@ -167,12 +167,6 @@ public class WebSocketServer {
             return;
         }
 
-        // String clientSessionId = message.getSessionId();
-        // if (clientSessionId != null) {
-        //     roomManager.registerClientSessionId(clientSessionId, player);
-        //     log.info("✅ Registered clientSessionId {} → userId {}", clientSessionId, player.getUserId());
-        // }
-
         GameRoom room = roomManager.getRoom(message.getRoomId());
         if (room != null) {
             room.broadcastRoomStatus();
@@ -251,7 +245,8 @@ public class WebSocketServer {
             info.put("players", room.getCurrentPlayerCount());
             info.put("maxPlayers", room.getMaxPlayer());
             // 加一个 game Status来阻止加入正在进行的游戏
-            info.put("gameStatus", room.getGame().getGameState());
+            String gameStatus = room.getGame() != null ? room.getGame().getGameState().toString() : null;
+            info.put("gameStatus", gameStatus);
             roomSummaries.add(info);
         }
 
@@ -284,7 +279,8 @@ public class WebSocketServer {
             info.put("players", room.getCurrentPlayerCount());
             info.put("maxPlayers", room.getMaxPlayer());
             // 加一个game status来阻止加入正在进行的游戏    NOT_STARTED, RUNNING, FINISHED
-            info.put("gameStatus", room.getGame().getGameState());
+            String gameStatus = room.getGame() != null ? room.getGame().getGameState().toString() : null;
+            info.put("gameStatus", gameStatus);
 
             roomSummaries.add(info);
         }
