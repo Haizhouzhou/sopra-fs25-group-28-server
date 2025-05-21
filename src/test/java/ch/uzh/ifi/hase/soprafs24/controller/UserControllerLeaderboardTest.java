@@ -23,7 +23,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import ch.uzh.ifi.hase.soprafs24.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs24.entity.User;
-import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
 
 @WebMvcTest(UserController.class)
@@ -32,14 +31,8 @@ public class UserControllerLeaderboardTest {
     @MockBean
     private UserService userService;
 
-      @MockBean
-      private LeaderboardService leaderboardService;
-
     @Autowired
     private MockMvc mockMvc;
-
-    // @Mock
-    // private LeaderboardService leaderboardService;
 
     @InjectMocks
     private UserController userController;
@@ -63,8 +56,6 @@ public class UserControllerLeaderboardTest {
         user.setWincounter(1);
 
         when(userService.getUsersSortedByWins()).thenReturn(List.of(user));
-
-        // List<UserListGetDTO> result = userController.getLeaderboard();
 
         MockHttpServletRequestBuilder getRequest = get("/users/leaderboard").contentType(MediaType.APPLICATION_JSON);
 

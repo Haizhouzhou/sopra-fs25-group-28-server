@@ -31,7 +31,6 @@ import ch.uzh.ifi.hase.soprafs24.entity.User;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.LoginCredentialPostDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
-import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 
 /**
  * UserControllerTest
@@ -47,9 +46,6 @@ public class UserControllerTest {
 
   @MockBean
   private UserService userService;
-
-  @MockBean
-  private LeaderboardService leaderboardService;
 
   @Test
   public void givenUsers_whenGetUsers_thenReturnJsonArray() throws Exception {

@@ -20,7 +20,6 @@ import ch.uzh.ifi.hase.soprafs24.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.UserListGetDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.mapper.DTOMapper;
-import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
 
 /**
@@ -31,11 +30,9 @@ import ch.uzh.ifi.hase.soprafs24.service.UserService;
 public class UserController {
 
     private final UserService userService;
-    private final LeaderboardService leaderboardService;
 
-    public UserController(UserService userService, LeaderboardService leaderboardService) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.leaderboardService = leaderboardService;
     }
 
     @GetMapping("/users")
