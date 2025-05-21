@@ -250,6 +250,8 @@ public class WebSocketServer {
             info.put("owner", room.getOwnerName());
             info.put("players", room.getCurrentPlayerCount());
             info.put("maxPlayers", room.getMaxPlayer());
+            // 加一个 game Status来阻止加入正在进行的游戏
+            info.put("gameStatus", room.getGame().getGameState());
             roomSummaries.add(info);
         }
 
@@ -281,6 +283,9 @@ public class WebSocketServer {
             info.put("owner", room.getOwnerName());
             info.put("players", room.getCurrentPlayerCount());
             info.put("maxPlayers", room.getMaxPlayer());
+            // 加一个game status来阻止加入正在进行的游戏    NOT_STARTED, RUNNING, FINISHED
+            info.put("gameStatus", room.getGame().getGameState());
+
             roomSummaries.add(info);
         }
 

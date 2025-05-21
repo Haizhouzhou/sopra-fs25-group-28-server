@@ -34,7 +34,7 @@ public class GameRoom {
   
   protected final ScheduledExecutorService roundTimerExecutor = Executors.newSingleThreadScheduledExecutor();
   protected  ScheduledFuture<?> roundTimerFuture; // 当前回合的timer
-  protected final long ROUND_TIMEOUT_MILLIS = 35000; // 后端限制35秒
+  protected final long ROUND_TIMEOUT_MILLIS = 62000; // 后端限制35秒
 
 
   private String roomName = "";
