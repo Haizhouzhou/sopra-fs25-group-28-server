@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import ch.uzh.ifi.hase.soprafs24.entity.LeaderboardEntry;
 import ch.uzh.ifi.hase.soprafs24.entity.User;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.LoginCredentialPostDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.LoginTokenGetDTO;
@@ -21,7 +20,6 @@ import ch.uzh.ifi.hase.soprafs24.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.UserListGetDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs24.rest.mapper.DTOMapper;
-import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
 
 /**
@@ -32,11 +30,9 @@ import ch.uzh.ifi.hase.soprafs24.service.UserService;
 public class UserController {
 
     private final UserService userService;
-    private final LeaderboardService leaderboardService;
 
-    public UserController(UserService userService, LeaderboardService leaderboardService) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.leaderboardService = leaderboardService;
     }
 
     @GetMapping("/users")
@@ -72,10 +68,11 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
     public LoginTokenGetDTO createUser(@RequestBody UserPostDTO userPostDTO) {
-        User newUser = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
+        User newUser = DTOMapper.INSTANCE.convertUserPostDTOtoEntityWithDefaults(userPostDTO);
         User createdUser = userService.createUser(newUser);
         return DTOMapper.INSTANCE.convertEntityToLoginTokenGetDTO(createdUser);
     }
+
 
     @PutMapping("/login")
     @ResponseStatus(HttpStatus.OK)
@@ -99,7 +96,15 @@ public class UserController {
     @GetMapping("/users/leaderboard")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<LeaderboardEntry> getLeaderboard() {
-        return leaderboardService.getLeaderboard();
-    }
+    public List<UserListGetDTO> getLeaderboard() {
+        List<User> users = userService.getUsersSortedByWins();
+        List<UserListGetDTO> leaderboard = new ArrayList<>();
+
+        for (User user : users) {
+        leaderboard.add(DTOMapper.INSTANCE.convertUserToUserListGetDTO(user));
+        }
+
+    return leaderboard;
+}
+
   }

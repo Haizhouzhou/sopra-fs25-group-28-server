@@ -2,10 +2,7 @@ package ch.uzh.ifi.hase.soprafs24.rest.mapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.User;
 import ch.uzh.ifi.hase.soprafs24.rest.dto.*;
-import ch.uzh.ifi.hase.soprafs24.rest.dto.UserGetDTO;
-import ch.uzh.ifi.hase.soprafs24.rest.dto.UserPostDTO;
-import ch.uzh.ifi.hase.soprafs24.rest.dto.LoginTokenGetDTO;
-import ch.uzh.ifi.hase.soprafs24.rest.dto.LoginCredentialPostDTO;
+
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -30,6 +27,7 @@ public interface DTOMapper {
   @Mapping(source = "password", target = "password")
   @Mapping(source = "token", target = "token")
   @Mapping(source = "avatar", target = "avatar")
+  @Mapping(source = "wincounter", target = "wincounter")
 
   User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
@@ -40,6 +38,7 @@ public interface DTOMapper {
   @Mapping(source = "creation_date", target = "creation_date")
   @Mapping(source = "birthday", target = "birthday")
   @Mapping(source = "avatar", target = "avatar")
+  @Mapping(source = "wincounter", target = "wincounter")
   UserGetDTO convertEntityToUserGetDTO(User user);
 
   @Mapping(source = "token", target = "token")
@@ -54,6 +53,18 @@ public interface DTOMapper {
   @Mapping(source = "id", target = "id")
   @Mapping(source = "username", target = "username")
   @Mapping(source = "status", target = "status")
+  @Mapping(source = "wincounter", target = "wincounter")
+  @Mapping(source = "avatar", target = "avatar")
   UserListGetDTO convertUserToUserListGetDTO(User user);
+
+
+  
+
+  default User convertUserPostDTOtoEntityWithDefaults(UserPostDTO userPostDTO) {
+    User user = convertUserPostDTOtoEntity(userPostDTO);
+    user.setWincounter(0); // set default win counter
+    return user;
+}
+
 
 }

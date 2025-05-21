@@ -3,7 +3,6 @@ package ch.uzh.ifi.hase.soprafs24.service;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +72,24 @@ public class UserService {
 
     return userByUsername;
   }
+  
+  public void incrementWincounter(Long userId) {
+    User user = userRepository.findById(userId).orElse(null);
+    if (user != null) {
+      user.setWincounter(user.getWincounter() + 1);
+      userRepository.saveAndFlush(user);
+    } else {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for ID: " + userId);
+    }
+  }
+  
+  public List<User> getUsersSortedByWins() {
+    List<User> users = userRepository.findAll();
+    users.sort((u1, u2) -> Integer.compare(u2.getWincounter(), u1.getWincounter())); // Descending
+    return users;
+  }
+
+
 
   public User userLogout(User loginCredential){
     User userByToken = userRepository.findByToken(loginCredential.getToken());
@@ -131,7 +148,7 @@ public class UserService {
   }
 
   public User getUserById(long userId){
-    return userRepository.findById(userId).get();
+    return userRepository.findById(userId).orElse(null);
   }
 
   public User getUserByToken(String token){
@@ -155,7 +172,7 @@ public class UserService {
 
     User checkDuplicUserName = userRepository.findByUsername(inputUser.getUsername());
     User checkDuplicName = userRepository.findByName(inputUser.getName());
-    User edituser = userRepository.findById(id).get();
+    User edituser = userRepository.findById(id).orElse(null);
     if(edituser == null){
       throw new ResponseStatusException(HttpStatus.NOT_FOUND,"user with userId was not found");
     }else if(checkDuplicUserName != null && checkDuplicUserName.getId()!=id){
@@ -176,34 +193,4 @@ public class UserService {
     return edituser;
   }
 
-  // /**
-  //  * A helper methods that generate random name
-  //  */
-  // private String generateRandomName(){
-  //   final String PREFIX = "user_";
-  //   final int LENGTH = 8;
-
-  //   String uuid = UUID.randomUUID().toString().replace("-", "");
-  //   int startIndex = ThreadLocalRandom.current().nextInt(uuid.length() - LENGTH + 1);
-  //   String suffix = uuid.substring(startIndex, startIndex + LENGTH);
-
-  //   return PREFIX + suffix;    
-  // }
-
-  // /**
-  //  * A helper methods that generate random name when Creating new user
-  //  * if the generated random name duplicate with existing name, generate a new one
-  //  * 
-  //  * @return generatedName
-  //  */
-  // private String generateUniqueRandomUsername(){
-  //   final int MAX_GEN_ATTEMPT = 10;
-  //   for (int i = 0;i<MAX_GEN_ATTEMPT;i++){
-  //     String generatedName = generateRandomName();
-  //     if (userRepository.findByName(generatedName) == null){
-  //       return generatedName;
-  //     }
-  //   }
-  //   throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "fail to generate unique name for new user, please try again");
-  // }
 }

@@ -154,8 +154,6 @@ public class WebSocketServer {
         broadcastRoomListToLobby();
     }
 
-
-
     private void handleJoinRoom(Session session, MyWebSocketMessage message) {
         boolean joined = roomManager.joinRoom(message.getRoomId(), session);
         if (!joined) {
@@ -182,7 +180,6 @@ public class WebSocketServer {
 
         broadcastRoomListToLobby();
     }
-
 
     private void handleLeaveRoom(Session session) {
         roomManager.leaveRoom(session);
@@ -222,7 +219,6 @@ public class WebSocketServer {
     public GameRoomManager getRoomManager() {
         return roomManager;
     }
-
 
     @SuppressWarnings("unchecked")
     private void handleGetRooms(Session session, MyWebSocketMessage wsMessage) {
@@ -272,7 +268,6 @@ public class WebSocketServer {
     }
 
     protected void broadcastRoomListToLobby(){
-
         // 获取房间列表信息
         List<GameRoom> roomList = roomManager.getAllRooms();
         

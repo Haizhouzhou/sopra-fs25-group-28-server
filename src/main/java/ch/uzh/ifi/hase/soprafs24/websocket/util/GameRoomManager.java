@@ -1,12 +1,9 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,7 +15,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.User;
-import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
 
 
@@ -37,14 +33,9 @@ public class GameRoomManager {
 
     private Map<Long, String> userIdToUsername = new ConcurrentHashMap<>();
 
-    private final LeaderboardService leaderboardService;
-
-
-
     @Autowired
-    public GameRoomManager(UserService userService, LeaderboardService leaderboardService) {
+    public GameRoomManager(UserService userService) {
     this.userService = userService;
-    this.leaderboardService = leaderboardService;
     }
 
 
@@ -116,10 +107,14 @@ public class GameRoomManager {
         }
 
         String roomId = generateRoomId();
-        GameRoom room = new GameRoom(roomId, maxPlayers, leaderboardService);
+        GameRoom room = new GameRoom(roomId, maxPlayers, userService);
+
         room.setOwnerName(player.getName());
         room.setOwnerId(player.getUserId());
         room.setRoomName(roomName);
+
+        // reset player ready status --> not ready
+        player.setStatus(false);
 
         rooms.put(roomId, room);
         room.addPlayer(player);
@@ -138,6 +133,8 @@ public class GameRoomManager {
             System.err.println("joinRoom: session is null or closed");
             return false;
         }
+        // reset player ready status --> not ready
+        player.setStatus(false);
 
         GameRoom room = rooms.get(roomId);
         if (room == null || room.isFull()) {
@@ -172,6 +169,9 @@ public class GameRoomManager {
         String roomId = sessionRooms.get(session.getId());
 
         if (player != null && roomId != null) {
+            // reset player ready status
+            player.setStatus(false);
+
             GameRoom room = rooms.get(roomId);
             if (room != null) {
                 room.removePlayer(player);
@@ -205,42 +205,6 @@ public class GameRoomManager {
             .filter(p-> p.getSession() != null && p.getSession().getId().equals(session.getId()))
             .findFirst()
             .orElse(null);
-
-        // String sessionId = session.getId();
-        // Player sessionPlayer = sessionPlayers.get(sessionId);
-
-        // System.out.println("getPlayerBySession - sessionId: " + sessionId +
-        //         ", sessionPlayer: " + (sessionPlayer != null ?
-        //         sessionPlayer.getName() + ", id:" + sessionPlayer.getUserId() : "null"));
-
-        // if (sessionPlayer == null) return null;
-
-        // // 获取玩家所在的房间
-        // String roomId = sessionRooms.get(sessionId);
-        // System.out.println("getPlayerBySession - roomId: " + roomId);
-
-        // if (roomId != null) {
-        //     GameRoom room = rooms.get(roomId);
-        //     if (room != null) {
-        //         System.out.println("Room player count: " + room.getPlayers().size());
-        //         // 从房间中查找真正的Player实例
-        //         for (Player roomPlayer : room.getPlayers()) {
-        //             System.out.println("Room player: " + roomPlayer.getName() +
-        //                     ", id:" + roomPlayer.getUserId() +
-        //                     ", instance:" + System.identityHashCode(roomPlayer));
-
-        //             if (roomPlayer.getUserId().equals(sessionPlayer.getUserId())) {
-        //                 System.out.println("Returning ROOM player instance: " +
-        //                         System.identityHashCode(roomPlayer));
-        //                 return roomPlayer; // 返回房间中的Player实例
-        //             }
-        //         }
-        //     }
-        // }
-
-        // System.out.println("Returning SESSION player instance: " +
-        //         System.identityHashCode(sessionPlayer));
-        // return sessionPlayer; // 如果找不到，返回原始实例
     }
 
 
@@ -255,15 +219,6 @@ public class GameRoomManager {
     public GameRoom getRoom(String roomId) {
         return rooms.get(roomId);
     }
-
-
-    // public void registerClientSessionId(String clientSessionId, Player player) {
-    //     clientSessionIdToPlayerMap.put(clientSessionId, player);
-    // }
-
-    // public Player getPlayerByClientSessionId(String clientSessionId) {
-    //     return sessionPlayers.get(clientSessionId);
-    // }
 
     public void broadcastToLobby(Object message){
         String msgJson;

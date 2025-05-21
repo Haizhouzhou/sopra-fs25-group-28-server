@@ -16,12 +16,15 @@ public class UserPostDTO {
 
   private String avatar;
 
+    private int wincounter;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private Date birthday;
 
   public String getName() {
     return name;
   }
+  
 
   public void setName(String name) {
     this.name = name;
@@ -63,5 +66,12 @@ public class UserPostDTO {
   public String getAvatar() {return avatar;}
 
   public void setAvatar(String avatar) {this.avatar = avatar;}
+
+    public int getWincounter() {
+    return wincounter;
+}
+public void setWincounter(int wincounter) {
+    this.wincounter = wincounter;
+}
   
 }

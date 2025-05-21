@@ -101,10 +101,12 @@ public class Player {
   public void setAvatar(String avatar) {this.avatar = avatar;}
 
   public void setSession(Session session) {this.session = session;}
+  
 
   // called when intialized a game
   public void initializeGameStatus(){
     
+    // reset gems and bonus
     this.gems = new HashMap<>();
     gems.put(GemColor.BLACK, 0L);
     gems.put(GemColor.BLUE, 0L);
@@ -120,6 +122,9 @@ public class Player {
     bonusGems.put(GemColor.RED, 0L);
     bonusGems.put(GemColor.WHITE, 0L);
     bonusGems.put(GemColor.GOLD, 0L);
+
+    // reset reserved cards
+    this.reservedCards = new ArrayList<>();
 
     this.victoryPoints = 0L;
 
