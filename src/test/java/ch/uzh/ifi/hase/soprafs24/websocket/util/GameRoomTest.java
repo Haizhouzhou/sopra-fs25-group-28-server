@@ -3,10 +3,13 @@ package ch.uzh.ifi.hase.soprafs24.websocket.util;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -356,5 +359,79 @@ public class GameRoomTest {
 
     // assert
   }
+
+ @Test
+  void startGame_ShouldCreateGameAndCallInitialize() {
+    // arrange
+    Player player = mock(Player.class);
+    Session session = mock(Session.class);
+    given(session.isOpen()).willReturn(true);
+    given(player.getSession()).willReturn(session);
+    given(player.getName()).willReturn("TestName");
+    given(player.getUserId()).willReturn(123L);
+
+    gameRoom.getPlayers().add(player);
+
+    // act & assert
+    assertDoesNotThrow(() -> gameRoom.startGame());
+    assertNotNull(gameRoom.getGameInstance());
+  }
+
+  @Test
+  void sendErrorToPlayer_ShouldSendProperErrorMessage() {
+    // arrange
+    String errorMsg = "Test Error";
+    ArgumentCaptor<MyWebSocketMessage> captor = ArgumentCaptor.forClass(MyWebSocketMessage.class);
+
+    // act
+    gameRoom.sendErrorToPlayer(mockPlayer1, errorMsg);
+
+    // assert
+    verify(mockPlayer1).sendMessage(captor.capture());
+    MyWebSocketMessage message = captor.getValue();
+    assertEquals(MyWebSocketMessage.TYPE_SERVER_ERROR, message.getType());
+    assertEquals(gameRoom.getRoomId(), message.getRoomId());
+    assertTrue(message.getContent() instanceof Map);
+
+    @SuppressWarnings("unchecked")
+    Map<String, String> content = (Map<String, String>) message.getContent();
+    assertEquals(errorMsg, content.get("message"));
+  }
+
+  @Test
+  void manuallyDestroyTimer_ShouldShutdownExecutorGracefully() {
+    // arrange
+    GameRoom spyRoom = org.mockito.Mockito.spy(gameRoom);
+    ScheduledExecutorService executor = spyRoom.roundTimerExecutor;
+
+    // act
+    spyRoom.manuallyDestroyTimer();
+
+    // assert
+    assertTrue(executor.isShutdown() || executor.isTerminated());
+  }
+
+  @Test
+  void cancelRoundTimer_WhenFutureIsNullOrDone_ShouldNotThrow() {
+    // arrange 1: future is null
+    ReflectionTestUtils.setField(gameRoom, "roundTimerFuture", null);
+    // act & assert : no exception
+    gameRoom.cancelRoundTimer();
+
+    // arrange 2 :future complete
+    ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
+    given(mockFuture.isDone()).willReturn(true);
+    ReflectionTestUtils.setField(gameRoom, "roundTimerFuture", mockFuture);
+    // act & assert
+    gameRoom.cancelRoundTimer();
+
+    // arrange 3 :future incomplete (isDone Return false)
+    ScheduledFuture<?> mockFuture2 = mock(ScheduledFuture.class);
+    given(mockFuture2.isDone()).willReturn(false);
+    ReflectionTestUtils.setField(gameRoom, "roundTimerFuture", mockFuture2);
+    gameRoom.cancelRoundTimer();
+    verify(mockFuture2, times(1)).cancel(false);
+  }
+
 
 }
