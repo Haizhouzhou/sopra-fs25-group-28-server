@@ -91,7 +91,8 @@ public class GameRoomManager {
         }
 
         String roomId = generateRoomId();
-        GameRoom room = new GameRoom(roomId, maxPlayers, leaderboardService);
+        GameRoom room = new GameRoom(roomId, maxPlayers, leaderboardService, userService);
+
         room.setOwnerName(player.getName());
         room.setOwnerId(player.getUserId());
         room.setRoomName(roomName);

@@ -27,6 +27,7 @@ public interface DTOMapper {
   @Mapping(source = "password", target = "password")
   @Mapping(source = "token", target = "token")
   @Mapping(source = "avatar", target = "avatar")
+  @Mapping(source = "wincounter", target = "wincounter")
 
   User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
@@ -37,6 +38,7 @@ public interface DTOMapper {
   @Mapping(source = "creation_date", target = "creation_date")
   @Mapping(source = "birthday", target = "birthday")
   @Mapping(source = "avatar", target = "avatar")
+  @Mapping(source = "wincounter", target = "wincounter")
   UserGetDTO convertEntityToUserGetDTO(User user);
 
   @Mapping(source = "token", target = "token")
@@ -52,7 +54,9 @@ public interface DTOMapper {
   @Mapping(source = "username", target = "username")
   @Mapping(source = "status", target = "status")
   @Mapping(source = "wincounter", target = "wincounter")
+  @Mapping(source = "avatar", target = "avatar")
   UserListGetDTO convertUserToUserListGetDTO(User user);
+
 
   
 
