@@ -188,15 +188,15 @@ public GameRoom(String roomId, int maxPlayer, UserService userService) {
     players.remove(player);
   }
 
-  public void changePlayerStatus(Player targetPlayer){
-    Player actualPlayer = findPlayerInRoom(targetPlayer);
-    // switch status
-    boolean currentStatus = actualPlayer.getStatus();
-    actualPlayer.setStatus(!currentStatus);
+//   public void changePlayerStatus(Player targetPlayer){
+//     Player actualPlayer = findPlayerInRoom(targetPlayer);
+//     // switch status
+//     boolean currentStatus = actualPlayer.getStatus();
+//     actualPlayer.setStatus(!currentStatus);
 
-    // update and broadcastRoomStatus
-    broadcastRoomStatus();
-  }
+//     // update and broadcastRoomStatus
+//     broadcastRoomStatus();
+//   }
 
   /**
    * broadcast Message to all players in the room
@@ -265,14 +265,14 @@ public GameRoom(String roomId, int maxPlayer, UserService userService) {
   }
 
 
-  private Player findPlayerInRoom(Player targetPlayer){
-    for(Player player : players){
-      if(player.equals(targetPlayer)){
-        return player;
-      }
-    }
-    return null;
-  }
+//   private Player findPlayerInRoom(Player targetPlayer){
+//     for(Player player : players){
+//       if(player.equals(targetPlayer)){
+//         return player;
+//       }
+//     }
+//     return null;
+//   }
 
 
   public void broadcast(String message) {

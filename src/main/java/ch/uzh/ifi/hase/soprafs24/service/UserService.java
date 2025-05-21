@@ -148,7 +148,7 @@ public class UserService {
   }
 
   public User getUserById(long userId){
-    return userRepository.findById(userId).get();
+    return userRepository.findById(userId).orElse(null);
   }
 
   public User getUserByToken(String token){
@@ -172,7 +172,7 @@ public class UserService {
 
     User checkDuplicUserName = userRepository.findByUsername(inputUser.getUsername());
     User checkDuplicName = userRepository.findByName(inputUser.getName());
-    User edituser = userRepository.findById(id).get();
+    User edituser = userRepository.findById(id).orElse(null);
     if(edituser == null){
       throw new ResponseStatusException(HttpStatus.NOT_FOUND,"user with userId was not found");
     }else if(checkDuplicUserName != null && checkDuplicUserName.getId()!=id){
