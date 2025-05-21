@@ -54,6 +54,18 @@ public class User implements Serializable {
 
   @Column
   private String avatar;
+  
+  @Column(nullable = false)
+  private int wincounter = 0;
+
+  public int getWincounter() {
+      return wincounter;
+  }
+
+  public void setWincounter(int wincounter) {
+      this.wincounter = wincounter;
+  }
+
 
   public Long getId() {
     return id;

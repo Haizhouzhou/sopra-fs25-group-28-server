@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.User;
-import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
 
 
@@ -34,14 +33,9 @@ public class GameRoomManager {
 
     private Map<Long, String> userIdToUsername = new ConcurrentHashMap<>();
 
-    private final LeaderboardService leaderboardService;
-
-
-
     @Autowired
-    public GameRoomManager(UserService userService, LeaderboardService leaderboardService) {
+    public GameRoomManager(UserService userService) {
     this.userService = userService;
-    this.leaderboardService = leaderboardService;
     }
 
 
@@ -113,7 +107,8 @@ public class GameRoomManager {
         }
 
         String roomId = generateRoomId();
-        GameRoom room = new GameRoom(roomId, maxPlayers, leaderboardService);
+        GameRoom room = new GameRoom(roomId, maxPlayers, userService);
+
         room.setOwnerName(player.getName());
         room.setOwnerId(player.getUserId());
         room.setRoomName(roomName);

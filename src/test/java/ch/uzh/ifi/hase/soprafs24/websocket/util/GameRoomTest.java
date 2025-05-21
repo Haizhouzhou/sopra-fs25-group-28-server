@@ -27,7 +27,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
@@ -42,9 +41,6 @@ public class GameRoomTest {
 
   @MockBean
   private UserService userService;
-
-  @MockBean
-  private LeaderboardService leaderboardService;
 
   // Mocks for dependencies (Players)
   @Mock
@@ -70,7 +66,7 @@ public class GameRoomTest {
     MockitoAnnotations.openMocks(this);
 
     // Create a new GameRoom instance for each test
-    gameRoom = new GameRoom(testRoomId, testMaxPlayers, leaderboardService);
+    gameRoom = new GameRoom(testRoomId, testMaxPlayers, userService);
     gameRoom.setRoomName(testRoomName); // Set a name for testing
 
     gameRoom.setGameInstance(mockGame);

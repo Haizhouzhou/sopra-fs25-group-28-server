@@ -31,7 +31,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
-import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
@@ -44,9 +43,6 @@ public class GameRoomHandleTest {
 
   @Mock
   private UserService userService;
-
-  @Mock
-  private LeaderboardService leaderboardService;
 
   // Mocks for dependencies (Players)
   @Mock
@@ -76,7 +72,7 @@ public class GameRoomHandleTest {
   void setUp() {
     MockitoAnnotations.openMocks(this);
 
-    gameRoom = new GameRoom(testRoomId, testMaxPlayers, leaderboardService);
+    gameRoom = new GameRoom(testRoomId, testMaxPlayers, userService);
     gameRoom.setRoomName(testRoomName);
 
     gameRoom.setGameInstance(mockGame);
@@ -382,7 +378,7 @@ public class GameRoomHandleTest {
     // arrange
     AtomicBoolean triggered = new AtomicBoolean(false);
 
-    GameRoom testRoom = new GameRoom(testRoomId, testMaxPlayers, leaderboardService) {
+    GameRoom testRoom = new GameRoom(testRoomId, testMaxPlayers, userService) {
       @Override
         public void startRoundTimer(Player currentPlayer) {
           cancelRoundTimer();
@@ -436,7 +432,7 @@ public class GameRoomHandleTest {
     given(mockPlayer1.getSession()).willReturn(mockSession);
 
     // 只覆盖 handleEndTurn，timer 逻辑用 GameRoom 原实现
-    GameRoom testRoom = new GameRoom(testRoomId, testMaxPlayers, leaderboardService) {
+    GameRoom testRoom = new GameRoom(testRoomId, testMaxPlayers, userService) {
       @Override
       public boolean handleEndTurn(Player currentPlayer) {
         triggered.set(true);

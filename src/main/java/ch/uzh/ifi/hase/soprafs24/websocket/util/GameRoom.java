@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 import javax.websocket.Session;
 
 import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
-import ch.uzh.ifi.hase.soprafs24.service.LeaderboardService;
+import ch.uzh.ifi.hase.soprafs24.service.UserService;
 import ch.uzh.ifi.hase.soprafs24.websocket.dto.GameSnapshot;
 import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
@@ -40,17 +40,6 @@ public class GameRoom {
   private String roomName = "";
   private Long ownerId;
   private String ownerName;
-  private final LeaderboardService leaderboardService;
-
-
-
-  public GameRoom(String roomId, int maxPlayer, LeaderboardService leaderboardService) {
-    this.roomId = roomId;
-    this.maxPlayer = maxPlayer;
-    this.leaderboardService = leaderboardService;
-    this.roomStatus = ROOM_WAITING;
-}
-
 
   public String getRoomId(){return roomId;}
 
@@ -79,6 +68,16 @@ public class GameRoom {
   // used for testing
   public Game getGameInstance(){return game;}
   public void setGameInstance(Game game){this.game = game;}
+private final UserService userService;
+
+public GameRoom(String roomId, int maxPlayer, UserService userService) {
+    this.roomId = roomId;
+    this.maxPlayer = maxPlayer;
+    this.userService = userService;
+    this.roomStatus = ROOM_WAITING;
+}
+
+
 
 
     /**
@@ -111,9 +110,16 @@ public class GameRoom {
     // TODO: 确认leaderboard的entry
     Long winnerId = game.getWinnerId();
     if (winnerId != null) {
-        leaderboardService.addWinForPlayer(winnerId);
-        System.out.println("Leaderboard updated for winner ID: " + winnerId);
+    for (Player player : players) {
+        if (player.getUserId().equals(winnerId)) {
+            userService.incrementWincounter(winnerId);
+            System.out.println("Win counter incremented for user ID: " + winnerId);
+
+            break;
+        }
     }
+}
+
 
     // 🎯 Broadcast final results
     MyWebSocketMessage message = new MyWebSocketMessage();
