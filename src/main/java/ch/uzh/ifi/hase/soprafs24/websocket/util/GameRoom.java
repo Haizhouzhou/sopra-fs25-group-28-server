@@ -53,9 +53,7 @@ public class GameRoom {
 
   public boolean isEmpty(){return players.isEmpty();}
 
-  public String getOwnerName() {
-        return ownerName;
-    }
+  public String getOwnerName() {return ownerName;}
 
   public void setRoomName(String roomName) {this.roomName = roomName;}
 
@@ -68,16 +66,14 @@ public class GameRoom {
   // used for testing
   public Game getGameInstance(){return game;}
   public void setGameInstance(Game game){this.game = game;}
-private final UserService userService;
+    private final UserService userService;
 
-public GameRoom(String roomId, int maxPlayer, UserService userService) {
-    this.roomId = roomId;
-    this.maxPlayer = maxPlayer;
-    this.userService = userService;
-    this.roomStatus = ROOM_WAITING;
-}
-
-
+    public GameRoom(String roomId, int maxPlayer, UserService userService) {
+        this.roomId = roomId;
+        this.maxPlayer = maxPlayer;
+        this.userService = userService;
+        this.roomStatus = ROOM_WAITING;
+    }
 
 
     /**
@@ -96,7 +92,6 @@ public GameRoom(String roomId, int maxPlayer, UserService userService) {
 
   /**
    * if any players reach the goal, call this function and save game record
-   * TODO: to be implemente
    */
   public void EndGame() {
     if (game == null) {
@@ -188,16 +183,6 @@ public GameRoom(String roomId, int maxPlayer, UserService userService) {
     players.remove(player);
   }
 
-//   public void changePlayerStatus(Player targetPlayer){
-//     Player actualPlayer = findPlayerInRoom(targetPlayer);
-//     // switch status
-//     boolean currentStatus = actualPlayer.getStatus();
-//     actualPlayer.setStatus(!currentStatus);
-
-//     // update and broadcastRoomStatus
-//     broadcastRoomStatus();
-//   }
-
   /**
    * broadcast Message to all players in the room
    * @param message either a String or a WebSocketMessage Object
@@ -263,17 +248,6 @@ public GameRoom(String roomId, int maxPlayer, UserService userService) {
   public void setOwnerName(String ownerName) {
       this.ownerName = ownerName;
   }
-
-
-//   private Player findPlayerInRoom(Player targetPlayer){
-//     for(Player player : players){
-//       if(player.equals(targetPlayer)){
-//         return player;
-//       }
-//     }
-//     return null;
-//   }
-
 
   public void broadcast(String message) {
       for (Player player : players) {
