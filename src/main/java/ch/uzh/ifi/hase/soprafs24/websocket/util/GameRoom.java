@@ -467,8 +467,8 @@ public class GameRoom {
             GameSnapshot snapshot = game.getGameInformation();
 
             // 打印详细信息
-            System.out.println("玩家顺序: " + snapshot.getPlayerOrder());
-            System.out.println("当前玩家索引: " + snapshot.getCurrentPlayerIndex());
+            // System.out.println("玩家顺序: " + snapshot.getPlayerOrder());
+            // System.out.println("当前玩家索引: " + snapshot.getCurrentPlayerIndex());
             if (snapshot.getCurrentPlayerIndex() >= 0 &&
                     snapshot.getCurrentPlayerIndex() < snapshot.getPlayerOrder().size()) {
                 System.out.println("当前玩家ID: " +
