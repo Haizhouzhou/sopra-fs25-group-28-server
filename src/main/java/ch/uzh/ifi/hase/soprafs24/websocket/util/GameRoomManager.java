@@ -30,7 +30,7 @@ public class GameRoomManager {
     // private Map<String, Player> sessionPlayers = new ConcurrentHashMap<>(); // session may change during app functioning
     private Map<String, String> sessionRooms = new ConcurrentHashMap<>();
 
-    private final Set<Session> lobbySessions = ConcurrentHashMap.newKeySet();
+    protected final Set<Session> lobbySessions = ConcurrentHashMap.newKeySet();
 
     private Map<Long, String> userIdToUsername = new ConcurrentHashMap<>();
 
