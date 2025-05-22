@@ -34,7 +34,7 @@ public class Game {
   private ActionReserveCard actionReserveCard = new ActionReserveCard();
   private ActionTakeGems actionTakeGems = new ActionTakeGems();
 
-  public final Long VICTORYPOINTS = 5L; //modified for M3 demo
+  public static final Long VICTORYPOINTS = 15L; //modified for final delpoy
 
   // unique id for the game
   private final String gameId;
@@ -272,8 +272,13 @@ public class Game {
     // 检查finalRound的逻辑
     System.out.println("Final round flag:" + finalRound);
     for(Player player : players){
-      System.out.println("player.getSession" + player.getSession());
-      System.out.println("player.finishedFinalRound:" + player.getFinishedFinalRound());
+      // System.out.println("player.getSession" + player.getSession());
+      // System.out.println("player.finishedFinalRound:" + player.getFinishedFinalRound());
+    }
+
+    if(finalRound){
+      players.get(currentPlayer).setFinishedFinalRound(true);
+      System.out.println("player" + players.get(currentPlayer).getUserId() + ".finishedFinalRound now change to :" + players.get(currentPlayer).getFinishedFinalRound());
     }
 
     // 4. if it's final round and all players have played the same number of turns
@@ -286,10 +291,10 @@ public class Game {
       return;
     }
 
-    if(finalRound){
-      players.get(currentPlayer).setFinishedFinalRound(true);
-      System.out.println("player" + players.get(currentPlayer).getUserId() + ".finishedFinalRound now change to :" + players.get(currentPlayer).getFinishedFinalRound());
-    }
+    // if(finalRound){
+    //   players.get(currentPlayer).setFinishedFinalRound(true);
+    //   System.out.println("player" + players.get(currentPlayer).getUserId() + ".finishedFinalRound now change to :" + players.get(currentPlayer).getFinishedFinalRound());
+    // }
 
     // 5. Increment round
     currentRound++;

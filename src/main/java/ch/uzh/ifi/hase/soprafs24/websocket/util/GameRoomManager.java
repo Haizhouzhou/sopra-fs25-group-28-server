@@ -55,16 +55,16 @@ public class GameRoomManager {
             player = existing;
             player.setSession(session);
             for(GameRoom room : rooms.values()){
-                System.out.println("roomId:"+room.getRoomId()+ " contains(player)? = " + (room.getPlayers().contains(player)));
-                System.out.println("roomId:"+room.getRoomId()+ " .getGame().getPlayers().contains(player)? = " + (room.getGame().getPlayers().contains(player)));
-                System.out.println("room.getGame().getGameState() = "+ (room.getGame() != null ? room.getGame().getGameState() : null));
+                // System.out.println("roomId:"+room.getRoomId()+ " contains(player)? = " + (room.getPlayers().contains(player)));
+                // System.out.println("roomId:"+room.getRoomId()+ " .getGame().getPlayers().contains(player)? = " + (room.getGame().getPlayers().contains(player)));
+                // System.out.println("room.getGame().getGameState() = "+ (room.getGame() != null ? room.getGame().getGameState() : null));
 
                 if(player.getIsInGame() && room.getGame() != null && room.getGame().getGameState() == Game.GameState.RUNNING){
-                    System.out.println("roomId:"+room.getRoomId()+ " .getGame().getPlayers().contains(player)? = " + (room.getGame().getPlayers().contains(player)));
+                    // System.out.println("roomId:"+room.getRoomId()+ " .getGame().getPlayers().contains(player)? = " + (room.getGame().getPlayers().contains(player)));
                     if(room.getGame().getPlayers().contains(player)){
-                        System.out.println("玩家刷新，所属游戏id映射回去 " );
+                        // System.out.println("玩家刷新，所属游戏id映射回去 " );
                         player.setBelongsToGameId(room.getGame().getGameId());   
-                        System.out.println("registerPlayer对象地址：" + System.identityHashCode(player));
+                        // System.out.println("registerPlayer对象地址：" + System.identityHashCode(player));
                     }
                 }
                 
