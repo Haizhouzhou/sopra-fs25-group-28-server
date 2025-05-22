@@ -1,23 +1,24 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.game;
 
-import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
-import ch.uzh.ifi.hase.soprafs24.websocket.util.Card;
-import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
-import ch.uzh.ifi.hase.soprafs24.websocket.util.Noble;
-import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.given;
+import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.Card;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.GameRoom;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.Noble;
+import ch.uzh.ifi.hase.soprafs24.websocket.util.Player;
 
 
 public class GameCreateAllItemsTest {
@@ -35,7 +36,7 @@ public class GameCreateAllItemsTest {
   private final int EXPECTED_TOTAL_TIER_2_CARDS = 30;
   private final int EXPECTED_TOTAL_TIER_3_CARDS = 20;
   private final int EXPECTED_VISIBLE_CARDS_PER_TIER = 4;
-  private final int EXPECTED_VISIBLE_NOBLES = 4;
+  private final int EXPECTED_VISIBLE_NOBLES = 5;
 
   @BeforeEach
   void setUp() { // Changed visibility

@@ -28,6 +28,8 @@ public class PlayerSnapshotTest {
   private Map<GemColor, Long> mockBonusGems;
   private List<Card> mockReservedCards;
 
+  private String mockGameId = "mockGameId";
+
   @BeforeEach
   public void testSetup(){
     mockGems = new HashMap<>();
@@ -58,9 +60,10 @@ public class PlayerSnapshotTest {
     when(p1.getAllGems()).thenReturn(mockGems);
     when(p1.getAllBonusGems()).thenReturn(mockBonusGems);
     when(p1.getReservedCards()).thenReturn(mockReservedCards);
+    when(p1.getBelongsToGameId()).thenReturn(mockGameId);
 
     //act
-    PlayerSnapshot snapshot = PlayerSnapshot.createFromPlayer(p1);
+    PlayerSnapshot snapshot = PlayerSnapshot.createFromPlayer(p1, mockGameId);
     ObjectMapper mapper = new ObjectMapper();
     String json = mapper.writeValueAsString(snapshot);
     ReadContext ctx = JsonPath.parse(json);

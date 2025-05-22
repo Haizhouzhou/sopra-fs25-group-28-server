@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs24.entity.User;
 import ch.uzh.ifi.hase.soprafs24.service.UserService;
+import ch.uzh.ifi.hase.soprafs24.websocket.game.Game;
 
 
 
@@ -29,7 +30,7 @@ public class GameRoomManager {
     // private Map<String, Player> sessionPlayers = new ConcurrentHashMap<>(); // session may change during app functioning
     private Map<String, String> sessionRooms = new ConcurrentHashMap<>();
 
-    private final Set<Session> lobbySessions = ConcurrentHashMap.newKeySet();
+    protected final Set<Session> lobbySessions = ConcurrentHashMap.newKeySet();
 
     private Map<Long, String> userIdToUsername = new ConcurrentHashMap<>();
 
@@ -53,11 +54,28 @@ public class GameRoomManager {
         if (existing != null) {
             player = existing;
             player.setSession(session);
+            for(GameRoom room : rooms.values()){
+                System.out.println("roomId:"+room.getRoomId()+ " contains(player)? = " + (room.getPlayers().contains(player)));
+                System.out.println("roomId:"+room.getRoomId()+ " .getGame().getPlayers().contains(player)? = " + (room.getGame().getPlayers().contains(player)));
+                System.out.println("room.getGame().getGameState() = "+ (room.getGame() != null ? room.getGame().getGameState() : null));
+
+                if(player.getIsInGame() && room.getGame() != null && room.getGame().getGameState() == Game.GameState.RUNNING){
+                    System.out.println("roomId:"+room.getRoomId()+ " .getGame().getPlayers().contains(player)? = " + (room.getGame().getPlayers().contains(player)));
+                    if(room.getGame().getPlayers().contains(player)){
+                        System.out.println("玩家刷新，所属游戏id映射回去 " );
+                        player.setBelongsToGameId(room.getGame().getGameId());   
+                        System.out.println("registerPlayer对象地址：" + System.identityHashCode(player));
+                    }
+                }
+                
+                System.out.println("player.getBelongsToGameId:" + ((player.getBelongsToGameId()!=null) ? player.getBelongsToGameId() : null));
+            }
         } else {
             player = new Player(session, correspondingUser.getName(), userId);
             players.add(player);
         }
 
+        player.setName(correspondingUser.getName());
         player.setAvatar(correspondingUser.getAvatar());
         System.out.println("[registerPlayer] avatar = " + correspondingUser.getAvatar());
 
@@ -74,9 +92,6 @@ public class GameRoomManager {
             .filter(p-> p.getSession() != null && p.getSession().getId().equals(session.getId()))
             .findFirst()
             .orElse(null);
-
-        // String sessionId = session.getId();
-        // sessionPlayers.remove(sessionId);
         
         // remove from lobbySession
         lobbySessions.remove(session);
@@ -84,6 +99,10 @@ public class GameRoomManager {
         // 断开session引用 / disconnect session instead of remove Player
         if(player != null){
             player.setSession(null);
+
+            // reset player belongs to null game
+            player.setBelongsToGameId(null);
+            System.out.println("call setBelongsToGameId(null) in deregisterPlayer");
         }
         
     }
@@ -115,6 +134,9 @@ public class GameRoomManager {
 
         // reset player ready status --> not ready
         player.setStatus(false);
+        // reset player belongs to null game
+        player.setBelongsToGameId(null);
+        System.out.println("call setBelongsToGameId(null) in createRoom");
 
         rooms.put(roomId, room);
         room.addPlayer(player);
@@ -133,8 +155,6 @@ public class GameRoomManager {
             System.err.println("joinRoom: session is null or closed");
             return false;
         }
-        // reset player ready status --> not ready
-        player.setStatus(false);
 
         GameRoom room = rooms.get(roomId);
         if (room == null || room.isFull()) {
@@ -144,6 +164,12 @@ public class GameRoomManager {
 
         room.addPlayer(player);
         sessionRooms.put(session.getId(), roomId);
+
+        // reset player ready status --> not ready
+        player.setStatus(false);
+        // reset player belongs to null game
+        // player.setBelongsToGameId(null);
+        // System.out.println("call setBelongsToGameId(null) in joinRoom"); 
 
         // 离开lobby
         lobbySessions.remove(session);
@@ -163,7 +189,7 @@ public class GameRoomManager {
     }
 
     public void leaveRoom(Session session) {
-        if (session == null) return;
+        if (session == null) {System.out.println("leaveRoom exit because session is null"); return;}
 
         Player player = getPlayerBySession(session);
         String roomId = sessionRooms.get(session.getId());
@@ -171,6 +197,13 @@ public class GameRoomManager {
         if (player != null && roomId != null) {
             // reset player ready status
             player.setStatus(false);
+            // reset player belongs to null game
+            // player.setIsInGame(false);
+            // System.out.println("-------");
+            // System.out.println("call setIsInGame(false) in leaveRoom");
+            // System.out.println("-------");
+            player.setBelongsToGameId(null);
+            System.out.println("call setBelongsToGameId(null) in leaveRoom");
 
             GameRoom room = rooms.get(roomId);
             if (room != null) {

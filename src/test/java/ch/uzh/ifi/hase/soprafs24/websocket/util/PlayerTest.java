@@ -1,19 +1,27 @@
 package ch.uzh.ifi.hase.soprafs24.websocket.util;
 
-import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import java.util.Map;
 
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import org.mockito.MockitoAnnotations;
+
+import ch.uzh.ifi.hase.soprafs24.entity.GemColor;
 
 public class PlayerTest {
 
@@ -30,6 +38,8 @@ public class PlayerTest {
   private Card mockCard2;
 
   private Player player;
+
+  private final String mockGameId = "mockGame";
 
   @BeforeEach
   void setUp() {
@@ -61,7 +71,7 @@ public class PlayerTest {
 
   @Test
   void testInitializeGameStatusAndGems() {
-    player.initializeGameStatus();
+    player.initializeGameStatus(mockGameId);
     Map<GemColor, Long> gems = player.getAllGems();
     Map<GemColor, Long> bonus = player.getAllBonusGems();
     assertEquals(0L, gems.get(GemColor.RED));
@@ -74,7 +84,7 @@ public class PlayerTest {
 
   @Test
   void testSetAndGetGem() {
-    player.initializeGameStatus();
+    player.initializeGameStatus(mockGameId);
     player.setGem(GemColor.RED, 3L);
     assertEquals(3L, player.getGem(GemColor.RED));
     player.setGem(GemColor.RED, 0L);
@@ -83,20 +93,20 @@ public class PlayerTest {
 
   @Test
   void testSetGemNegativeThrows() {
-    player.initializeGameStatus();
+    player.initializeGameStatus(mockGameId);
     assertThrows(IllegalArgumentException.class, () -> player.setGem(GemColor.RED, -1L));
   }
 
   @Test
   void testSetAndGetBonusGem() {
-    player.initializeGameStatus();
+    player.initializeGameStatus(mockGameId);
     player.setBonusGem(GemColor.BLUE, 2L);
     assertEquals(2L, player.getBonusGem(GemColor.BLUE));
   }
 
   @Test
   void testSetBonusGemNegativeThrows() {
-    player.initializeGameStatus();
+    player.initializeGameStatus(mockGameId);
     assertThrows(IllegalArgumentException.class, () -> player.setBonusGem(GemColor.BLUE, -2L));
   }
 

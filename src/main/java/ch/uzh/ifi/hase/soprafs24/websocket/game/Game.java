@@ -159,7 +159,7 @@ public class Game {
     // TODO: initialize players' game status
     for(Player player : players){
       // TODO: not fully implemented yet
-      player.initializeGameStatus();
+      player.initializeGameStatus(this.getGameId());
     }
 
     this.gameState = GameState.RUNNING;
@@ -207,7 +207,7 @@ public class Game {
 
       Collections.shuffle(nobles);
 
-      for(int i = 0; i<4; i++){
+      for(int i = 0; i<5; i++){
         visibleNoble.add(nobles.get(i));
       }
 
@@ -269,12 +269,26 @@ public class Game {
     // 3. Check for victory condition
     checkVictoryCondition();
 
+    // 检查finalRound的逻辑
+    System.out.println("Final round flag:" + finalRound);
+    for(Player player : players){
+      System.out.println("player.getSession" + player.getSession());
+      System.out.println("player.finishedFinalRound:" + player.getFinishedFinalRound());
+    }
+
     // 4. if it's final round and all players have played the same number of turns
-    if (finalRound && currentPlayer == players.size() - 1) {
+    if (finalRound && players.stream()
+        .filter(p-> p.getSession() != null && p.getSession().isOpen() && p.getBelongsToGameId()!=null && p.getBelongsToGameId().equals(gameId))
+        .allMatch(p->p.getFinishedFinalRound())) {
       setGameState(GameState.FINISHED);
       System.out.println("Final round completed. Game finished.");
 
       return;
+    }
+
+    if(finalRound){
+      players.get(currentPlayer).setFinishedFinalRound(true);
+      System.out.println("player" + players.get(currentPlayer).getUserId() + ".finishedFinalRound now change to :" + players.get(currentPlayer).getFinishedFinalRound());
     }
 
     // 5. Increment round

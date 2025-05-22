@@ -34,7 +34,7 @@ public class GameRoom {
   
   protected final ScheduledExecutorService roundTimerExecutor = Executors.newSingleThreadScheduledExecutor();
   protected  ScheduledFuture<?> roundTimerFuture; // 当前回合的timer
-  protected final long ROUND_TIMEOUT_MILLIS = 62000; // 后端限制35秒
+  protected final long ROUND_TIMEOUT_MILLIS = 62000; // 后端限制62秒
 
 
   private String roomName = "";
@@ -105,24 +105,28 @@ public class GameRoom {
     // TODO: 确认leaderboard的entry
     Long winnerId = game.getWinnerId();
     if (winnerId != null) {
-    for (Player player : players) {
-        if (player.getUserId().equals(winnerId)) {
-            userService.incrementWincounter(winnerId);
-            System.out.println("Win counter incremented for user ID: " + winnerId);
+        for (Player player : players) {
+            if (player.getUserId().equals(winnerId)) {
+                userService.incrementWincounter(winnerId);
+                System.out.println("Win counter incremented for user ID: " + winnerId);
 
-            break;
+                break;
+            }
         }
     }
-}
 
 
-    // 🎯 Broadcast final results
+    // Broadcast final results
     MyWebSocketMessage message = new MyWebSocketMessage();
     message.setType(MyWebSocketMessage.TYPE_SERVER_GAME_OVER);
     message.setRoomId(roomId);
 
     List<Map<String, Object>> playerResults = new ArrayList<>();
-    for (Player p : players) {
+
+    System.out.println("Game End, gameroom playerlists:" + players);
+    System.out.println("Game End, game playerlists:" + game.getPlayers());
+
+    for (Player p : game.getPlayers()) {
         Map<String, Object> pInfo = new HashMap<>();
         pInfo.put("userId", p.getUserId());
         pInfo.put("name", p.getName());
@@ -134,6 +138,8 @@ public class GameRoom {
     Map<String, Object> content = new HashMap<>();
     content.put("players", playerResults);
     content.put("winnerId", winnerId);
+
+    System.out.println("Final Result:" + content);
 
     message.setContent(content);
     broadcastMessage(message);
@@ -406,10 +412,22 @@ public class GameRoom {
             int totalPlayers = playerList.size();
             int idx = game.getCurrentPlayer();
             boolean foundOnline = false;
+            System.out.println("检查最新的CurrentPlayer是否在游戏内");
             for (int i = 0; i < totalPlayers; i++) {
                 Player next = playerList.get(idx);
                 Session session = next.getSession();
-                if (session != null && session.isOpen()) {
+                System.out.println("玩家Id："+ next.getUserId());
+                System.out.println("该Player对象地址：" + System.identityHashCode(next));
+                System.out.println("session是否存在？："+ session);
+                System.out.println("session.isOpen() : " + (session != null ? session.isOpen() : null));
+                System.out.println("getBelongsToGameId():" + next.getBelongsToGameId());
+                System.out.println("game.getGameId:" + game.getGameId());
+                System.out.println("isInGame的状态：" + next.getIsInGame());
+                System.out.println("isInSpecificGame的状态：" + 
+                                    ( (next.getBelongsToGameId() != null) ? (next.getBelongsToGameId().equals(game.getGameId())) : false) 
+                                );
+                System.out.println("--------");
+                if (session != null && session.isOpen() && (next.getBelongsToGameId()!=null) &&(next.getBelongsToGameId().equals(game.getGameId()))) {
                     foundOnline = true;
                     game.setCurrentPlayer(idx);
                     startRoundTimer(next);
@@ -417,12 +435,19 @@ public class GameRoom {
                 }
                 idx = (idx + 1) % totalPlayers;
             }
+
+            int newCurrentPlayerIndexAfterCheck = game.getCurrentPlayer();
+            Player newCurrentPlayerAfterCheck = game.getPlayers().get(newCurrentPlayerIndexAfterCheck);
+            System.out.println("新的当前玩家索引: " + newCurrentPlayerIndexAfterCheck);
+            System.out.println("新的当前玩家ID: " + newCurrentPlayerAfterCheck.getUserId());
+
+
             // 如果没有在线玩家，不再递归
             if (!foundOnline) {
                 System.out.println("所有玩家都离线，停止定时器递归。");
             }
         }
-        
+
         // 发送游戏状态更新到所有玩家
         broadcastGameState();
 

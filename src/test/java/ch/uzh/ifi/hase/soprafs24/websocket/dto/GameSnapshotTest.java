@@ -73,12 +73,15 @@ public class GameSnapshotTest {
     when(game.getVisibleLevel1Cards()).thenReturn(new ArrayList<>());
     when(game.getVisibleLevel2Cards()).thenReturn(new ArrayList<>());
     when(game.getVisibleLevel3Cards()).thenReturn(new ArrayList<>());
+    when(game.getLevel1CardDeckSize()).thenReturn(1);
+    when(game.getLevel2CardDeckSize()).thenReturn(1);
+    when(game.getLevel3CardDeckSize()).thenReturn(1);
     when(game.getVisibleNoble()).thenReturn(new ArrayList<>());
     when(game.getGameRoom()).thenReturn(gameRoom);
 
   
     try (MockedStatic<PlayerSnapshot> mockedStatic = mockStatic(PlayerSnapshot.class)) {
-      mockedStatic.when(() -> PlayerSnapshot.createFromPlayer(player)).thenReturn(p1);
+      mockedStatic.when(() -> PlayerSnapshot.createFromPlayer(player, game.getGameId())).thenReturn(p1);
 
       // Act
       GameSnapshot snapshot = GameSnapshot.createFromGame(game);

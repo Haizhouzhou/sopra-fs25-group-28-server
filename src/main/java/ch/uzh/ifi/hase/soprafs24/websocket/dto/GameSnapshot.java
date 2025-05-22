@@ -80,12 +80,12 @@ public class GameSnapshot {
     }
   }
 
-  protected int getLevel1CardDeckSize(){return level1CardDeckSize;}
-  protected int getLevel2CardDeckSize(){return level2CardDeckSize;}
-  protected int getLevel3CardDeckSize(){return level3CardDeckSize;}
-  protected void setLevel1CardDeckSize(int level1CardDeckSize){this.level1CardDeckSize = level1CardDeckSize;}
-  protected void setLevel2CardDeckSize(int level2CardDeckSize){this.level2CardDeckSize = level2CardDeckSize;}
-  protected void setLevel3CardDeckSize(int level3CardDeckSize){this.level3CardDeckSize = level3CardDeckSize;}
+  public int getLevel1CardDeckSize(){return level1CardDeckSize;}
+  public int getLevel2CardDeckSize(){return level2CardDeckSize;}
+  public int getLevel3CardDeckSize(){return level3CardDeckSize;}
+  public void setLevel1CardDeckSize(int level1CardDeckSize){this.level1CardDeckSize = level1CardDeckSize;}
+  public void setLevel2CardDeckSize(int level2CardDeckSize){this.level2CardDeckSize = level2CardDeckSize;}
+  public void setLevel3CardDeckSize(int level3CardDeckSize){this.level3CardDeckSize = level3CardDeckSize;}
 
   public List<PlayerSnapshot> getPlayerSnapshots(){return playerSnapshots;}
   public void setPlayerSnapshots(List<PlayerSnapshot> playerSnapshots){this.playerSnapshots = playerSnapshots;}
@@ -116,11 +116,11 @@ public class GameSnapshot {
 
     List<PlayerSnapshot> playerSnapshots = new ArrayList<>();
     for(Player player : game.getPlayers()){
-      playerSnapshots.add(PlayerSnapshot.createFromPlayer(player));
+      playerSnapshots.add(PlayerSnapshot.createFromPlayer(player, game.getGameId()));
     }
     snapshot.setPlayerSnapshots(playerSnapshots);
 
-      return snapshot;
+    return snapshot;
   }
 
 }
