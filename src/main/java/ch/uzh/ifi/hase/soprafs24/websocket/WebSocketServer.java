@@ -155,6 +155,8 @@ public class WebSocketServer {
     }
 
     private void handleJoinRoom(Session session, MyWebSocketMessage message) {
+        broadcastRoomListToLobby();
+
         boolean joined = roomManager.joinRoom(message.getRoomId(), session);
         if (!joined) {
             log.warn("joinRoom: session is null or closed");
@@ -176,6 +178,13 @@ public class WebSocketServer {
     }
 
     private void handleLeaveRoom(Session session) {
+        Player player = roomManager.getPlayerBySession(session);
+        log.info("get player in handleLeaveRoom");
+        if (player != null){
+            player.setIsInGame(false);;
+            log.info("call player.setIsInGame(false) in handleLeaveRoom");
+        }
+
         roomManager.leaveRoom(session);
 
         broadcastRoomListToLobby();

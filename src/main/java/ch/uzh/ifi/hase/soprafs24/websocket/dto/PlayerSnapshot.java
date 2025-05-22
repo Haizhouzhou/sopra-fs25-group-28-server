@@ -16,6 +16,9 @@ public class PlayerSnapshot {
   private Map<GemColor, Long> bonusGems; //gems collect from development card
   private Long victoryPoints;
   private List<Long> reservedCardIds = new ArrayList<>();
+  
+  // boolean indicate if the player is in specific game
+  protected boolean isInThisGame;
 
   // getter and setter
   public Long getUserId(){return userId;}
@@ -31,29 +34,37 @@ public class PlayerSnapshot {
   public void setBonusGems(Map<GemColor, Long> bonusGems){this.bonusGems = bonusGems;}
 
   public List<Long> getReservedCardIds(){return reservedCardIds;}
-
   public void setReservedCardIds(List<Long> reservedCardIds) {this.reservedCardIds = reservedCardIds;}
 
   public String getName() {return name;}
-
   public void setName(String name) {this.name = name;}
 
-  public static PlayerSnapshot createFromPlayer(Player player){
-        PlayerSnapshot snapshot = new PlayerSnapshot();
+  public boolean getIsInThisGame(){return isInThisGame;}
+  public void setIsInThisGame(boolean isInThisGame){this.isInThisGame = isInThisGame;}
 
-        snapshot.setUserId(player.getUserId());
-        snapshot.setVictoryPoints(player.getVictoryPoints());
-        snapshot.setGems(player.getAllGems());
-        snapshot.setBonusGems(player.getAllBonusGems());
-        snapshot.setName(player.getName());
 
-        List<Long> reservedIds = new ArrayList<>();
-        for (Card card : player.getReservedCards()) {
-            reservedIds.add(card.getId());
-        }
-        snapshot.setReservedCardIds(reservedIds);
+  public static PlayerSnapshot createFromPlayer(Player player, String GameId){
+    PlayerSnapshot snapshot = new PlayerSnapshot();
 
-        return snapshot;
+    snapshot.setUserId(player.getUserId());
+    snapshot.setVictoryPoints(player.getVictoryPoints());
+    snapshot.setGems(player.getAllGems());
+    snapshot.setBonusGems(player.getAllBonusGems());
+    snapshot.setName(player.getName());
+
+    boolean isInGame = false;
+    if(player.getBelongsToGameId() != null){
+      isInGame = player.getBelongsToGameId().equals(GameId);
+    }
+    snapshot.setIsInThisGame(isInGame);
+
+    List<Long> reservedIds = new ArrayList<>();
+    for (Card card : player.getReservedCards()) {
+        reservedIds.add(card.getId());
+    }
+    snapshot.setReservedCardIds(reservedIds);
+
+    return snapshot;
   }
 
 

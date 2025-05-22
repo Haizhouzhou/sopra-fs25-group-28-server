@@ -183,6 +183,10 @@ public class UserService {
       if(inputUser.getBirthday()!= null){
         edituser.setBirthday(inputUser.getBirthday());
       }
+
+      //增加更改头像
+      edituser.setAvatar(inputUser.getAvatar());
+
       edituser.setName(inputUser.getName());
       edituser.setUsername(inputUser.getUsername());
       if(inputUser.getPassword()!= null && !inputUser.getPassword().trim().isEmpty()){

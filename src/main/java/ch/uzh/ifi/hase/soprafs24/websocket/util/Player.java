@@ -18,14 +18,15 @@ public class Player {
   private static final boolean PLAYER_NOT_READY = false;
   private static final boolean PLAYER_READY = true;
 
+  // user related value
   private Session session;
   private String name;
   private String avatar;
-
-    // TODO: add correspondance to User
   private Long userId;
   private boolean status = false;
   private boolean isInitialized = false;
+
+  private boolean leaveRoomFlag = false;
 
   // Game status relate
   private Map<GemColor, Long> gems;
@@ -33,6 +34,10 @@ public class Player {
   private Long victoryPoints;
   public List<Card> reservedCards = new ArrayList<>();
   public boolean hintAvailable = true;
+  protected boolean finishedFinalRound = false;
+
+  private boolean isInGame = false;
+  protected String belongsToGameId = null;
 
 
   private final Object sendLock = new Object(); // 发送锁
@@ -69,6 +74,8 @@ public class Player {
   public Long getUserId(){return userId;}
   public void setUserId(Long userId){this.userId = userId;}
 
+  public void setName(String name){this.name = name;}
+
   public Long getGem(GemColor color){
     return this.gems.get(color);
   }
@@ -83,6 +90,7 @@ public class Player {
   public Long getBonusGem(GemColor color){
     return this.bonusGems.get(color);
   }
+  
   public void setBonusGem(GemColor color, Long amount){
     if(amount < 0){
       throw new IllegalArgumentException("cannot set negative gem amount");
@@ -102,10 +110,22 @@ public class Player {
   public void setAvatar(String avatar) {this.avatar = avatar;}
 
   public void setSession(Session session) {this.session = session;}
+
+  public boolean getFinishedFinalRound(){return finishedFinalRound;}
+  public void setFinishedFinalRound(boolean finishedFinalRound){this.finishedFinalRound = finishedFinalRound;}
+
+  public String getBelongsToGameId(){return belongsToGameId;}
+  public void setBelongsToGameId(String belongsToGameId){this.belongsToGameId = belongsToGameId;}
+
+  public boolean getIsInGame(){return isInGame;}
+  public void setIsInGame(boolean isInGame){this.isInGame = isInGame;}
+
+  public boolean getLeaveRoomFlag(){return leaveRoomFlag;}
+  public void setLeaveRoomFlag(boolean leaveRoomFlag){this.leaveRoomFlag = leaveRoomFlag;}
   
 
   // called when intialized a game
-  public void initializeGameStatus(){
+  public void initializeGameStatus(String GameId){
     
     // reset gems and bonus
     this.gems = new HashMap<>();
@@ -131,6 +151,13 @@ public class Player {
     this.hintAvailable = true;
 
     this.victoryPoints = 0L;
+
+    // reset finishedFinalRound
+    this.finishedFinalRound = false;
+
+    // reset belongsToGameId
+    this.isInGame = true;
+    this.belongsToGameId = GameId;
 
     this.isInitialized = true;
   }
@@ -160,7 +187,7 @@ public class Player {
         session.getBasicRemote().sendText(messageStr);
       }
 
-      System.out.println("Message sent to user: " + messageStr);
+      // System.out.println("Message sent to user: " + messageStr);
 
     } catch (IOException e) {
       System.err.println("Failed to send message to user:" + e);
