@@ -123,8 +123,8 @@ public class GameRoom {
 
     List<Map<String, Object>> playerResults = new ArrayList<>();
 
-    System.out.println("Game End, gameroom playerlists:" + players);
-    System.out.println("Game End, game playerlists:" + game.getPlayers());
+    // System.out.println("Game End, gameroom playerlists:" + players);
+    // System.out.println("Game End, game playerlists:" + game.getPlayers());
 
     for (Player p : game.getPlayers()) {
         Map<String, Object> pInfo = new HashMap<>();
@@ -273,9 +273,9 @@ public class GameRoom {
     cancelRoundTimer();
 
     Session session = currentPlayer.getSession();
-    System.out.println("玩家：" + currentPlayer.getName() + "连接状态：isOpen() = " + session.isOpen());
+    // System.out.println("玩家：" + currentPlayer.getName() + "连接状态：isOpen() = " + session.isOpen());
     if(session == null || !session.isOpen()){
-        System.out.println("[Timer] 玩家离线，自动跳过回合: " + currentPlayer.getUserId());
+        // System.out.println("[Timer] 玩家离线，自动跳过回合: " + currentPlayer.getUserId());
         handleEndTurn(currentPlayer);
     }else{
         roundTimerFuture = roundTimerExecutor.schedule(() -> {
@@ -367,19 +367,19 @@ public class GameRoom {
         Player currentTurnPlayer = game.getPlayers().get(currentPlayerIndex);
         Long currentPlayerId = currentTurnPlayer.getUserId();
 
-        System.out.println("当前玩家索引: " + currentPlayerIndex);
-        System.out.println("尝试结束回合的玩家ID: " + playerId);
-        System.out.println("当前回合玩家ID: " + currentPlayerId);
+        // System.out.println("当前玩家索引: " + currentPlayerIndex);
+        // System.out.println("尝试结束回合的玩家ID: " + playerId);
+        // System.out.println("当前回合玩家ID: " + currentPlayerId);
 
         // 检查是否是该玩家的回合
         boolean isTurn = game.isPlayerTurn(player);
-        System.out.println("是否是玩家的回合: " + isTurn);
+        // System.out.println("是否是玩家的回合: " + isTurn);
 
         if (!isTurn) {
             return false;
         }
 
-        System.out.println("deactivate timer");
+        // System.out.println("deactivate timer");
         // deactivate timer 
         cancelRoundTimer();
 
@@ -387,14 +387,14 @@ public class GameRoom {
         //game.endTurn的作用：更新游戏状态，更新要做行动的玩家，处理noble逻辑，判断是否有玩家胜出
         //增加所有玩家进行同样数量轮次的逻辑：更改Game.GameState设置成FINISHED的节点，也就是在Game.endTurn中处理
         //GameRoom中的handle EndTurn应该不需要更改
-        System.out.println("调用game.endTurn");
+        // System.out.println("调用game.endTurn");
         game.endTurn();
 
         // 记录新的当前玩家
-        int newCurrentPlayerIndex = game.getCurrentPlayer();
-        Player newCurrentPlayer = game.getPlayers().get(newCurrentPlayerIndex);
-        System.out.println("新的当前玩家索引: " + newCurrentPlayerIndex);
-        System.out.println("新的当前玩家ID: " + newCurrentPlayer.getUserId());
+        // int newCurrentPlayerIndex = game.getCurrentPlayer();
+        // Player newCurrentPlayer = game.getPlayers().get(newCurrentPlayerIndex);
+        // System.out.println("新的当前玩家索引: " + newCurrentPlayerIndex);
+        // System.out.println("新的当前玩家ID: " + newCurrentPlayer.getUserId());
 
         // broadcastGameState();
 
@@ -412,21 +412,21 @@ public class GameRoom {
             int totalPlayers = playerList.size();
             int idx = game.getCurrentPlayer();
             boolean foundOnline = false;
-            System.out.println("检查最新的CurrentPlayer是否在游戏内");
+            // System.out.println("检查最新的CurrentPlayer是否在游戏内");
             for (int i = 0; i < totalPlayers; i++) {
                 Player next = playerList.get(idx);
                 Session session = next.getSession();
-                System.out.println("玩家Id："+ next.getUserId());
-                System.out.println("该Player对象地址：" + System.identityHashCode(next));
-                System.out.println("session是否存在？："+ session);
-                System.out.println("session.isOpen() : " + (session != null ? session.isOpen() : null));
-                System.out.println("getBelongsToGameId():" + next.getBelongsToGameId());
-                System.out.println("game.getGameId:" + game.getGameId());
-                System.out.println("isInGame的状态：" + next.getIsInGame());
-                System.out.println("isInSpecificGame的状态：" + 
-                                    ( (next.getBelongsToGameId() != null) ? (next.getBelongsToGameId().equals(game.getGameId())) : false) 
-                                );
-                System.out.println("--------");
+                // System.out.println("玩家Id："+ next.getUserId());
+                // System.out.println("该Player对象地址：" + System.identityHashCode(next));
+                // System.out.println("session是否存在？："+ session);
+                // System.out.println("session.isOpen() : " + (session != null ? session.isOpen() : null));
+                // System.out.println("getBelongsToGameId():" + next.getBelongsToGameId());
+                // System.out.println("game.getGameId:" + game.getGameId());
+                // System.out.println("isInGame的状态：" + next.getIsInGame());
+                // System.out.println("isInSpecificGame的状态：" + 
+                //                     ( (next.getBelongsToGameId() != null) ? (next.getBelongsToGameId().equals(game.getGameId())) : false) 
+                //                 );
+                // System.out.println("--------");
                 if (session != null && session.isOpen() && (next.getBelongsToGameId()!=null) &&(next.getBelongsToGameId().equals(game.getGameId()))) {
                     foundOnline = true;
                     game.setCurrentPlayer(idx);
@@ -438,8 +438,8 @@ public class GameRoom {
 
             int newCurrentPlayerIndexAfterCheck = game.getCurrentPlayer();
             Player newCurrentPlayerAfterCheck = game.getPlayers().get(newCurrentPlayerIndexAfterCheck);
-            System.out.println("新的当前玩家索引: " + newCurrentPlayerIndexAfterCheck);
-            System.out.println("新的当前玩家ID: " + newCurrentPlayerAfterCheck.getUserId());
+            // System.out.println("新的当前玩家索引: " + newCurrentPlayerIndexAfterCheck);
+            // System.out.println("新的当前玩家ID: " + newCurrentPlayerAfterCheck.getUserId());
 
 
             // 如果没有在线玩家，不再递归

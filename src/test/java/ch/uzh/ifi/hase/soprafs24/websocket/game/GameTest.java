@@ -69,7 +69,7 @@ public class GameTest {
 
   @Test
   void checkVictoryCondition_playerMeetsVictory_setsFinalRound() {
-    given(mockPlayer1.getVictoryPoints()).willReturn(5L);
+    given(mockPlayer1.getVictoryPoints()).willReturn(Game.VICTORYPOINTS);
 
     boolean result = game.checkVictoryCondition();
 

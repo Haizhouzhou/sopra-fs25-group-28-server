@@ -152,7 +152,7 @@ public class UserService {
   }
 
   public User getUserByToken(String token){
-      System.out.println("Looking for token: " + token);
+      // System.out.println("Looking for token: " + token);
       System.out.println("Looking for token: " + token);
       User user = userRepository.findByToken(token);
       if (user == null) {
