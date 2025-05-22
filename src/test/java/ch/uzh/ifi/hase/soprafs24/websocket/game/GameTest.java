@@ -41,6 +41,8 @@ public class GameTest {
   @Mock
   private Noble mockNoble;
 
+  private final String gameId = "test-nonActionLogic-room";
+
   private List<Player> players;
   private Game game;
 
@@ -62,6 +64,10 @@ public class GameTest {
     given(mockPlayer1.getUserId()).willReturn(111L);
     given(mockPlayer2.getUserId()).willReturn(222L);
     given(mockPlayer3.getUserId()).willReturn(333L);
+
+    given(mockPlayer1.getBelongsToGameId()).willReturn(gameId);
+    given(mockPlayer2.getBelongsToGameId()).willReturn(gameId);
+    given(mockPlayer3.getBelongsToGameId()).willReturn(gameId);
 
     doNothing().when(game).fillVisibleAllVisibleCardsOnBoard();
     doNothing().when(game).noblePurchase(any());
@@ -168,7 +174,7 @@ public class GameTest {
 
   @Test
   void getWinnerId_singleWinner() {
-    given(mockPlayer1.getVictoryPoints()).willReturn(game.VICTORYPOINTS);
+    given(mockPlayer1.getVictoryPoints()).willReturn(Game.VICTORYPOINTS);
     given(mockPlayer2.getVictoryPoints()).willReturn(0L);
     given(mockPlayer3.getVictoryPoints()).willReturn(0L);
 
@@ -180,8 +186,8 @@ public class GameTest {
 
   @Test
   void getWinnerId_multipleTiedWinners_samePoints_returnsFirst() {
-    given(mockPlayer1.getVictoryPoints()).willReturn(game.VICTORYPOINTS);
-    given(mockPlayer2.getVictoryPoints()).willReturn(game.VICTORYPOINTS);
+    given(mockPlayer1.getVictoryPoints()).willReturn(Game.VICTORYPOINTS);
+    given(mockPlayer2.getVictoryPoints()).willReturn(Game.VICTORYPOINTS);
     given(mockPlayer3.getVictoryPoints()).willReturn(3L);
 
     ReflectionTestUtils.setField(game, "players", players);
@@ -205,13 +211,41 @@ public class GameTest {
   @Test
   void getWinnerId_multipleTiedWinners_differentPoints_returnsHighest(){
     given(mockPlayer1.getVictoryPoints()).willReturn(0L);
-    given(mockPlayer2.getVictoryPoints()).willReturn(game.VICTORYPOINTS + 1L);
-    given(mockPlayer3.getVictoryPoints()).willReturn(game.VICTORYPOINTS);
+    given(mockPlayer2.getVictoryPoints()).willReturn(Game.VICTORYPOINTS + 1L);
+    given(mockPlayer3.getVictoryPoints()).willReturn(Game.VICTORYPOINTS);
 
     ReflectionTestUtils.setField(game, "players", players);
 
     Long winnerId = game.getWinnerId();
     assertEquals(mockPlayer2.getUserId(), winnerId);
+  }
+
+  @Test
+  void getWinnerId_PlayerNotBelongsToThisGame_NotAWinner(){
+    given(mockPlayer1.getVictoryPoints()).willReturn(0L);
+    given(mockPlayer2.getVictoryPoints()).willReturn(Game.VICTORYPOINTS + 1L);
+    given(mockPlayer3.getVictoryPoints()).willReturn(Game.VICTORYPOINTS);
+
+    given(mockPlayer2.getBelongsToGameId()).willReturn("notGameId");
+
+    ReflectionTestUtils.setField(game, "players", players);
+
+    Long winnerId = game.getWinnerId();
+    assertEquals(mockPlayer3.getUserId(), winnerId);
+  }
+
+  @Test
+  void getWinnerId_PlayerBelongsToNull_NotAWinner(){
+    given(mockPlayer1.getVictoryPoints()).willReturn(0L);
+    given(mockPlayer2.getVictoryPoints()).willReturn(Game.VICTORYPOINTS + 1L);
+    given(mockPlayer3.getVictoryPoints()).willReturn(Game.VICTORYPOINTS);
+
+    given(mockPlayer2.getBelongsToGameId()).willReturn("null");
+
+    ReflectionTestUtils.setField(game, "players", players);
+
+    Long winnerId = game.getWinnerId();
+    assertEquals(mockPlayer3.getUserId(), winnerId);
   }
 
   @Test

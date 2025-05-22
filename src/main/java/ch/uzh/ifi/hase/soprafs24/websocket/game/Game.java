@@ -123,7 +123,7 @@ public class Game {
     Long maxPoints = -1L;
 
     for (Player player : players) {
-      if (player.getVictoryPoints() > maxPoints && player.getVictoryPoints() >= VICTORYPOINTS) {
+      if (player.getVictoryPoints() > maxPoints && player.getVictoryPoints() >= VICTORYPOINTS && player.getBelongsToGameId()!=null && (player.getBelongsToGameId().equals(gameId))) {
         maxPoints = player.getVictoryPoints();
         winner = player;
       }
