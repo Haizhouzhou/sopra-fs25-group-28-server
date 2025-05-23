@@ -160,4 +160,33 @@ public class UserServiceTest {
     assertEquals(null, result);
   }
 
+  @Test
+  void incrementWincounter_userExists_shouldIncrementWinCounter() {
+    // arrange
+    User userInDb = new User();
+    userInDb.setId(42L);
+    userInDb.setWincounter(3);
+
+    Mockito.when(userRepository.findById(42L)).thenReturn(java.util.Optional.of(userInDb));
+    Mockito.when(userRepository.saveAndFlush(userInDb)).thenReturn(userInDb);
+
+    // act
+    userService.incrementWincounter(42L);
+
+    // assert
+    Mockito.verify(userRepository).findById(42L);
+    Mockito.verify(userRepository).saveAndFlush(userInDb);
+    assertEquals(4, userInDb.getWincounter());
+  }
+
+  @Test
+  void incrementWincounter_userNotExist_shouldThrowException() {
+    // arrange
+    Mockito.when(userRepository.findById(99L)).thenReturn(java.util.Optional.empty());
+
+    // act & assert
+    assertThrows(ResponseStatusException.class, () -> userService.incrementWincounter(99L));
+    Mockito.verify(userRepository).findById(99L);
+  }
+
 }
