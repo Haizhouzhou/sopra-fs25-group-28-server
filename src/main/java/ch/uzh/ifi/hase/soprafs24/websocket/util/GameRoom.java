@@ -255,11 +255,11 @@ public class GameRoom {
       this.ownerName = ownerName;
   }
 
-  public void broadcast(String message) {
-      for (Player player : players) {
-          player.sendMessage(message);
-      }
-  }
+//   public void broadcast(String message) {
+//       for (Player player : players) {
+//           player.sendMessage(message);
+//       }
+//   }
 
   public Game getGame() {
       return this.game;
